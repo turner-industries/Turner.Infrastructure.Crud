@@ -1,36 +1,35 @@
-using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using SimpleInjector;
-using System.Reflection;
-using Turner.Infrastructure.Crud.Configuration;
-using Turner.Infrastructure.Crud.Tests.Fakes;
+using SimpleInjector.Lifestyles;
 using Turner.Infrastructure.Mediator;
-using Turner.Infrastructure.Mediator.Configuration;
 
 namespace Turner.Infrastructure.Crud.Tests
 {
     public class BaseUnitTest
     {
-        protected Container Container { get; set; }
+        private Scope _scope;
 
-        protected IMediator Mediator => Container.GetInstance<IMediator>();
-        
+        protected Container Container => UnitTestSetUp.Container;
+
+        protected IMediator Mediator { get; private set; }
+
+        protected DbContext Context { get; private set; }
+
         [SetUp]
-        public void SetUp()
+        public void SetUpBase()
         {
-            var assemblies = new[] { GetType().GetTypeInfo().Assembly };
+            _scope = AsyncScopedLifestyle.BeginScope(Container);
 
-            Container = new Container();
-            Container.RegisterSingleton<DbContext>(() => new FakeDbContext());
-            Container.ConfigureMediator(assemblies);
-            Container.ConfigureCrud(assemblies);
+            Mediator = _scope.GetInstance<IMediator>();
+            Context = _scope.GetInstance<DbContext>();
+            Context.Database.EnsureDeleted();
+        }
 
-            Mapper.Reset();
-            Mapper.Initialize(config =>
-            {
-                config.AddProfiles(assemblies);
-            });
+        [TearDown]
+        public void BaseTearDown()
+        {
+            _scope.Dispose();
         }
     }
 }

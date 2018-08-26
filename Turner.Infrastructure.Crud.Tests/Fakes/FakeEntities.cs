@@ -1,4 +1,5 @@
-﻿using Turner.Infrastructure.Crud.Configuration;
+﻿using System.ComponentModel.DataAnnotations;
+using Turner.Infrastructure.Crud.Configuration;
 
 namespace Turner.Infrastructure.Crud.Tests.Fakes
 {
@@ -7,14 +8,15 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         int Id { get; set; }
     }
 
-    public class Entity : IEntity
+    public class IEntityCrudProfile : CrudEntityProfile<IEntity>
     {
-        public int Id { get; set; }
+
     }
 
-    public class EntityCrudProfile : CrudEntityProfile<Entity>
+    public class Entity : IEntity
     {
-
+        [Key, Required]
+        public int Id { get; set; }
     }
 
     public class User : Entity
@@ -42,8 +44,16 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         public int Id { get; set; }
     }
 
-    public class UserGetDtoCrudProfile : CrudDtoProfile<UserGetDto>
+    public class Site : Entity
     {
 
+    }
+
+    public class NonEntity
+    {
+    }
+
+    public class NonEntityDto
+    {
     }
 }
