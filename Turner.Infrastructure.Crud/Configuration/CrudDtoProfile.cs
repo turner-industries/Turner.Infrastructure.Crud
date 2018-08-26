@@ -5,9 +5,11 @@
 
     }
 
-    public class CrudDtoProfile<T> : ICrudDtoProfile
-        where T : class
+    public abstract class CrudDtoProfile<T> : ICrudDtoProfile
     {
+    }
 
+    public class DefaultCrudDtoProfile<T> : CrudDtoProfile<T>
+    {
     }
 }

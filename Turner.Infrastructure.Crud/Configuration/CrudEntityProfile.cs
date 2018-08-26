@@ -2,12 +2,13 @@
 {
     public interface ICrudEntityProfile
     {
-
     }
 
-    public class CrudEntityProfile<T> : ICrudEntityProfile
-        where T : class
+    public abstract class CrudEntityProfile<T> : ICrudEntityProfile
     {
+    }
 
+    public class DefaultCrudEntityProfile<T> : CrudEntityProfile<T>
+    {
     }
 }
