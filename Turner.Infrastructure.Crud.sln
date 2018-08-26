@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Turner.Infrastructure.Crud"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".tests", ".tests", "{B13008F4-AB99-4D68-9073-6781122713FD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Turner.Infrastructure.Crud.Tests", "Turner.Infrastructure.Crud.Tests\Turner.Infrastructure.Crud.Tests.csproj", "{2E4BC6BE-A802-4B34-ADDC-2AC83F85A384}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Turner.Infrastructure.Crud.Tests", "Turner.Infrastructure.Crud.Tests\Turner.Infrastructure.Crud.Tests.csproj", "{2E4BC6BE-A802-4B34-ADDC-2AC83F85A384}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
