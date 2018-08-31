@@ -5,17 +5,19 @@ using System.Reflection;
 
 namespace Turner.Infrastructure.Crud.Configuration
 {
-    public class CrudProfileManager
+    public class CrudConfigManager
     {
         private readonly Dictionary<Type, ICrudEntityProfile> _entityProfiles;
         private readonly Dictionary<Type, ICrudDtoProfile> _dtoProfiles;
-        private readonly Dictionary<Type, ICrudRequestProfile> _requestProfiles;
+        private readonly Dictionary<Type, ICrudRequestConfig> _requestConfigs;
 
-        public CrudProfileManager(params Assembly[] profileAssemblies)
+        public CrudConfigManager(params Assembly[] profileAssemblies)
         { 
             _entityProfiles = GetProfileTypesOf<ICrudEntityProfile>(profileAssemblies, typeof(CrudEntityProfile<>));
             _dtoProfiles = GetProfileTypesOf<ICrudDtoProfile>(profileAssemblies, typeof(CrudDtoProfile<>));
-            _requestProfiles = GetProfileTypesOf<ICrudRequestProfile>(profileAssemblies, typeof(CrudRequestProfile<>));
+            
+            var requestProfiles = GetProfileTypesOf<ICrudRequestProfile>(profileAssemblies, typeof(CrudRequestProfile<>));
+            _requestConfigs = requestProfiles.ToDictionary(kv => kv.Key, kv => kv.Value.BuildConfig());
         }
 
         public ICrudEntityProfile GetEntityProfileFor<TEntity>() where TEntity : class
@@ -34,13 +36,13 @@ namespace Turner.Infrastructure.Crud.Configuration
             => FindProfile(tDto, _dtoProfiles)
                ?? (ICrudDtoProfile) Activator.CreateInstance(typeof(DefaultCrudDtoProfile<>).MakeGenericType(tDto));
 
-        public ICrudRequestProfile GetRequestProfileFor<TRequest>() 
-            => FindProfile(typeof(TRequest), _requestProfiles) 
-               ?? new DefaultCrudRequestProfile<TRequest>();
+        public ICrudRequestConfig GetRequestConfigFor<TRequest>() 
+            => FindConfig(typeof(TRequest), _requestConfigs) 
+               ?? new DefaultCrudRequestConfig<TRequest>();
 
-        public ICrudRequestProfile GetRequestProfileFor(Type tRequest) 
-            => FindProfile(tRequest, _requestProfiles) 
-               ?? (ICrudRequestProfile) Activator.CreateInstance(typeof(DefaultCrudRequestProfile<>).MakeGenericType(tRequest));
+        public ICrudRequestConfig GetRequestConfigFor(Type tRequest) 
+            => FindConfig(tRequest, _requestConfigs) 
+               ?? (ICrudRequestConfig) Activator.CreateInstance(typeof(DefaultCrudRequestConfig<>).MakeGenericType(tRequest));
 
         private static Dictionary<Type, TProfile> GetProfileTypesOf<TProfile>(Assembly[] assemblies, Type tOpenGeneric)
         {
@@ -58,7 +60,27 @@ namespace Turner.Infrastructure.Crud.Configuration
                 .ToDictionary(x => x.BaseType.GenericTypeArguments[0], x => (TProfile) Activator.CreateInstance(x));
         }
 
-        private static TProfile FindProfile<TProfile>(Type needle, Dictionary<Type, TProfile> haystack)
+        private static TConfig FindConfig<TConfig>(Type needle, IReadOnlyDictionary<Type, TConfig> haystack)
+            where TConfig : class
+        {
+            if (haystack.TryGetValue(needle, out var config))
+                return config;
+
+            var parents = new[] { needle.BaseType }
+                .Concat(needle.GetInterfaces())
+                .Where(x => x != null);
+
+            foreach (var tParent in parents)
+            {
+                config = FindConfig(tParent, haystack);
+                if (config != null)
+                    return config;
+            }
+
+            return null;
+        }
+
+        private static TProfile FindProfile<TProfile>(Type needle, IReadOnlyDictionary<Type, TProfile> haystack)
             where TProfile : class
         {
             if (haystack.TryGetValue(needle, out var profile))

@@ -19,7 +19,7 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             var configAssemblies = allAssemblies.ToArray();
 
-            container.RegisterSingleton(() => new CrudProfileManager(configAssemblies));
+            container.RegisterSingleton(() => new CrudConfigManager(configAssemblies));
             
             bool IfNotHandled(PredicateContext c) => !c.Handled;
             

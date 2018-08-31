@@ -7,12 +7,12 @@ namespace Turner.Infrastructure.Crud.Tests
     [TestFixture]
     public class ConfigurationTests : BaseUnitTest
     {
-        private CrudProfileManager _profileManager;
+        private CrudConfigManager _profileManager;
 
         [SetUp]
         public void SetUp()
         {
-            _profileManager = Container.GetInstance<CrudProfileManager>();
+            _profileManager = Container.GetInstance<CrudConfigManager>();
         }
 
         [Test]
@@ -71,14 +71,14 @@ namespace Turner.Infrastructure.Crud.Tests
         }
 
         [Test]
-        public void Test_RequestWithoutProfile_FindsDefaultProfile()
+        public void Test_RequestWithoutProfile_FindsDefaultConfig()
         {
-            var defaultProfile = new DefaultCrudRequestProfile<CreateUserWithResponseRequest>();
-            var createUserProfile = _profileManager.GetRequestProfileFor<CreateUserWithResponseRequest>();
+            var defaultConfig = new DefaultCrudRequestConfig<CreateUserWithResponseRequest>();
+            var createUserConfig = _profileManager.GetRequestConfigFor<CreateUserWithResponseRequest>();
 
-            Assert.IsNotNull(defaultProfile);
-            Assert.IsNotNull(createUserProfile);
-            Assert.AreEqual(defaultProfile.GetType(), createUserProfile.GetType());
+            Assert.IsNotNull(defaultConfig);
+            Assert.IsNotNull(createUserConfig);
+            Assert.AreEqual(defaultConfig.GetType(), createUserConfig.GetType());
         }
         
         [Test]
@@ -90,8 +90,8 @@ namespace Turner.Infrastructure.Crud.Tests
             var dtoProfile1 = _profileManager.GetDtoProfileFor(typeof(UserDto));
             var dtoProfile2 = _profileManager.GetDtoProfileFor<UserDto>();
 
-            var requestProfile1 = _profileManager.GetRequestProfileFor(typeof(CreateUserWithoutResponseRequest));
-            var requestProfile2 = _profileManager.GetRequestProfileFor<CreateUserWithoutResponseRequest>();
+            var requestConfig1 = _profileManager.GetRequestConfigFor(typeof(CreateUserWithoutResponseRequest));
+            var requestConfig2 = _profileManager.GetRequestConfigFor<CreateUserWithoutResponseRequest>();
 
             Assert.IsNotNull(entityProfile1);
             Assert.AreEqual(entityProfile1.GetType(), entityProfile2.GetType());
@@ -99,8 +99,8 @@ namespace Turner.Infrastructure.Crud.Tests
             Assert.IsNotNull(dtoProfile1);
             Assert.AreEqual(dtoProfile1.GetType(), dtoProfile2.GetType());
 
-            Assert.IsNotNull(requestProfile1);
-            Assert.AreEqual(requestProfile1.GetType(), requestProfile2.GetType());
+            Assert.IsNotNull(requestConfig1);
+            Assert.AreEqual(requestConfig1.GetType(), requestConfig2.GetType());
         }
     }
 }

@@ -1,7 +1,5 @@
 ﻿using AutoMapper;
-using FluentValidation;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Mediator;
@@ -23,7 +21,7 @@ namespace Turner.Infrastructure.Crud.Requests
     public class CreateRequest<TEntity, TInput> : ICreateRequest<TEntity>
         where TEntity : class
     {
-        public TInput Data { get; private set; }
+        public TInput Data { get; }
         
         public CreateRequest(TInput data)
         {
@@ -35,7 +33,7 @@ namespace Turner.Infrastructure.Crud.Requests
     public class CreateRequest<TEntity, TInput, TOutput> : ICreateRequest<TEntity, TOutput>
         where TEntity : class
     {
-        public TInput Data { get; private set; }
+        public TInput Data { get; }
         
         public CreateRequest(TInput data)
         {
@@ -47,17 +45,17 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
     {
         protected readonly DbContext Context;
-        protected readonly ICrudRequestProfile RequestProfile;
+        protected readonly ICrudRequestConfig RequestConfig;
 
-        public CreateRequestHandlerBase(DbContext context, CrudProfileManager profileManager)
+        public CreateRequestHandlerBase(DbContext context, CrudConfigManager profileManager)
         {
             Context = context;
-            RequestProfile = profileManager.GetRequestProfileFor<TRequest>();
+            RequestConfig = profileManager.GetRequestConfigFor<TRequest>();
         }
         
         protected async Task<TEntity> CreateEntity(TRequest request)
         {
-            var entity = RequestProfile.ConvertToEntity<TRequest, TEntity>()(request);
+            var entity = RequestConfig.CreateEntity<TEntity>(request);
             await Context.Set<TEntity>().AddAsync(entity);
             await Context.SaveChangesAsync();
 
@@ -71,7 +69,7 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
         where TRequest : ICreateRequest<TEntity>
     {
-        public CreateRequestHandler(DbContext context, CrudProfileManager profileManager)
+        public CreateRequestHandler(DbContext context, CrudConfigManager profileManager)
             : base(context, profileManager)
         {
         }
@@ -90,7 +88,7 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
         where TRequest : ICreateRequest<TEntity, TOutput>
     {
-        public CreateRequestHandler(DbContext context, CrudProfileManager profileManager)
+        public CreateRequestHandler(DbContext context, CrudConfigManager profileManager)
             : base(context, profileManager)
         {
         }

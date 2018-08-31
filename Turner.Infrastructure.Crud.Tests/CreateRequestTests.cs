@@ -24,6 +24,20 @@ namespace Turner.Infrastructure.Crud.Tests
         }
 
         [Test]
+        public async Task Handle_DerivedWithoutResponse_CreatesUserUsingBaseConfig()
+        {
+            var request = new DerivedCreateUserWithoutResponseRequest
+            {
+                User = new UserDto { Name = "TestUser" }
+            };
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.AreEqual(1, Context.Set<User>().Count());
+        }
+
+        [Test]
         public async Task Handle_WithResponse_CreatesUserAndReturnsDto()
         {
             var request = new CreateUserWithResponseRequest

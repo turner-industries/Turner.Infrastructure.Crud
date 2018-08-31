@@ -1,22 +1,37 @@
-﻿using AutoMapper;
-using System;
+﻿using System;
+using System.Collections.Generic;
+using Turner.Infrastructure.Crud.Configuration.Builders;
 
 namespace Turner.Infrastructure.Crud.Configuration
 {
     public interface ICrudRequestProfile
     {
-        Func<TRequest, TEntity> ConvertToEntity<TRequest, TEntity>();
+        ICrudRequestConfig BuildConfig();
     }
     
     public abstract class CrudRequestProfile<TRequest> 
         : ICrudRequestProfile
     {
-        public virtual Func<TCompatibleRequest, TEntity> ConvertToEntity<TCompatibleRequest, TEntity>()
-        {
-            if (!typeof(TRequest).IsAssignableFrom(typeof(TCompatibleRequest)))
-                throw new BadCrudConfigurationException();
+        protected readonly Dictionary<Type, ICrudRequestEntityConfigBuilder> RequestEntityBuilders
+            = new Dictionary<Type, ICrudRequestEntityConfigBuilder>();
 
-            return tRequest => Mapper.Map<TEntity>(tRequest);
+        protected CrudRequestEntityConfigBuilder<TRequest, TEntity> ForEntity<TEntity>()
+            where TEntity : class
+        {
+            var builder = new CrudRequestEntityConfigBuilder<TRequest, TEntity>();
+            RequestEntityBuilders[typeof(TEntity)] = builder;
+
+            return builder;
+        }
+
+        public ICrudRequestConfig BuildConfig()
+        {
+            var config = new CrudRequestConfig<TRequest>();
+
+            foreach (var builder in RequestEntityBuilders.Values)
+                builder.Build(config);
+
+            return config;
         }
     }
 
