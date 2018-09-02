@@ -1,26 +1,54 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
+using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
+    public interface IGetAlgorithm
+    {
+        DbSet<TEntity> GetEntities<TEntity>(DbContext context)
+            where TEntity : class;
+    }
+
+    public class StandardGetAlgorithm : IGetAlgorithm
+    {
+        private readonly IContextAccess _contextAccess;
+
+        public StandardGetAlgorithm(IContextAccess contextAccess)
+        {
+            _contextAccess = contextAccess;
+        }
+
+        public DbSet<TEntity> GetEntities<TEntity>(DbContext context)
+            where TEntity : class
+        {
+            return _contextAccess.GetEntities<TEntity>(context);
+        }
+    }
+
     internal class GetRequestHandler<TRequest, TEntity, TOut>
         : CrudRequestHandler<TRequest>, IRequestHandler<TRequest, TOut>
         where TEntity : class
         where TRequest : IGetRequest<TEntity, TOut>
     {
-        public GetRequestHandler(DbContext context, CrudConfigManager profileManager)
+        protected readonly IGetAlgorithm Algorithm;
+
+        public GetRequestHandler(DbContext context, 
+            CrudConfigManager profileManager,
+            IGetAlgorithm algorithm)
             : base(context, profileManager)
         {
+            Algorithm = algorithm;
         }
 
         public async Task<Response<TOut>> HandleAsync(TRequest request)
         {
             var selector = RequestConfig.GetSelector<TEntity>();
-            var entity = await Context.Set<TEntity>()
+            var entity = await Algorithm.GetEntities<TEntity>(Context)
                 .SelectAsync(request, selector);
 
             var failedToFind = entity == null;

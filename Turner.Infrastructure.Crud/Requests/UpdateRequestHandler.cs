@@ -1,25 +1,60 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
+using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
+    public interface IUpdateAlgorithm
+    {
+        DbSet<TEntity> GetEntities<TEntity>(DbContext context)
+            where TEntity : class;
+
+        Task SaveChangesAsync(DbContext context);
+    }
+
+    public class StandardUpdateAlgorithm : IUpdateAlgorithm
+    {
+        private readonly IContextAccess _contextAccess;
+
+        public StandardUpdateAlgorithm(IContextAccess contextAccess)
+        {
+            _contextAccess = contextAccess;
+        }
+
+        public DbSet<TEntity> GetEntities<TEntity>(DbContext context)
+            where TEntity : class
+        {
+            return _contextAccess.GetEntities<TEntity>(context);
+        }
+
+        public Task SaveChangesAsync(DbContext context)
+        {
+            return _contextAccess.ApplyChangesAsync(context);
+        }
+    }
+
     internal abstract class UpdateRequestHandlerBase<TRequest, TEntity>
         : CrudRequestHandler<TRequest>
         where TEntity : class
     {
-        public UpdateRequestHandlerBase(DbContext context, CrudConfigManager profileManager)
+        protected readonly IUpdateAlgorithm Algorithm;
+
+        public UpdateRequestHandlerBase(DbContext context, 
+            CrudConfigManager profileManager,
+            IUpdateAlgorithm algorithm)
             : base(context, profileManager)
         {
+            Algorithm = algorithm;
         }
 
         protected async Task<TEntity> GetEntity(TRequest request)
         {
             var selector = RequestConfig.UpdateSelector<TEntity>();
-            var entity = await Context.Set<TEntity>()
+            var entity = await Algorithm.GetEntities<TEntity>(Context)
                 .SelectAsync(request, selector);
             
             if (entity == null && RequestConfig.FailedToFindInUpdateIsError)
@@ -37,12 +72,10 @@ namespace Turner.Infrastructure.Crud.Requests
         protected async Task UpdateEntity(TRequest request, TEntity entity)
         {
             await RequestConfig.PreUpdate<TEntity>(request);
-
             await RequestConfig.UpdateEntity(request, entity);
-
             await RequestConfig.PostUpdate(entity);
 
-            await Context.SaveChangesAsync();
+            await Algorithm.SaveChangesAsync(Context);
         }
     }
 
@@ -52,8 +85,10 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
         where TRequest : IUpdateRequest<TEntity>
     {
-        public UpdateRequestHandler(DbContext context, CrudConfigManager profileManager)
-            : base(context, profileManager)
+        public UpdateRequestHandler(DbContext context, 
+            CrudConfigManager profileManager,
+            IUpdateAlgorithm algorithm)
+            : base(context, profileManager, algorithm)
         {
         }
 
@@ -73,8 +108,10 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
         where TRequest : IUpdateRequest<TEntity, TOut>
     {
-        public UpdateRequestHandler(DbContext context, CrudConfigManager profileManager)
-            : base(context, profileManager)
+        public UpdateRequestHandler(DbContext context, 
+            CrudConfigManager profileManager,
+            IUpdateAlgorithm algorithm)
+            : base(context, profileManager, algorithm)
         {
         }
 

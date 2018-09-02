@@ -1,6 +1,7 @@
 ﻿using SimpleInjector;
 using System.Collections.Generic;
 using System.Reflection;
+using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Mediator;
 
@@ -22,20 +23,24 @@ namespace Turner.Infrastructure.Crud.Configuration
             container.RegisterSingleton(() => new CrudConfigManager(configAssemblies));
             
             bool IfNotHandled(PredicateContext c) => !c.Handled;
-            
-            container.Register(typeof(CreateRequestHandler<,>), configAssemblies);
-            container.RegisterConditional(typeof(IRequestHandler<>), typeof(CreateRequestHandler<,>), IfNotHandled);
 
+            container.RegisterConditional(typeof(IContextAccess), typeof(StandardContextAccess), IfNotHandled);
+            container.RegisterConditional(typeof(IDbSetAccess), typeof(StandardDbSetAccess), IfNotHandled);
+
+            container.RegisterConditional(typeof(ICreateAlgorithm), typeof(StandardCreateAlgorithm), IfNotHandled);
+            container.Register(typeof(CreateRequestHandler<,>), configAssemblies);
             container.Register(typeof(CreateRequestHandler<,,>), configAssemblies);
+            container.RegisterConditional(typeof(IRequestHandler<>), typeof(CreateRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(CreateRequestHandler<,,>), IfNotHandled);
 
+            container.RegisterConditional(typeof(IGetAlgorithm), typeof(StandardGetAlgorithm), IfNotHandled);
             container.Register(typeof(GetRequestHandler<,,>), configAssemblies);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(GetRequestHandler<,,>), IfNotHandled);
 
+            container.RegisterConditional(typeof(IUpdateAlgorithm), typeof(StandardUpdateAlgorithm), IfNotHandled);
             container.Register(typeof(UpdateRequestHandler<,>), configAssemblies);
-            container.RegisterConditional(typeof(IRequestHandler<>), typeof(UpdateRequestHandler<,>), IfNotHandled);
-
             container.Register(typeof(UpdateRequestHandler<,,>), configAssemblies);
+            container.RegisterConditional(typeof(IRequestHandler<>), typeof(UpdateRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(UpdateRequestHandler<,,>), IfNotHandled);
 
         }
