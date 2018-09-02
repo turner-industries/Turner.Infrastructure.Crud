@@ -49,7 +49,8 @@ namespace Turner.Infrastructure.Crud.Requests
         {
             var selector = RequestConfig.GetSelector<TEntity>();
             var entity = await Algorithm.GetEntities<TEntity>(Context)
-                .SelectAsync(request, selector);
+                .SelectAsync(request, selector)
+                .Configure();
 
             var failedToFind = entity == null;
             

@@ -55,7 +55,8 @@ namespace Turner.Infrastructure.Crud.Requests
         {
             var selector = RequestConfig.UpdateSelector<TEntity>();
             var entity = await Algorithm.GetEntities<TEntity>(Context)
-                .SelectAsync(request, selector);
+                .SelectAsync(request, selector)
+                .Configure();
             
             if (entity == null && RequestConfig.FailedToFindInUpdateIsError)
             {
@@ -71,11 +72,11 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task UpdateEntity(TRequest request, TEntity entity)
         {
-            await RequestConfig.PreUpdate<TEntity>(request);
-            await RequestConfig.UpdateEntity(request, entity);
-            await RequestConfig.PostUpdate(entity);
+            await RequestConfig.PreUpdate<TEntity>(request).Configure();
+            await RequestConfig.UpdateEntity(request, entity).Configure();
+            await RequestConfig.PostUpdate(entity).Configure();
 
-            await Algorithm.SaveChangesAsync(Context);
+            await Algorithm.SaveChangesAsync(Context).Configure();
         }
     }
 
@@ -94,9 +95,9 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response> HandleAsync(TRequest request)
         {
-            var entity = await GetEntity(request);
+            var entity = await GetEntity(request).Configure();
             if (entity != null)
-                await UpdateEntity(request, entity);
+                await UpdateEntity(request, entity).Configure();
 
             return Response.Success();
         }
@@ -117,12 +118,12 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response<TOut>> HandleAsync(TRequest request)
         {
-            var entity = await GetEntity(request);
+            var entity = await GetEntity(request).Configure();
             TOut result = default(TOut);
 
             if (entity != null)
             {
-                await UpdateEntity(request, entity);
+                await UpdateEntity(request, entity).Configure();
                 result = Mapper.Map<TOut>(entity);
             }
 

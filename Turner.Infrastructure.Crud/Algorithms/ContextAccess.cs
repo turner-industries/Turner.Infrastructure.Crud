@@ -21,7 +21,7 @@ namespace Turner.Infrastructure.Crud.Algorithms
 
         public async Task ApplyChangesAsync(DbContext context)
         {
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync().Configure();
         }
     }
 }

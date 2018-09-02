@@ -56,13 +56,13 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity> CreateEntity(TRequest request)
         {
-            await RequestConfig.PreCreate<TEntity>(request);
+            await RequestConfig.PreCreate<TEntity>(request).Configure();
 
-            var entity = await RequestConfig.CreateEntity<TEntity>(request);
-            var newEntity = await Algorithm.CreateEntityAsync(Context, entity);
+            var entity = await RequestConfig.CreateEntity<TEntity>(request).Configure();
+            var newEntity = await Algorithm.CreateEntityAsync(Context, entity).Configure();
 
-            await RequestConfig.PostCreate(entity);
-            await Algorithm.SaveChangesAsync(Context);
+            await RequestConfig.PostCreate(entity).Configure();
+            await Algorithm.SaveChangesAsync(Context).Configure();
 
             return entity;
         }
@@ -83,7 +83,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response> HandleAsync(TRequest request)
         {
-            await CreateEntity(request);
+            await CreateEntity(request).Configure();
 
             return Response.Success();
         }
@@ -104,7 +104,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response<TOut>> HandleAsync(TRequest request)
         {
-            var entity = await CreateEntity(request);
+            var entity = await CreateEntity(request).Configure();
             var result = Mapper.Map<TOut>(entity);
 
             return new Response<TOut> { Data = result };

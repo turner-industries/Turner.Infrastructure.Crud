@@ -109,7 +109,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             Func<object, Task<TEntity>> creator)
             where TEntity : class
         {
-            _entityCreators[typeof(TEntity)] = async request => await creator(request);
+            _entityCreators[typeof(TEntity)] = async request => await creator(request).Configure();
         }
 
         internal void SetEntityUpdator<TEntity>(
@@ -216,7 +216,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             }
 
             if (_entityCreators.TryGetValue(typeof(TEntity), out var creator))
-                return (TEntity) await creator(request);
+                return (TEntity) await creator(request).Configure();
             
             return Mapper.Map<TEntity>(request);
         }
@@ -264,7 +264,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             }
 
             foreach (var requestAction in _preCreateActions)
-                await requestAction(request);
+                await requestAction(request).Configure();
 
             var entities = new List<Type>();
             BuildEntityStack(typeof(TEntity), ref entities);
@@ -274,7 +274,7 @@ namespace Turner.Infrastructure.Crud.Configuration
                 if (_entityPreCreateActions.TryGetValue(tEntity, out var actions))
                 {
                     foreach (var action in actions)
-                        await action(request);
+                        await action(request).Configure();
                 }
             }
         }
@@ -290,7 +290,7 @@ namespace Turner.Infrastructure.Crud.Configuration
                 if (_entityPostCreateActions.TryGetValue(tEntity, out var actions))
                 {
                     foreach (var action in actions)
-                        await action(entity);
+                        await action(entity).Configure();
                 }
             }
         }
@@ -308,7 +308,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             }
 
             foreach (var requestAction in _preUpdateActions)
-                await requestAction(request);
+                await requestAction(request).Configure();
 
             var entities = new List<Type>();
             BuildEntityStack(typeof(TEntity), ref entities);
@@ -318,7 +318,7 @@ namespace Turner.Infrastructure.Crud.Configuration
                 if (_entityPreUpdateActions.TryGetValue(tEntity, out var actions))
                 {
                     foreach (var action in actions)
-                        await action(request);
+                        await action(request).Configure();
                 }
             }
         }
@@ -334,7 +334,7 @@ namespace Turner.Infrastructure.Crud.Configuration
                 if (_entityPostUpdateActions.TryGetValue(tEntity, out var actions))
                 {
                     foreach (var action in actions)
-                        await action(entity);
+                        await action(entity).Configure();
                 }
             }
         }

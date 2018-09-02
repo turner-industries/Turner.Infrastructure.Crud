@@ -28,7 +28,7 @@ namespace Turner.Infrastructure.Crud.Algorithms
             CancellationToken token = default(CancellationToken))
             where TEntity : class
         {
-            var trackedEntity = await set.AddAsync(entity, token);
+            var trackedEntity = await set.AddAsync(entity, token).Configure();
             return trackedEntity.Entity;
         }
     }
