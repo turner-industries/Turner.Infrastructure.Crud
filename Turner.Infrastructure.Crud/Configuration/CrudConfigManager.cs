@@ -2,102 +2,117 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Turner.Infrastructure.Crud.Requests;
 
 namespace Turner.Infrastructure.Crud.Configuration
 {
     public class CrudConfigManager
     {
-        private readonly Dictionary<Type, ICrudEntityProfile> _entityProfiles;
-        private readonly Dictionary<Type, ICrudDtoProfile> _dtoProfiles;
-        private readonly Dictionary<Type, ICrudRequestConfig> _requestConfigs;
+        private readonly Assembly[] _profileAssemblies;
+        private readonly Dictionary<Type, ICrudRequestProfile> _requestProfiles
+            = new Dictionary<Type, ICrudRequestProfile>();
+        private readonly Dictionary<Type, ICrudRequestConfig> _requestConfigs
+            = new Dictionary<Type, ICrudRequestConfig>();
 
         public CrudConfigManager(params Assembly[] profileAssemblies)
-        { 
-            _entityProfiles = GetProfileTypesOf<ICrudEntityProfile>(profileAssemblies, typeof(CrudEntityProfile<>));
-            _dtoProfiles = GetProfileTypesOf<ICrudDtoProfile>(profileAssemblies, typeof(CrudDtoProfile<>));
+        {
+            _profileAssemblies = profileAssemblies;
             
-            var requestProfiles = GetProfileTypesOf<ICrudRequestProfile>(profileAssemblies, typeof(CrudRequestProfile<>));
-            _requestConfigs = requestProfiles.ToDictionary(kv => kv.Key, kv => kv.Value.BuildConfig());
+            BuildRequestConfigurations();
         }
-
-        public ICrudEntityProfile GetEntityProfileFor<TEntity>() where TEntity : class
-            => FindProfile(typeof(TEntity), _entityProfiles)
-               ?? new DefaultCrudEntityProfile<TEntity>();
-
-        public ICrudEntityProfile GetEntityProfileFor(Type tEntity)
-            => FindProfile(tEntity, _entityProfiles)
-               ?? (ICrudEntityProfile) Activator.CreateInstance(typeof(DefaultCrudEntityProfile<>).MakeGenericType(tEntity));
-
-        public ICrudDtoProfile GetDtoProfileFor<TDto>() where TDto : class
-            => FindProfile(typeof(TDto), _dtoProfiles)
-               ?? new DefaultCrudDtoProfile<TDto>();
-
-        public ICrudDtoProfile GetDtoProfileFor(Type tDto)
-            => FindProfile(tDto, _dtoProfiles)
-               ?? (ICrudDtoProfile) Activator.CreateInstance(typeof(DefaultCrudDtoProfile<>).MakeGenericType(tDto));
 
         public ICrudRequestConfig GetRequestConfigFor<TRequest>() 
-            => FindConfig(typeof(TRequest), _requestConfigs) 
-               ?? new DefaultCrudRequestConfig<TRequest>();
+            => BuildRequestConfigFor(typeof(TRequest));
 
         public ICrudRequestConfig GetRequestConfigFor(Type tRequest) 
-            => FindConfig(tRequest, _requestConfigs) 
-               ?? (ICrudRequestConfig) Activator.CreateInstance(typeof(DefaultCrudRequestConfig<>).MakeGenericType(tRequest));
+            => BuildRequestConfigFor(tRequest);
 
-        private static Dictionary<Type, TProfile> GetProfileTypesOf<TProfile>(Assembly[] assemblies, Type tOpenGeneric)
+        private void BuildRequestConfigurations()
         {
-            // TODO: Reverse logic.
-            // Rather than searching for all profile types, search for all entity/dto/request types
-            // and create a profile for it.  This will improve the performance of default profiles.
-
-            return assemblies
+            var requests = _profileAssemblies
                 .SelectMany(x => x.GetExportedTypes())
-                .Where(x => !x.IsAbstract &&
+                .Where(x => x.IsClass &&
+                            !x.IsAbstract &&
                             !x.IsGenericTypeDefinition &&
-                            x.BaseType != null &&
-                            x.BaseType.IsGenericType &&
-                            x.BaseType.GetGenericTypeDefinition() == tOpenGeneric)
-                .ToDictionary(x => x.BaseType.GenericTypeArguments[0], x => (TProfile) Activator.CreateInstance(x));
+                            typeof(ICrudRequest).IsAssignableFrom(x));
+
+            foreach (var request in requests)
+                BuildRequestConfigFor(request);
         }
-
-        private static TConfig FindConfig<TConfig>(Type needle, IReadOnlyDictionary<Type, TConfig> haystack)
-            where TConfig : class
+        
+        private ICrudRequestProfile GetRequestProfileFor(Type tRequest)
         {
-            if (haystack.TryGetValue(needle, out var config))
-                return config;
-
-            var parents = new[] { needle.BaseType }
-                .Concat(needle.GetInterfaces())
-                .Where(x => x != null);
-
-            foreach (var tParent in parents)
-            {
-                config = FindConfig(tParent, haystack);
-                if (config != null)
-                    return config;
-            }
-
-            return null;
-        }
-
-        private static TProfile FindProfile<TProfile>(Type needle, IReadOnlyDictionary<Type, TProfile> haystack)
-            where TProfile : class
-        {
-            if (haystack.TryGetValue(needle, out var profile))
+            if (_requestProfiles.TryGetValue(tRequest, out var profile))
                 return profile;
 
-            var parents = new[] { needle.BaseType }
-                .Concat(needle.GetInterfaces())
-                .Where(x => x != null);
+            if (!typeof(ICrudRequest).IsAssignableFrom(tRequest))
+                throw new BadCrudConfigurationException($"{tRequest} is not an ICrudRequest");
 
-            foreach (var tParent in parents)
+            var profiles = new List<ICrudRequestProfile>();
+
+            var allProfiles = _profileAssemblies
+                .SelectMany(x => x.GetExportedTypes())
+                .Where(x => 
+                    !x.IsAbstract &&
+                    x.BaseType != null &&
+                    x.BaseType.IsGenericType &&
+                    x.BaseType.GetGenericTypeDefinition() == typeof(CrudRequestProfile<>))
+                .ToArray();
+
+            if (!tRequest.IsGenericType)
             {
-                profile = FindProfile(tParent, haystack);
-                if (profile != null)
-                    return profile;
+                profiles.AddRange(allProfiles
+                    .Where(x =>
+                        !x.BaseType.GenericTypeArguments[0].IsGenericType &&
+                        x.BaseType.GenericTypeArguments[0] == tRequest)
+                    .Select(x => (ICrudRequestProfile)Activator.CreateInstance(x)));
+            }
+            else
+            {
+                var tGenericRequest = tRequest.GetGenericTypeDefinition();
+
+                var tProfiles = allProfiles
+                    .Where(x =>
+                        x.BaseType.GenericTypeArguments[0].IsGenericType &&
+                        x.BaseType.GenericTypeArguments[0].GetGenericTypeDefinition() == tGenericRequest)
+                    .Select(x => x.MakeGenericType(tRequest.GenericTypeArguments));
+
+                profiles.AddRange(tProfiles.Select(x =>
+                    (ICrudRequestProfile) Activator.CreateInstance(x)));
             }
 
-            return null;
+            if (!profiles.Any())
+            {
+                profiles.Add((ICrudRequestProfile) Activator.CreateInstance(
+                    typeof(DefaultCrudRequestProfile<>).MakeGenericType(tRequest)));
+            }
+
+            profiles.AddRange(new[] { tRequest.BaseType }
+                .Concat(tRequest.GetInterfaces())
+                .Where(x => x != null && typeof(ICrudRequest).IsAssignableFrom(x))
+                .Select(x => GetRequestProfileFor(x)));
+
+            profile = profiles.First();
+            profile.Inherit(profiles.Skip(1).Where(x => x != null));
+
+            _requestProfiles[tRequest] = profile;
+
+            return profile;
+        }
+
+        private ICrudRequestConfig BuildRequestConfigFor(Type tRequest)
+        {
+            if (_requestConfigs.TryGetValue(tRequest, out var config))
+                return config;
+
+            config = (ICrudRequestConfig) Activator.CreateInstance(
+                typeof(CrudRequestConfig<>).MakeGenericType(tRequest));
+
+            GetRequestProfileFor(tRequest).Apply(config);
+
+            _requestConfigs[tRequest] = config;
+
+            return config;
         }
     }
 }

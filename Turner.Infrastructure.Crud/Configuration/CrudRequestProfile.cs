@@ -1,12 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Turner.Infrastructure.Crud.Configuration.Builders;
 
 namespace Turner.Infrastructure.Crud.Configuration
 {
     public interface ICrudRequestProfile
     {
-        ICrudRequestConfig BuildConfig();
+        Type RequestType { get; }
+
+        void Inherit(IEnumerable<ICrudRequestProfile> profile);
+
+        void Apply(ICrudRequestConfig config);
+        void Apply<TRequest>(CrudRequestConfig<TRequest> config);
     }
     
     public abstract class CrudRequestProfile<TRequest> 
@@ -14,6 +20,16 @@ namespace Turner.Infrastructure.Crud.Configuration
     {
         protected readonly Dictionary<Type, ICrudRequestEntityConfigBuilder> RequestEntityBuilders
             = new Dictionary<Type, ICrudRequestEntityConfigBuilder>();
+
+        protected readonly List<ICrudRequestProfile> _inheritProfiles 
+            = new List<ICrudRequestProfile>();
+
+        public Type RequestType => typeof(TRequest);
+
+        public void Inherit(IEnumerable<ICrudRequestProfile> profiles)
+        {
+            _inheritProfiles.AddRange(profiles.Distinct());
+        }
 
         protected CrudRequestEntityConfigBuilder<TRequest, TEntity> ForEntity<TEntity>()
             where TEntity : class
@@ -23,20 +39,38 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             return builder;
         }
-
-        public ICrudRequestConfig BuildConfig()
+        
+        public void Apply(ICrudRequestConfig config)
         {
-            var config = new CrudRequestConfig<TRequest>();
+            if (!(config is CrudRequestConfig<TRequest> tConfig))
+            {
+                var message = "Apply() should only be called internally.";
+                throw new BadCrudConfigurationException(message);
+            }
+
+            Apply(tConfig);
+        }
+
+        public void Apply<TPerspective>(CrudRequestConfig<TPerspective> config)
+        {
+            var inheritedTypes = new List<Type>();
+            foreach (var profile in _inheritProfiles)
+            {
+                if (inheritedTypes.Contains(profile.RequestType))
+                    continue;
+
+                profile.Apply(config);
+                inheritedTypes.Add(profile.RequestType);
+            }
 
             foreach (var builder in RequestEntityBuilders.Values)
                 builder.Build(config);
-
-            return config;
         }
     }
 
     public class DefaultCrudRequestProfile<TRequest>
         : CrudRequestProfile<TRequest>
     {
+
     }
 }
