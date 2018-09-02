@@ -2,7 +2,7 @@
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 
-namespace Turner.Infrastructure.Crud.Configuration
+namespace Turner.Infrastructure.Crud.Errors
 {
     [Serializable]
     public class BadCrudConfigurationException : Exception

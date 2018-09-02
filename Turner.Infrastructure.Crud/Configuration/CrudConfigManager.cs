@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Requests;
 
 namespace Turner.Infrastructure.Crud.Configuration
@@ -58,27 +59,23 @@ namespace Turner.Infrastructure.Crud.Configuration
                     x.BaseType.IsGenericType &&
                     x.BaseType.GetGenericTypeDefinition() == typeof(CrudRequestProfile<>))
                 .ToArray();
-
-            if (!tRequest.IsGenericType)
-            {
-                profiles.AddRange(allProfiles
-                    .Where(x =>
-                        !x.BaseType.GenericTypeArguments[0].IsGenericType &&
-                        x.BaseType.GenericTypeArguments[0] == tRequest)
-                    .Select(x => (ICrudRequestProfile)Activator.CreateInstance(x)));
-            }
-            else
+            
+            profiles.AddRange(allProfiles
+                .Where(x => x.BaseType.GenericTypeArguments[0] == tRequest)
+                .Select(x => (ICrudRequestProfile)Activator.CreateInstance(x)));
+            
+            if (tRequest.IsGenericType)
             {
                 var tGenericRequest = tRequest.GetGenericTypeDefinition();
-
                 var tProfiles = allProfiles
                     .Where(x =>
+                        x.IsGenericTypeDefinition &&
                         x.BaseType.GenericTypeArguments[0].IsGenericType &&
                         x.BaseType.GenericTypeArguments[0].GetGenericTypeDefinition() == tGenericRequest)
                     .Select(x => x.MakeGenericType(tRequest.GenericTypeArguments));
 
-                profiles.AddRange(tProfiles.Select(x =>
-                    (ICrudRequestProfile) Activator.CreateInstance(x)));
+                profiles.AddRange(tProfiles
+                    .Select(x => (ICrudRequestProfile) Activator.CreateInstance(x)));
             }
 
             if (!profiles.Any())
