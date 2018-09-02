@@ -28,6 +28,9 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             container.Register(typeof(CreateRequestHandler<,,>), configAssemblies);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(CreateRequestHandler<,,>), IfNotHandled);
+
+            container.Register(typeof(GetRequestHandler<,,>), configAssemblies);
+            container.RegisterConditional(typeof(IRequestHandler<,>), typeof(GetRequestHandler<,,>), IfNotHandled);
         }
     }
 }

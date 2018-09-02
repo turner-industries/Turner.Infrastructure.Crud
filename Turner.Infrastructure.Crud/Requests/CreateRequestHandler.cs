@@ -6,7 +6,7 @@ using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-    public abstract class CreateRequestHandlerBase<TRequest, TEntity>
+    internal abstract class CreateRequestHandlerBase<TRequest, TEntity>
         where TEntity : class
     {
         protected readonly DbContext Context;
@@ -32,7 +32,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    public class CreateRequestHandler<TRequest, TEntity>
+    internal class CreateRequestHandler<TRequest, TEntity>
         : CreateRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest>
         where TEntity : class
@@ -51,7 +51,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    public class CreateRequestHandler<TRequest, TEntity, TOut>
+    internal class CreateRequestHandler<TRequest, TEntity, TOut>
         : CreateRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest, TOut>
         where TEntity : class

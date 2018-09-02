@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Requests;
 
 namespace Turner.Infrastructure.Crud.Configuration
 {
-    public class CrudConfigManager
+    internal class CrudConfigManager
     {
         private readonly Assembly[] _profileAssemblies;
-        private readonly Dictionary<Type, ICrudRequestProfile> _requestProfiles
-            = new Dictionary<Type, ICrudRequestProfile>();
+        private readonly Dictionary<Type, CrudRequestProfile> _requestProfiles
+            = new Dictionary<Type, CrudRequestProfile>();
         private readonly Dictionary<Type, ICrudRequestConfig> _requestConfigs
             = new Dictionary<Type, ICrudRequestConfig>();
 
@@ -40,7 +41,7 @@ namespace Turner.Infrastructure.Crud.Configuration
                 BuildRequestConfigFor(request);
         }
         
-        private ICrudRequestProfile GetRequestProfileFor(Type tRequest)
+        private CrudRequestProfile GetRequestProfileFor(Type tRequest)
         {
             if (_requestProfiles.TryGetValue(tRequest, out var profile))
                 return profile;
@@ -48,7 +49,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             if (!typeof(ICrudRequest).IsAssignableFrom(tRequest))
                 throw new BadCrudConfigurationException($"{tRequest} is not an ICrudRequest");
 
-            var profiles = new List<ICrudRequestProfile>();
+            var profiles = new List<CrudRequestProfile>();
 
             var allProfiles = _profileAssemblies
                 .SelectMany(x => x.GetExportedTypes())
@@ -58,32 +59,28 @@ namespace Turner.Infrastructure.Crud.Configuration
                     x.BaseType.IsGenericType &&
                     x.BaseType.GetGenericTypeDefinition() == typeof(CrudRequestProfile<>))
                 .ToArray();
-
-            if (!tRequest.IsGenericType)
-            {
-                profiles.AddRange(allProfiles
-                    .Where(x =>
-                        !x.BaseType.GenericTypeArguments[0].IsGenericType &&
-                        x.BaseType.GenericTypeArguments[0] == tRequest)
-                    .Select(x => (ICrudRequestProfile)Activator.CreateInstance(x)));
-            }
-            else
+            
+            profiles.AddRange(allProfiles
+                .Where(x => x.BaseType.GenericTypeArguments[0] == tRequest)
+                .Select(x => (CrudRequestProfile)Activator.CreateInstance(x)));
+            
+            if (tRequest.IsGenericType)
             {
                 var tGenericRequest = tRequest.GetGenericTypeDefinition();
-
                 var tProfiles = allProfiles
                     .Where(x =>
+                        x.IsGenericTypeDefinition &&
                         x.BaseType.GenericTypeArguments[0].IsGenericType &&
                         x.BaseType.GenericTypeArguments[0].GetGenericTypeDefinition() == tGenericRequest)
                     .Select(x => x.MakeGenericType(tRequest.GenericTypeArguments));
 
-                profiles.AddRange(tProfiles.Select(x =>
-                    (ICrudRequestProfile) Activator.CreateInstance(x)));
+                profiles.AddRange(tProfiles
+                    .Select(x => (CrudRequestProfile) Activator.CreateInstance(x)));
             }
 
             if (!profiles.Any())
             {
-                profiles.Add((ICrudRequestProfile) Activator.CreateInstance(
+                profiles.Add((CrudRequestProfile) Activator.CreateInstance(
                     typeof(DefaultCrudRequestProfile<>).MakeGenericType(tRequest)));
             }
 
