@@ -1,5 +1,8 @@
 ﻿using SimpleInjector;
+using System.Collections.Generic;
 using System.Reflection;
+using Turner.Infrastructure.Crud.Requests;
+using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Configuration
 {
@@ -7,7 +10,24 @@ namespace Turner.Infrastructure.Crud.Configuration
     {
         public static void ConfigureCrud(this Container container, Assembly[] assemblies)
         {
-            /* TODO: SimpleInjector Registrations */
+            var allAssemblies = new List<Assembly>(1 + assemblies.Length)
+            {
+                typeof(SimpleInjectorCrudConfiguration).Assembly
+            };
+
+            allAssemblies.AddRange(assemblies);
+
+            var configAssemblies = allAssemblies.ToArray();
+
+            container.RegisterSingleton(() => new CrudConfigManager(configAssemblies));
+            
+            bool IfNotHandled(PredicateContext c) => !c.Handled;
+            
+            container.Register(typeof(CreateRequestHandler<,>), configAssemblies);
+            container.RegisterConditional(typeof(IRequestHandler<>), typeof(CreateRequestHandler<,>), IfNotHandled);
+
+            container.Register(typeof(CreateRequestHandler<,,>), configAssemblies);
+            container.RegisterConditional(typeof(IRequestHandler<,>), typeof(CreateRequestHandler<,,>), IfNotHandled);
         }
     }
 }
