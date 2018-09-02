@@ -18,9 +18,6 @@ namespace Turner.Infrastructure.Crud.Tests
         [Test]
         public void Test_RequestWithoutProfile_FindsDefaultConfig()
         {
-            // TODO: Write a test for this
-            //var test = _profileManager.GetRequestConfigFor<Requests.CreateRequest<User, UserDto>>();
-            
             var defaultConfig = new CrudRequestConfig<CreateUserWithResponseRequest>();
             var createUserConfig = _profileManager.GetRequestConfigFor<CreateUserWithResponseRequest>();
 
