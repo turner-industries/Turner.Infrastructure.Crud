@@ -1,7 +1,5 @@
-﻿//#define PROD
+﻿using System.Runtime.CompilerServices;
 
-using System.Runtime.CompilerServices;
-
-#if !PROD
+#if !DEPLOY
     [assembly: InternalsVisibleTo("Turner.Infrastructure.Crud.Tests")]
 #endif

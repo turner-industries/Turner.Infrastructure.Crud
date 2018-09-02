@@ -6,6 +6,7 @@ namespace Turner.Infrastructure.Crud.Tests
     [TestFixture]
     public class ConfigurationTests : BaseUnitTest
     {
+#if !DEPLOY
         private CrudConfigManager _profileManager;
 
         [SetUp]
@@ -34,5 +35,6 @@ namespace Turner.Infrastructure.Crud.Tests
             Assert.IsNotNull(requestConfig1);
             Assert.AreEqual(requestConfig1.GetType(), requestConfig2.GetType());
         }
+#endif
     }
 }
