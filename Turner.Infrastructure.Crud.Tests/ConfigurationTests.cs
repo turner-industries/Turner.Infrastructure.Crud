@@ -1,6 +1,5 @@
 ﻿using NUnit.Framework;
 using Turner.Infrastructure.Crud.Configuration;
-using Turner.Infrastructure.Crud.Tests.Fakes;
 
 namespace Turner.Infrastructure.Crud.Tests
 {
@@ -14,7 +13,7 @@ namespace Turner.Infrastructure.Crud.Tests
         {
             _profileManager = Container.GetInstance<CrudConfigManager>();
         }
-        
+
         [Test]
         public void Test_RequestWithoutProfile_FindsDefaultConfig()
         {
@@ -25,7 +24,7 @@ namespace Turner.Infrastructure.Crud.Tests
             Assert.IsNotNull(createUserConfig);
             Assert.AreEqual(defaultConfig.GetType(), createUserConfig.GetType());
         }
-        
+
         [Test]
         public void Test_FindAliases_HaveSameResult()
         {

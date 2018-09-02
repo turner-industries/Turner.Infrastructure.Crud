@@ -6,34 +6,27 @@ using Turner.Infrastructure.Crud.Errors;
 
 namespace Turner.Infrastructure.Crud.Configuration
 {
-    public interface ICrudRequestProfile
+    public abstract class CrudRequestProfile
     {
-        Type RequestType { get; }
-
-        // TODO: Protect these functions
-        void Inherit(IEnumerable<ICrudRequestProfile> profile);
-
-        void Apply(ICrudRequestConfig config);
-        void Apply<TRequest>(CrudRequestConfig<TRequest> config);
+        public abstract Type RequestType { get; }
+        
+        internal abstract void Inherit(IEnumerable<CrudRequestProfile> profile);
+        internal abstract void Apply(ICrudRequestConfig config);
+        internal abstract void Apply<TRequest>(CrudRequestConfig<TRequest> config);
     }
     
     public abstract class CrudRequestProfile<TRequest> 
-        : ICrudRequestProfile
+        : CrudRequestProfile
     {
         private readonly Dictionary<Type, ICrudRequestEntityConfigBuilder> _requestEntityBuilders
             = new Dictionary<Type, ICrudRequestEntityConfigBuilder>();
 
-        private readonly List<ICrudRequestProfile> _inheritProfiles 
-            = new List<ICrudRequestProfile>();
+        private readonly List<CrudRequestProfile> _inheritProfiles 
+            = new List<CrudRequestProfile>();
 
         private Action<CrudRequestErrorConfig> _errorConfig;
 
-        public Type RequestType => typeof(TRequest);
-
-        public void Inherit(IEnumerable<ICrudRequestProfile> profiles)
-        {
-            _inheritProfiles.AddRange(profiles);
-        }
+        public override Type RequestType => typeof(TRequest);
 
         protected void ConfigureErrors(Action<CrudRequestErrorConfig> config)
         {
@@ -49,7 +42,12 @@ namespace Turner.Infrastructure.Crud.Configuration
             return builder;
         }
         
-        public void Apply(ICrudRequestConfig config)
+        internal override void Inherit(IEnumerable<CrudRequestProfile> profiles)
+        {
+            _inheritProfiles.AddRange(profiles);
+        }
+
+        internal override void Apply(ICrudRequestConfig config)
         {
             if (!(config is CrudRequestConfig<TRequest> tConfig))
             {
@@ -60,7 +58,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             Apply(tConfig);
         }
 
-        public void Apply<TPerspective>(CrudRequestConfig<TPerspective> config)
+        internal override void Apply<TPerspective>(CrudRequestConfig<TPerspective> config)
         {
             foreach (var profile in _inheritProfiles.Distinct())
                 profile.Apply(config);

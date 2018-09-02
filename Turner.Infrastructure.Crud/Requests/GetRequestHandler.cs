@@ -7,7 +7,7 @@ using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-    public class GetRequestHandler<TRequest, TEntity, TOut>
+    internal class GetRequestHandler<TRequest, TEntity, TOut>
         : IRequestHandler<TRequest, TOut>
         where TEntity : class
         where TRequest : IGetRequest<TEntity, TOut>
