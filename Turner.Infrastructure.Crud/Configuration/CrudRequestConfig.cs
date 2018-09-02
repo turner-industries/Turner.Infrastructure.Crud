@@ -59,11 +59,17 @@ namespace Turner.Infrastructure.Crud.Configuration
             = new Dictionary<Type, object>();
 
         // TODO: move these into a utility class
+        private List<Func<object, Task>> _preCreateActions
+            = new List<Func<object, Task>>();
+
         private readonly Dictionary<Type, List<Func<object, Task>>> _entityPreCreateActions
             = new Dictionary<Type, List<Func<object, Task>>>();
 
         private readonly Dictionary<Type, List<Func<object, Task>>> _entityPostCreateActions
             = new Dictionary<Type, List<Func<object, Task>>>();
+
+        private List<Func<object, Task>> _preUpdateActions
+            = new List<Func<object, Task>>();
 
         private readonly Dictionary<Type, List<Func<object, Task>>> _entityPreUpdateActions
             = new Dictionary<Type, List<Func<object, Task>>>();
@@ -118,6 +124,18 @@ namespace Turner.Infrastructure.Crud.Configuration
             where TEntity : class
         {
             _defaultValues[typeof(TEntity)] = defaultValue;
+        }
+
+        internal void AddPreCreateActions(
+            List<Func<object, Task>> actions)
+        {
+            _preCreateActions.InsertRange(0, actions);
+        }
+
+        internal void AddPreUpdateActions(
+            List<Func<object, Task>> actions)
+        {
+            _preUpdateActions.InsertRange(0, actions);
         }
 
         internal void SetPreCreateActions<TEntity>(
@@ -245,6 +263,9 @@ namespace Turner.Infrastructure.Crud.Configuration
                 throw new BadCrudConfigurationException(message);
             }
 
+            foreach (var requestAction in _preCreateActions)
+                await requestAction(request);
+
             var entities = new List<Type>();
             BuildEntityStack(typeof(TEntity), ref entities);
 
@@ -285,6 +306,9 @@ namespace Turner.Infrastructure.Crud.Configuration
 
                 throw new BadCrudConfigurationException(message);
             }
+
+            foreach (var requestAction in _preUpdateActions)
+                await requestAction(request);
 
             var entities = new List<Type>();
             BuildEntityStack(typeof(TEntity), ref entities);

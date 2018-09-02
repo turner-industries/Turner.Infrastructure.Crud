@@ -8,12 +8,21 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
     {
         public CrudRequestProfile()
         {
+            BeforeCreating(request =>
+            {
+                if (request is IHasPreMessage tRequest)
+                    tRequest.PreMessage = "PreCreate";
+            });
+
+            BeforeUpdating(request =>
+            {
+                if (request is IHasPreMessage tRequest)
+                    tRequest.PreMessage = "PreUpdate";
+            });
+
             ForEntity<IEntity>()
-                .AfterCreating(entity =>
-                {
-                    entity.PostMessage = "PostMessage/Entity";
-                    return Task.CompletedTask;
-                });
+                .AfterCreating(entity => entity.PostMessage = "PostCreate/Entity")
+                .AfterUpdating(entity => entity.PostMessage = "PostUpdate/Entity");
 
             ConfigureErrors(config =>
             {

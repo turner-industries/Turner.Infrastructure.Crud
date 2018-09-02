@@ -33,7 +33,7 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
     {
         public string Name { get; set; }
 
-        public string PreMessage { get; set; } = "PreMessage";
+        public string PreMessage { get; set; }
     }
     
     public class UserGetDto : UserDto

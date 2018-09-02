@@ -41,7 +41,7 @@ namespace Turner.Infrastructure.Crud.Tests
             Assert.IsNotNull(response.Data);
             Assert.AreEqual(_user.Id, response.Data.Id);
             Assert.AreEqual("NewName", response.Data.Name);
-            Assert.AreEqual("PreMessage/Update", response.Data.PreMessage);
+            Assert.AreEqual("PreUpdate/Update", response.Data.PreMessage);
             Assert.AreEqual("PostMessage/Update", response.Data.PostMessage);
         }
 

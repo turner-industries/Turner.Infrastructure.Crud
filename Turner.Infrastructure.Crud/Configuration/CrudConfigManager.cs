@@ -83,7 +83,7 @@ namespace Turner.Infrastructure.Crud.Configuration
                 profiles.Add((CrudRequestProfile) Activator.CreateInstance(
                     typeof(DefaultCrudRequestProfile<>).MakeGenericType(tRequest)));
             }
-
+            
             profiles.AddRange(new[] { tRequest.BaseType }
                 .Concat(tRequest.GetInterfaces())
                 .Where(x => x != null && typeof(ICrudRequest).IsAssignableFrom(x))
