@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace Turner.Infrastructure.Crud.Configuration.Builders
@@ -17,12 +18,16 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         private readonly List<Func<TRequest, Task>> _preCreateActions;
         private readonly List<Func<TEntity, Task>> _postCreateActions;
 
+        private TEntity _defaultValue;
+        private ISelector _selectEntityFromRequest;
         private Func<TRequest, TEntity> _createEntityFromRequest;
 
         public CrudRequestEntityConfigBuilder()
         {
             _preCreateActions = new List<Func<TRequest, Task>>();
             _postCreateActions = new List<Func<TEntity, Task>>();
+            _defaultValue = null;
+            _selectEntityFromRequest = null;
             _createEntityFromRequest = null;
         }
 
@@ -44,6 +49,22 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> UseDefault(
+            TEntity defaultValue)
+        {
+            _defaultValue = defaultValue;
+
+            return this;
+        }
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectWith(
+            Func<TRequest, Expression<Func<TEntity, bool>>> selector)
+        {
+            _selectEntityFromRequest = Selector.From(selector);
+
+            return this;
+        }
+
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> CreateWith(
             Func<TRequest, TEntity> creator)
         {
@@ -54,6 +75,11 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
 
         public void Build<TCompatibleRequest>(CrudRequestConfig<TCompatibleRequest> config)
         {
+            config.SetDefault(_defaultValue);
+
+            if (_selectEntityFromRequest != null)
+                config.SetEntitySelector<TEntity>(_selectEntityFromRequest);
+
             if (_createEntityFromRequest != null)
                 config.SetEntityCreator(request => _createEntityFromRequest((TRequest)request));
 

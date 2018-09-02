@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Turner.Infrastructure.Crud.Configuration.Builders;
+using Turner.Infrastructure.Crud.Errors;
 
 namespace Turner.Infrastructure.Crud.Configuration
 {
@@ -9,6 +10,7 @@ namespace Turner.Infrastructure.Crud.Configuration
     {
         Type RequestType { get; }
 
+        // TODO: Protect these functions
         void Inherit(IEnumerable<ICrudRequestProfile> profile);
 
         void Apply(ICrudRequestConfig config);
@@ -18,24 +20,31 @@ namespace Turner.Infrastructure.Crud.Configuration
     public abstract class CrudRequestProfile<TRequest> 
         : ICrudRequestProfile
     {
-        protected readonly Dictionary<Type, ICrudRequestEntityConfigBuilder> RequestEntityBuilders
+        private readonly Dictionary<Type, ICrudRequestEntityConfigBuilder> _requestEntityBuilders
             = new Dictionary<Type, ICrudRequestEntityConfigBuilder>();
 
-        protected readonly List<ICrudRequestProfile> _inheritProfiles 
+        private readonly List<ICrudRequestProfile> _inheritProfiles 
             = new List<ICrudRequestProfile>();
+
+        private Action<CrudRequestErrorConfig> _errorConfig;
 
         public Type RequestType => typeof(TRequest);
 
         public void Inherit(IEnumerable<ICrudRequestProfile> profiles)
         {
-            _inheritProfiles.AddRange(profiles.Distinct());
+            _inheritProfiles.AddRange(profiles);
+        }
+
+        protected void ConfigureErrors(Action<CrudRequestErrorConfig> config)
+        {
+            _errorConfig = config;
         }
 
         protected CrudRequestEntityConfigBuilder<TRequest, TEntity> ForEntity<TEntity>()
             where TEntity : class
         {
             var builder = new CrudRequestEntityConfigBuilder<TRequest, TEntity>();
-            RequestEntityBuilders[typeof(TEntity)] = builder;
+            _requestEntityBuilders[typeof(TEntity)] = builder;
 
             return builder;
         }
@@ -53,18 +62,22 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         public void Apply<TPerspective>(CrudRequestConfig<TPerspective> config)
         {
-            var inheritedTypes = new List<Type>();
-            foreach (var profile in _inheritProfiles)
-            {
-                if (inheritedTypes.Contains(profile.RequestType))
-                    continue;
-
+            foreach (var profile in _inheritProfiles.Distinct())
                 profile.Apply(config);
-                inheritedTypes.Add(profile.RequestType);
-            }
 
-            foreach (var builder in RequestEntityBuilders.Values)
+            ApplyErrorConfig(config);
+
+            foreach (var builder in _requestEntityBuilders.Values)
                 builder.Build(config);
+        }
+
+        private void ApplyErrorConfig<TPerspective>(CrudRequestConfig<TPerspective> config)
+        {
+            var errorConfig = new CrudRequestErrorConfig();
+            _errorConfig?.Invoke(errorConfig);
+
+            if (errorConfig.FailedToFindIsError.HasValue)
+                config.SetFailedToFindIsError(errorConfig.FailedToFindIsError.Value);
         }
     }
 
