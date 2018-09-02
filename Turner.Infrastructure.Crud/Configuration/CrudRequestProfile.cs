@@ -74,8 +74,11 @@ namespace Turner.Infrastructure.Crud.Configuration
             var errorConfig = new CrudRequestErrorConfig();
             _errorConfig?.Invoke(errorConfig);
 
-            if (errorConfig.FailedToFindIsError.HasValue)
-                config.SetFailedToFindIsError(errorConfig.FailedToFindIsError.Value);
+            if (errorConfig.FailedToFindInGetIsError.HasValue)
+                config.SetFailedToFindInGetIsError(errorConfig.FailedToFindInGetIsError.Value);
+
+            if (errorConfig.FailedToFindInUpdateIsError.HasValue)
+                config.SetFailedToFindInUpdateIsError(errorConfig.FailedToFindInUpdateIsError.Value);
         }
     }
 

@@ -7,22 +7,19 @@ using Turner.Infrastructure.Mediator;
 namespace Turner.Infrastructure.Crud.Requests
 {
     internal abstract class CreateRequestHandlerBase<TRequest, TEntity>
+        : CrudRequestHandler<TRequest>
         where TEntity : class
     {
-        protected readonly DbContext Context;
-        protected readonly ICrudRequestConfig RequestConfig;
-
         public CreateRequestHandlerBase(DbContext context, CrudConfigManager profileManager)
+            : base(context, profileManager)
         {
-            Context = context;
-            RequestConfig = profileManager.GetRequestConfigFor<TRequest>();
         }
 
         protected async Task<TEntity> CreateEntity(TRequest request)
         {
             await RequestConfig.PreCreate<TEntity>(request);
 
-            var entity = RequestConfig.CreateEntity<TEntity>(request);
+            var entity = await RequestConfig.CreateEntity<TEntity>(request);
             await Context.Set<TEntity>().AddAsync(entity);
 
             await RequestConfig.PostCreate(entity);

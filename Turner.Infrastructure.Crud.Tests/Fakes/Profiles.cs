@@ -17,7 +17,7 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
 
             ConfigureErrors(config =>
             {
-                config.FailedToFindIsError = true;
+                config.FailedToFindInAnyIsError = true;
             });
         }
     }

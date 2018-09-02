@@ -8,17 +8,13 @@ using Turner.Infrastructure.Mediator;
 namespace Turner.Infrastructure.Crud.Requests
 {
     internal class GetRequestHandler<TRequest, TEntity, TOut>
-        : IRequestHandler<TRequest, TOut>
+        : CrudRequestHandler<TRequest>, IRequestHandler<TRequest, TOut>
         where TEntity : class
         where TRequest : IGetRequest<TEntity, TOut>
     {
-        protected readonly DbContext Context;
-        protected readonly ICrudRequestConfig RequestConfig;
-
         public GetRequestHandler(DbContext context, CrudConfigManager profileManager)
+            : base(context, profileManager)
         {
-            Context = context;
-            RequestConfig = profileManager.GetRequestConfigFor<TRequest>();
         }
 
         public async Task<Response<TOut>> HandleAsync(TRequest request)
@@ -34,7 +30,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 
             var result = Mapper.Map<TOut>(entity);
 
-            if (failedToFind && RequestConfig.FailedToFindIsError)
+            if (failedToFind && RequestConfig.FailedToFindInGetIsError)
             {
                 throw new FailedToFindException("Failed to find entity.")
                 {

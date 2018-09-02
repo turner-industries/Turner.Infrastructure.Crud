@@ -137,7 +137,7 @@ namespace Turner.Infrastructure.Crud.Tests
         public GetRequestProfile()
         {
             ForEntity<IEntity>()
-                .SelectWith(request =>
+                .SelectForGetWith(request =>
                 {
                     if (request is GetRequest<TEntity, int, TOut> intRequest)
                         return entity => intRequest.Data == entity.Id;
@@ -152,7 +152,7 @@ namespace Turner.Infrastructure.Crud.Tests
         public GetUserByIdProfile()
         {
             ForEntity<User>()
-                .SelectWith(r => e => e.Id == r.Id)
+                .SelectForAnyWith(r => e => e.Id == r.Id)
                 .UseDefault(new User { Name = "DefaultUser" });
         }
     }
@@ -163,10 +163,10 @@ namespace Turner.Infrastructure.Crud.Tests
         {
             ForEntity<User>()
                 .UseDefault(new User { Name = "DefaultUser" })
-                .SelectWith(request => entity =>
+                .SelectForGetWith(request => entity =>
                     string.Equals(entity.Name, request.Name, StringComparison.InvariantCultureIgnoreCase));
 
-            ConfigureErrors(config => config.FailedToFindIsError = false);
+            ConfigureErrors(config => config.FailedToFindInGetIsError = false);
         }
     }
 }
