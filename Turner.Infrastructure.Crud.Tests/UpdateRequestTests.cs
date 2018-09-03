@@ -148,6 +148,21 @@ namespace Turner.Infrastructure.Crud.Tests
             Assert.AreEqual(_user.PreMessage, response.Data.PreMessage);
             Assert.AreEqual(_user.PostMessage, response.Data.PostMessage);
         }
+
+        [Test]
+        public async Task Handle_UpdateByIdRequest_UpdatesUser()
+        {
+            var request = new UpdateByIdRequest<User, UserDto, UserGetDto>(
+                _user.Id,
+                new UserDto { Name = "NewUser" });
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(_user.Id, response.Data.Id);
+            Assert.AreEqual("NewUser", response.Data.Name);
+        }
     }
     
     [DoNotValidate]

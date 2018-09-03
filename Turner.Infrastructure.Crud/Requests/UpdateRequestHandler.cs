@@ -74,7 +74,7 @@ namespace Turner.Infrastructure.Crud.Requests
         {
             await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Update, request).Configure();
             await RequestConfig.UpdateEntity(request, entity).Configure();
-            await RequestConfig.RunPostActionsFor(ActionType.Update, entity).Configure();
+            await RequestConfig.RunPostActionsFor(ActionType.Update, request, entity).Configure();
 
             await Algorithm.SaveChangesAsync(Context).Configure();
         }

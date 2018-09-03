@@ -87,7 +87,7 @@ namespace Turner.Infrastructure.Crud.Requests
         {
             await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Delete, request).Configure();
             await Algorithm.DeleteEntityAsync(Context, entity).Configure();
-            await RequestConfig.RunPostActionsFor(ActionType.Delete, entity).Configure();
+            await RequestConfig.RunPostActionsFor(ActionType.Delete, request, entity).Configure();
 
             await Algorithm.SaveChangesAsync(Context).Configure();
         }

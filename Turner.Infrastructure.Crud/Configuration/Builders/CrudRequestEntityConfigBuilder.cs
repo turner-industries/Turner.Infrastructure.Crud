@@ -25,6 +25,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         private readonly Dictionary<ActionType, List<Func<TEntity, Task>>> _postActions
             = new Dictionary<ActionType, List<Func<TEntity, Task>>>();
 
+        private CrudOptionsConfig _optionsConfig = null;
         private TEntity _defaultValue = null;
         private Func<TRequest, Task<TEntity>> _createEntityFromRequest = null;
         private Func<TRequest, TEntity, Task> _updateEntityFromRequest = null;
@@ -36,6 +37,21 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
                 _preActions[type] = new List<Func<TRequest, Task>>();
                 _postActions[type] = new List<Func<TEntity, Task>>();
             }
+        }
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> ConfigureOptions(Action<CrudOptionsConfig> config)
+        {
+            if (config == null)
+            {
+                _optionsConfig = null;
+            }
+            else
+            {
+                _optionsConfig = new CrudOptionsConfig();
+                config(_optionsConfig);
+            }
+
+            return this;
         }
 
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> BeforeCreating(Func<TRequest, Task> action) 
@@ -73,6 +89,18 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
 
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> AfterDeleting(Action<TEntity> action)
             => AddPostAction(ActionType.Delete, action);
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> BeforeSaving(Func<TRequest, Task> action)
+            => AddPreAction(ActionType.Save, action);
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> BeforeSaving(Action<TRequest> action)
+            => AddPreAction(ActionType.Save, action);
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> AfterSaving(Func<TEntity, Task> action)
+            => AddPostAction(ActionType.Save, action);
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> AfterSaving(Action<TEntity> action)
+            => AddPostAction(ActionType.Save, action);
 
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> UseDefault(TEntity defaultValue)
         {
@@ -131,7 +159,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
 
             return this;
         }
-
+        
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForAnyWith(
             Func<TRequest, Expression<Func<TEntity, bool>>> selector)
         {
@@ -193,6 +221,9 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
 
         public void Build<TCompatibleRequest>(CrudRequestConfig<TCompatibleRequest> config)
         {
+            if (_optionsConfig != null)
+                config.SetOptionsFor<TEntity>(_optionsConfig);
+
             config.SetDefault(_defaultValue);
 
             foreach (var (type, selector) in _selectors)

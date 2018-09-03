@@ -58,4 +58,15 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
                 .SelectForUpdateWith(builder => builder.Build(r => r.Key, e => e.Id));
         }
     }
+
+    public class DefaultSaveRequestProfile<TEntity, TKey, TIn, TOut>
+        : CrudRequestProfile<SaveRequest<TEntity, TKey, TIn, TOut>>
+        where TEntity : class, IEntity
+    {
+        public DefaultSaveRequestProfile()
+        {
+            ForEntity<IEntity>()
+                .SelectForUpdateWith(builder => builder.Build(r => r.Key, e => e.Id));
+        }
+    }
 }

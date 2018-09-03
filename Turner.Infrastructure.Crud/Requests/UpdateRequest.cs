@@ -1,7 +1,4 @@
 ﻿using AutoMapper;
-using System;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Mediator;
 using Turner.Infrastructure.Mediator.Decorators;
@@ -83,6 +80,24 @@ namespace Turner.Infrastructure.Crud.Requests
         {
             ForEntity<TEntity>()
                 .UpdateWith((request, entity) => Mapper.Map(request.Data, entity));
+        }
+    }
+    
+    [DoNotValidate]
+    public class UpdateByIdRequest<TEntity, TIn, TOut> : UpdateRequest<TEntity, int, TIn, TOut>
+        where TEntity : class
+    {
+        public UpdateByIdRequest(int id, TIn data) : base(id, data) { }
+    }
+
+    public class UpdateByIdRequestProfile<TEntity, TIn, TOut>
+        : CrudRequestProfile<UpdateByIdRequest<TEntity, TIn, TOut>>
+        where TEntity : class
+    {
+        public UpdateByIdRequestProfile()
+        {
+            ForEntity<TEntity>()
+                .SelectForUpdateWith(builder => builder.Build("Key", "Id"));
         }
     }
 }

@@ -34,7 +34,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public CreateRequestProfile()
         {
             ForEntity<TEntity>()
-                .CreateWith(x => Mapper.Map<TEntity>(x.Data));
+                .CreateWith(request => Mapper.Map<TEntity>(request.Data));
         }
     }
 
@@ -53,7 +53,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public CreateRequestProfile()
         {
             ForEntity<TEntity>()
-                .CreateWith(x => Mapper.Map<TEntity>(x.Data));
+                .CreateWith(request => Mapper.Map<TEntity>(request.Data));
         }
     }
 }

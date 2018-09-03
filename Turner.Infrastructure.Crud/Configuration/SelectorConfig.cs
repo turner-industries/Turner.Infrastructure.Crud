@@ -37,7 +37,7 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         public ISelector FindSelectorFor(Type tEntity)
         {
-            foreach (var type in GetEntityHierarchy(tEntity))
+            foreach (var type in tEntity.BuildTypeHierarchyUp())
             {
                 if (_entitySelectors.TryGetValue(type, out var selector))
                     return selector;
@@ -49,19 +49,6 @@ namespace Turner.Infrastructure.Crud.Configuration
         internal void SetSelectorFor(Type tEntity, ISelector selector)
         {
             _entitySelectors[tEntity] = selector;
-        }
-
-        private IEnumerable<Type> GetEntityHierarchy(Type tEntity)
-        {
-            yield return tEntity;
-
-            var entityParents = new[] { tEntity.BaseType }
-                .Concat(tEntity.GetInterfaces())
-                .Where(x => x != null);
-
-            foreach (var parent in entityParents)
-                foreach (var item in GetEntityHierarchy(parent))
-                    yield return item;
         }
     }
 }

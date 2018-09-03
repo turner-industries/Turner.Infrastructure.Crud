@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Turner.Infrastructure.Crud.Configuration.Builders;
 using Turner.Infrastructure.Crud.Errors;
 
 namespace Turner.Infrastructure.Crud.Configuration
@@ -10,13 +11,16 @@ namespace Turner.Infrastructure.Crud.Configuration
     {
         ErrorConfig ErrorConfig { get; }
 
+        RequestOptions GetOptionsFor<TEntity>()
+            where TEntity : class;
+
         ISelector GetSelectorFor<TEntity>(SelectorType type)
             where TEntity : class;
         
         Task RunPreActionsFor<TEntity>(ActionType type, object request)
             where TEntity : class;
 
-        Task RunPostActionsFor<TEntity>(ActionType type, TEntity entity)
+        Task RunPostActionsFor<TEntity>(ActionType type, object request, TEntity entity)
             where TEntity : class;
 
         Task<TEntity> CreateEntity<TEntity>(object request)
@@ -34,6 +38,10 @@ namespace Turner.Infrastructure.Crud.Configuration
     {
         private readonly SelectorConfig _selectors = new SelectorConfig();
         private readonly ActionConfig _actions = new ActionConfig();
+        private readonly RequestOptions _options = new RequestOptions();
+
+        private readonly Dictionary<Type, CrudOptionsConfig> _entityOptionOverrides
+            = new Dictionary<Type, CrudOptionsConfig>();
 
         private readonly Dictionary<Type, Func<object, Task<object>>> _entityCreators
             = new Dictionary<Type, Func<object, Task<object>>>();
@@ -44,6 +52,11 @@ namespace Turner.Infrastructure.Crud.Configuration
         private readonly Dictionary<Type, object> _defaultValues
             = new Dictionary<Type, object>();
         
+        internal void SetOptionsFor<TEntity>(CrudOptionsConfig options)
+        {
+            _entityOptionOverrides[typeof(TEntity)] = options;
+        }
+
         internal void SetEntitySelectorFor<TEntity>(SelectorType type, ISelector selector)
             where TEntity : class
         {
@@ -53,6 +66,11 @@ namespace Turner.Infrastructure.Crud.Configuration
         internal void AddPreActions(ActionType type, ActionList actions)
         {
             _actions[type].AddPreActions(actions);
+        }
+
+        internal void AddPostActions(ActionType type, ActionList actions)
+        {
+            _actions[type].AddPostActions(actions);
         }
         
         internal void SetPreActionsFor<TEntity>(ActionType type, ActionList actions)
@@ -87,8 +105,17 @@ namespace Turner.Infrastructure.Crud.Configuration
         {
             _defaultValues[typeof(TEntity)] = defaultValue;
         }
-
+        
         public ErrorConfig ErrorConfig { get; private set; } = new ErrorConfig();
+
+        public RequestOptions GetOptionsFor<TEntity>()
+            where TEntity : class
+        {
+            var options = _options.Clone();
+            OverrideOptions(options, typeof(TEntity));
+
+            return options;
+        }
 
         public ISelector GetSelectorFor<TEntity>(SelectorType type)
             where TEntity : class
@@ -107,7 +134,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             if (!(request is TRequest))
             {
                 var message =
-                    $"Unable to run {type.ToString()} actions on a request of type '{request.GetType()}'. " +
+                    $"Unable to run {type.ToString()} pre actions on a request of type '{request.GetType()}'. " +
                     $"Configuration expected a request of type '{typeof(TRequest)}'.";
 
                 throw new BadCrudConfigurationException(message);
@@ -116,10 +143,19 @@ namespace Turner.Infrastructure.Crud.Configuration
             return _actions[type].RunPreActionsFor(typeof(TEntity), request);
         }
 
-        public Task RunPostActionsFor<TEntity>(ActionType type, TEntity entity)
+        public Task RunPostActionsFor<TEntity>(ActionType type, object request, TEntity entity)
             where TEntity : class
         {
-            return _actions[type].RunPostActionsFor(typeof(TEntity), entity);
+            if (!(request is TRequest))
+            {
+                var message =
+                    $"Unable to run {type.ToString()} post actions on a request of type '{request.GetType()}'. " +
+                    $"Configuration expected a request of type '{typeof(TRequest)}'.";
+
+                throw new BadCrudConfigurationException(message);
+            }
+
+            return _actions[type].RunPostActionsFor(typeof(TEntity), request, entity);
         }
         
         public async Task<TEntity> CreateEntity<TEntity>(object request)
@@ -169,6 +205,21 @@ namespace Turner.Infrastructure.Crud.Configuration
                 return (TEntity) entity;
 
             return null;
+        }
+
+        private void OverrideOptions(RequestOptions options, Type tEntity)
+        {
+            foreach (var type in tEntity.BuildTypeHierarchyDown())
+            {
+                if (_entityOptionOverrides.TryGetValue(type, out var entityOptions))
+                {
+                    if (entityOptions.SuppressCreateActionsInSave.HasValue)
+                        options.SuppressCreateActionsInSave = entityOptions.SuppressCreateActionsInSave.Value;
+
+                    if (entityOptions.SuppressUpdateActionsInSave.HasValue)
+                        options.SuppressUpdateActionsInSave = entityOptions.SuppressUpdateActionsInSave.Value;
+                }
+            }
         }
     }
 }
