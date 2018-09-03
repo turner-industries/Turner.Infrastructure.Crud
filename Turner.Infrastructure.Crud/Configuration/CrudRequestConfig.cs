@@ -11,11 +11,15 @@ namespace Turner.Infrastructure.Crud.Configuration
     {
         bool FailedToFindInGetIsError { get; }
         bool FailedToFindInUpdateIsError { get; }
+        bool FailedToFindInDeleteIsError { get; }
 
         ISelector GetSelector<TEntity>()
             where TEntity : class;
 
         ISelector UpdateSelector<TEntity>()
+            where TEntity : class;
+
+        ISelector DeleteSelector<TEntity>()
             where TEntity : class;
 
         Task<TEntity> CreateEntity<TEntity>(object request)
@@ -38,6 +42,12 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         Task PostUpdate<TEntity>(TEntity entity)
             where TEntity : class;
+
+        Task PreDelete<TEntity>(object request)
+            where TEntity : class;
+
+        Task PostDelete<TEntity>(TEntity entity)
+            where TEntity : class;
     }
 
     public class CrudRequestConfig<TRequest>
@@ -47,6 +57,9 @@ namespace Turner.Infrastructure.Crud.Configuration
             = new Dictionary<Type, ISelector>();
 
         private readonly Dictionary<Type, ISelector> _entityUpdateSelectors
+            = new Dictionary<Type, ISelector>();
+
+        private readonly Dictionary<Type, ISelector> _entityDeleteSelectors
             = new Dictionary<Type, ISelector>();
 
         private readonly Dictionary<Type, Func<object, Task<object>>> _entityCreators
@@ -62,14 +75,17 @@ namespace Turner.Infrastructure.Crud.Configuration
         private List<Func<object, Task>> _preCreateActions
             = new List<Func<object, Task>>();
 
+        private List<Func<object, Task>> _preUpdateActions
+            = new List<Func<object, Task>>();
+
+        private List<Func<object, Task>> _preDeleteActions
+            = new List<Func<object, Task>>();
+
         private readonly Dictionary<Type, List<Func<object, Task>>> _entityPreCreateActions
             = new Dictionary<Type, List<Func<object, Task>>>();
 
         private readonly Dictionary<Type, List<Func<object, Task>>> _entityPostCreateActions
             = new Dictionary<Type, List<Func<object, Task>>>();
-
-        private List<Func<object, Task>> _preUpdateActions
-            = new List<Func<object, Task>>();
 
         private readonly Dictionary<Type, List<Func<object, Task>>> _entityPreUpdateActions
             = new Dictionary<Type, List<Func<object, Task>>>();
@@ -77,10 +93,17 @@ namespace Turner.Infrastructure.Crud.Configuration
         private readonly Dictionary<Type, List<Func<object, Task>>> _entityPostUpdateActions
             = new Dictionary<Type, List<Func<object, Task>>>();
 
+        private readonly Dictionary<Type, List<Func<object, Task>>> _entityPreDeleteActions
+            = new Dictionary<Type, List<Func<object, Task>>>();
+
+        private readonly Dictionary<Type, List<Func<object, Task>>> _entityPostDeleteActions
+            = new Dictionary<Type, List<Func<object, Task>>>();
+
         public CrudRequestConfig()
         {
             FailedToFindInGetIsError = true;
             FailedToFindInUpdateIsError = true;
+            FailedToFindInDeleteIsError = false;
         }
 
         internal void SetFailedToFindInGetIsError(bool isError)
@@ -93,6 +116,11 @@ namespace Turner.Infrastructure.Crud.Configuration
             FailedToFindInUpdateIsError = isError;
         }
 
+        internal void SetFailedToFindInDeleteIsError(bool isError)
+        {
+            FailedToFindInDeleteIsError = isError;
+        }
+
         internal void SetEntitySelectorForGet<TEntity>(ISelector selector)
             where TEntity : class
         {
@@ -103,6 +131,12 @@ namespace Turner.Infrastructure.Crud.Configuration
             where TEntity : class
         {
             _entityUpdateSelectors[typeof(TEntity)] = selector;
+        }
+
+        internal void SetEntitySelectorForDelete<TEntity>(ISelector selector)
+            where TEntity : class
+        {
+            _entityDeleteSelectors[typeof(TEntity)] = selector;
         }
 
         internal void SetEntityCreator<TEntity>(
@@ -138,6 +172,12 @@ namespace Turner.Infrastructure.Crud.Configuration
             _preUpdateActions.InsertRange(0, actions);
         }
 
+        internal void AddPreDeleteActions(
+            List<Func<object, Task>> actions)
+        {
+            _preDeleteActions.InsertRange(0, actions);
+        }
+
         internal void SetPreCreateActions<TEntity>(
             List<Func<object, Task>> actions)
             where TEntity : class
@@ -166,40 +206,42 @@ namespace Turner.Infrastructure.Crud.Configuration
             _entityPostUpdateActions[typeof(TEntity)] = actions;
         }
 
+        internal void SetPreDeleteActions<TEntity>(
+            List<Func<object, Task>> actions)
+            where TEntity : class
+        {
+            _entityPreDeleteActions[typeof(TEntity)] = actions;
+        }
+
+        internal void SetPostDeleteActions<TEntity>(
+            List<Func<object, Task>> actions)
+            where TEntity : class
+        {
+            _entityPostDeleteActions[typeof(TEntity)] = actions;
+        }
+        
         public bool FailedToFindInGetIsError { get; private set; }
 
         public bool FailedToFindInUpdateIsError { get; private set; }
 
+        public bool FailedToFindInDeleteIsError { get; private set; }
+
         public ISelector GetSelector<TEntity>()
             where TEntity : class
         {
-            var entities = new List<Type>();
-            BuildEntityQueue(typeof(TEntity), ref entities);
-
-            foreach (var tEntity in entities)
-            {
-                if (_entityGetSelectors.TryGetValue(tEntity, out var selector))
-                    return selector;
-            }
-
-            throw new BadCrudConfigurationException(
-                $"No selector defined for entity '{typeof(TEntity)}' for request '{typeof(TRequest)}'.");
+            return FindSelector<TEntity>(_entityGetSelectors);
         }
 
         public ISelector UpdateSelector<TEntity>()
             where TEntity : class
         {
-            var entities = new List<Type>();
-            BuildEntityQueue(typeof(TEntity), ref entities);
+            return FindSelector<TEntity>(_entityUpdateSelectors);
+        }
 
-            foreach (var tEntity in entities)
-            {
-                if (_entityUpdateSelectors.TryGetValue(tEntity, out var selector))
-                    return selector;
-            }
-
-            throw new BadCrudConfigurationException(
-                $"No selector defined for entity '{typeof(TEntity)}' for request '{typeof(TRequest)}'.");
+        public ISelector DeleteSelector<TEntity>()
+            where TEntity : class
+        {
+            return FindSelector<TEntity>(_entityDeleteSelectors);
         }
 
         public async Task<TEntity> CreateEntity<TEntity>(object request)
@@ -251,52 +293,45 @@ namespace Turner.Infrastructure.Crud.Configuration
             return null;
         }
 
-        public async Task PreCreate<TEntity>(object request) 
+        public Task PreCreate<TEntity>(object request) 
             where TEntity : class
         {
-            if (!(request is TRequest))
-            {
-                var message =
-                    $"Unable to run PreCreate actions on a request of type '{request.GetType()}'. " +
-                    $"Configuration expected a request of type '{typeof(TRequest)}'.";
-
-                throw new BadCrudConfigurationException(message);
-            }
-
-            foreach (var requestAction in _preCreateActions)
-                await requestAction(request).Configure();
-
-            var entities = new List<Type>();
-            BuildEntityStack(typeof(TEntity), ref entities);
-
-            foreach (var tEntity in entities)
-            {
-                if (_entityPreCreateActions.TryGetValue(tEntity, out var actions))
-                {
-                    foreach (var action in actions)
-                        await action(request).Configure();
-                }
-            }
+            return PreActions<TEntity>(request, _preCreateActions, _entityPreCreateActions);
         }
 
-        public async Task PostCreate<TEntity>(TEntity entity) 
+        public Task PostCreate<TEntity>(TEntity entity) 
             where TEntity : class
         {
-            var entities = new List<Type>();
-            BuildEntityStack(typeof(TEntity), ref entities);
-
-            foreach (var tEntity in entities)
-            {
-                if (_entityPostCreateActions.TryGetValue(tEntity, out var actions))
-                {
-                    foreach (var action in actions)
-                        await action(entity).Configure();
-                }
-            }
+            return PostActions(entity, _entityPostCreateActions);
         }
 
-        public async Task PreUpdate<TEntity>(object request)
+        public Task PreUpdate<TEntity>(object request)
             where TEntity : class
+        {
+            return PreActions<TEntity>(request, _preUpdateActions, _entityPreUpdateActions);
+        }
+
+        public Task PostUpdate<TEntity>(TEntity entity)
+            where TEntity : class
+        {
+            return PostActions(entity, _entityPostUpdateActions);
+        }
+
+        public Task PreDelete<TEntity>(object request)
+            where TEntity : class
+        {
+            return PreActions<TEntity>(request, _preDeleteActions,_entityPreDeleteActions);
+        }
+
+        public Task PostDelete<TEntity>(TEntity entity)
+            where TEntity : class
+        {
+            return PostActions(entity, _entityPostDeleteActions);
+        }
+
+        private async Task PreActions<TEntity>(object request, 
+            IEnumerable<Func<object, Task>> requestActions, 
+            IReadOnlyDictionary<Type, List<Func<object, Task>>> actionMap)
         {
             if (!(request is TRequest))
             {
@@ -307,7 +342,7 @@ namespace Turner.Infrastructure.Crud.Configuration
                 throw new BadCrudConfigurationException(message);
             }
 
-            foreach (var requestAction in _preUpdateActions)
+            foreach (var requestAction in requestActions)
                 await requestAction(request).Configure();
 
             var entities = new List<Type>();
@@ -315,7 +350,7 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             foreach (var tEntity in entities)
             {
-                if (_entityPreUpdateActions.TryGetValue(tEntity, out var actions))
+                if (actionMap.TryGetValue(tEntity, out var actions))
                 {
                     foreach (var action in actions)
                         await action(request).Configure();
@@ -323,7 +358,8 @@ namespace Turner.Infrastructure.Crud.Configuration
             }
         }
 
-        public async Task PostUpdate<TEntity>(TEntity entity)
+        private async Task PostActions<TEntity>(TEntity entity, 
+            IReadOnlyDictionary<Type, List<Func<object, Task>>> actionMap)
             where TEntity : class
         {
             var entities = new List<Type>();
@@ -331,14 +367,30 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             foreach (var tEntity in entities)
             {
-                if (_entityPostUpdateActions.TryGetValue(tEntity, out var actions))
+                if (actionMap.TryGetValue(tEntity, out var actions))
                 {
                     foreach (var action in actions)
                         await action(entity).Configure();
                 }
             }
         }
-        
+
+        private ISelector FindSelector<TEntity>(IReadOnlyDictionary<Type, ISelector> selectors)
+            where TEntity : class
+        {
+            var entities = new List<Type>();
+            BuildEntityQueue(typeof(TEntity), ref entities);
+
+            foreach (var tEntity in entities)
+            {
+                if (selectors.TryGetValue(tEntity, out var selector))
+                    return selector;
+            }
+
+            throw new BadCrudConfigurationException(
+                $"No selector defined for entity '{typeof(TEntity)}' for request '{typeof(TRequest)}'.");
+        }
+
         private void BuildEntityStack(Type tEntity, ref List<Type> entities)
         {
             var entityParents = new[] { tEntity.BaseType }

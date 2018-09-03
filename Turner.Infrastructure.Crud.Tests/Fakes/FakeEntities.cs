@@ -8,6 +8,7 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
     {
         int Id { get; set; }
         string PostMessage { get; set; }
+        bool IsDeleted { get; set; }
     }
 
     public interface IHasPreMessage
@@ -21,6 +22,8 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         public int Id { get; set; }
 
         public string PostMessage { get; set; }
+
+        public bool IsDeleted { get; set; } = false;
     }
 
     public class User : Entity, IHasPreMessage
@@ -40,6 +43,8 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
     public class UserGetDto : UserDto
     {
         public int Id { get; set; }
+
+        public bool IsDeleted { get; set; }
 
         public string PostMessage { get; set; }
     }

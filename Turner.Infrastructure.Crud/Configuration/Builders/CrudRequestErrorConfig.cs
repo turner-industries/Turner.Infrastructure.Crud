@@ -8,6 +8,8 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
 
         public bool? FailedToFindInUpdateIsError { get; set; }
 
+        public bool? FailedToFindInDeleteIsError { get; set; }
+
         public bool? FailedToFindInAnyIsError
         {
             get
@@ -15,14 +17,16 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
                 return new[]
                 {
                     FailedToFindInGetIsError,
-                    FailedToFindInUpdateIsError
+                    FailedToFindInUpdateIsError,
+                    FailedToFindInDeleteIsError
                 }.Any(x => x.HasValue && x.Value);
             }
 
             set
             {
                 FailedToFindInGetIsError = 
-                FailedToFindInUpdateIsError = value;
+                FailedToFindInUpdateIsError =
+                FailedToFindInDeleteIsError = value;
             }
         }
     }

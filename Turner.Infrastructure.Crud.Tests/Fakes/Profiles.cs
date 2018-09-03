@@ -19,9 +19,16 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
                     tRequest.PreMessage = "PreUpdate";
             });
 
+            BeforeDeleting(request =>
+            {
+                if (request is IHasPreMessage tRequest)
+                    tRequest.PreMessage += "PreDelete";
+            });
+
             ForEntity<IEntity>()
                 .AfterCreating(entity => entity.PostMessage = "PostCreate/Entity")
-                .AfterUpdating(entity => entity.PostMessage = "PostUpdate/Entity");
+                .AfterUpdating(entity => entity.PostMessage = "PostUpdate/Entity")
+                .AfterDeleting(entity => entity.PostMessage = "PostDelete/Entity");
 
             ConfigureErrors(config =>
             {

@@ -20,10 +20,13 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         private readonly List<Func<TEntity, Task>> _postCreateActions;
         private readonly List<Func<TRequest, Task>> _preUpdateActions;
         private readonly List<Func<TEntity, Task>> _postUpdateActions;
+        private readonly List<Func<TRequest, Task>> _preDeleteActions;
+        private readonly List<Func<TEntity, Task>> _postDeleteActions;
 
         private TEntity _defaultValue;
         private ISelector _selectEntityFromRequestForGet;
         private ISelector _selectEntityFromRequestForUpdate;
+        private ISelector _selectEntityFromRequestForDelete;
         private Func<TRequest, Task<TEntity>> _createEntityFromRequest;
         private Func<TRequest, TEntity, Task> _updateEntityFromRequest;
 
@@ -33,10 +36,13 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             _postCreateActions = new List<Func<TEntity, Task>>();
             _preUpdateActions = new List<Func<TRequest, Task>>();
             _postUpdateActions = new List<Func<TEntity, Task>>();
+            _preDeleteActions = new List<Func<TRequest, Task>>();
+            _postDeleteActions = new List<Func<TEntity, Task>>();
 
             _defaultValue = null;
             _selectEntityFromRequestForGet = null;
             _selectEntityFromRequestForUpdate = null;
+            _selectEntityFromRequestForDelete = null;
             _createEntityFromRequest = null;
             _updateEntityFromRequest = null;
         }
@@ -128,7 +134,51 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
 
             return this;
         }
-        
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> BeforeDeleting(
+            Func<TRequest, Task> preDeleteAction)
+        {
+            if (preDeleteAction != null)
+                _preDeleteActions.Add(preDeleteAction);
+
+            return this;
+        }
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> BeforeDeleting(
+            Action<TRequest> preDeleteAction)
+        {
+            if (preDeleteAction != null)
+                _preDeleteActions.Add(request =>
+                {
+                    preDeleteAction(request);
+                    return Task.CompletedTask;
+                });
+
+            return this;
+        }
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> AfterDeleting(
+            Func<TEntity, Task> postDeleteAction)
+        {
+            if (postDeleteAction != null)
+                _postDeleteActions.Add(postDeleteAction);
+
+            return this;
+        }
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> AfterDeleting(
+            Action<TEntity> postDeleteAction)
+        {
+            if (postDeleteAction != null)
+                _postDeleteActions.Add(entity =>
+                {
+                    postDeleteAction(entity);
+                    return Task.CompletedTask;
+                });
+
+            return this;
+        }
+
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> UseDefault(
             TEntity defaultValue)
         {
@@ -171,15 +221,45 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForAnyWith(
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForDeleteWith(
             Func<TRequest, Expression<Func<TEntity, bool>>> selector)
         {
-            _selectEntityFromRequestForGet = 
-            _selectEntityFromRequestForUpdate = Selector.From(selector);
+            _selectEntityFromRequestForDelete = Selector.From(selector);
 
             return this;
         }
 
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForDeleteWith(
+            Func<SelectorBuilder<TRequest, TEntity>, Func<TRequest, Expression<Func<TEntity, bool>>>> build)
+        {
+            var builder = new SelectorBuilder<TRequest, TEntity>();
+            _selectEntityFromRequestForDelete = Selector.From(build(builder));
+
+            return this;
+        }
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForAnyWith(
+            Func<TRequest, Expression<Func<TEntity, bool>>> selector)
+        {
+            _selectEntityFromRequestForGet = 
+            _selectEntityFromRequestForUpdate = 
+            _selectEntityFromRequestForDelete = Selector.From(selector);
+
+            return this;
+        }
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForAnyWith(
+            Func<SelectorBuilder<TRequest, TEntity>, Func<TRequest, Expression<Func<TEntity, bool>>>> build)
+        {
+            var builder = new SelectorBuilder<TRequest, TEntity>();
+
+            _selectEntityFromRequestForGet =
+            _selectEntityFromRequestForUpdate =
+            _selectEntityFromRequestForDelete = Selector.From(build(builder));
+
+            return this;
+        }
+        
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> CreateWith(
             Func<TRequest, Task<TEntity>> creator)
         {
@@ -226,6 +306,9 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             if (_selectEntityFromRequestForUpdate != null)
                 config.SetEntitySelectorForUpdate<TEntity>(_selectEntityFromRequestForUpdate);
 
+            if (_selectEntityFromRequestForDelete != null)
+                config.SetEntitySelectorForDelete<TEntity>(_selectEntityFromRequestForDelete);
+
             if (_createEntityFromRequest != null)
                 config.SetEntityCreator(request => _createEntityFromRequest((TRequest)request));
 
@@ -266,6 +349,24 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
                     .ToList();
 
                 config.SetPostUpdateActions<TEntity>(actions);
+            }
+
+            if (_preDeleteActions.Count > 0)
+            {
+                var actions = _preDeleteActions
+                    .Select(action => new Func<object, Task>(x => action((TRequest)x)))
+                    .ToList();
+
+                config.SetPreDeleteActions<TEntity>(actions);
+            }
+
+            if (_postDeleteActions.Count > 0)
+            {
+                var actions = _postDeleteActions
+                    .Select(action => new Func<object, Task>(x => action((TEntity)x)))
+                    .ToList();
+
+                config.SetPostDeleteActions<TEntity>(actions);
             }
         }
     }

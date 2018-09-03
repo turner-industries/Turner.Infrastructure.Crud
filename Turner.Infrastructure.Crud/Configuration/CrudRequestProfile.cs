@@ -31,6 +31,9 @@ namespace Turner.Infrastructure.Crud.Configuration
         private readonly List<Func<object, Task>> _preUpdateActions
             = new List<Func<object, Task>>();
 
+        private readonly List<Func<object, Task>> _preDeleteActions
+            = new List<Func<object, Task>>();
+
         private Action<CrudRequestErrorConfig> _errorConfig;
 
         public override Type RequestType => typeof(TRequest);
@@ -81,6 +84,22 @@ namespace Turner.Infrastructure.Crud.Configuration
                 });
         }
 
+        protected void BeforeDeleting(Func<TRequest, Task> preDeleteAction)
+        {
+            if (preDeleteAction != null)
+                _preDeleteActions.Add(request => preDeleteAction((TRequest)request));
+        }
+
+        protected void BeforeDeleting(Action<TRequest> preDeleteAction)
+        {
+            if (preDeleteAction != null)
+                _preDeleteActions.Add(request =>
+                {
+                    preDeleteAction((TRequest)request);
+                    return Task.CompletedTask;
+                });
+        }
+
         internal override void Inherit(IEnumerable<CrudRequestProfile> profiles)
         {
             _inheritProfiles.AddRange(profiles);
@@ -113,6 +132,7 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             config.AddPreCreateActions(_preCreateActions);
             config.AddPreUpdateActions(_preUpdateActions);
+            config.AddPreDeleteActions(_preDeleteActions);
 
             ApplyErrorConfig(config);
 
@@ -130,6 +150,9 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             if (errorConfig.FailedToFindInUpdateIsError.HasValue)
                 config.SetFailedToFindInUpdateIsError(errorConfig.FailedToFindInUpdateIsError.Value);
+
+            if (errorConfig.FailedToFindInDeleteIsError.HasValue)
+                config.SetFailedToFindInDeleteIsError(errorConfig.FailedToFindInDeleteIsError.Value);
         }
     }
 
