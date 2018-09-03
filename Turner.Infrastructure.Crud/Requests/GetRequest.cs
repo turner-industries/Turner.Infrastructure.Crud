@@ -14,15 +14,15 @@ namespace Turner.Infrastructure.Crud.Requests
     }
     
     [DoNotValidate]
-    public class GetRequest<TEntity, TIn, TOut> : IGetRequest<TEntity, TOut>
+    public class GetRequest<TEntity, TKey, TOut> : IGetRequest<TEntity, TOut>
         where TEntity : class
     {
-        public GetRequest(TIn data) { Data = data; }
-        public TIn Data { get; }
+        public GetRequest(TKey key) { Key = key; }
+        public TKey Key { get; }
     }
 
-    public class GetRequestProfile<TEntity, TIn, TOut>
-        : CrudRequestProfile<GetRequest<TEntity, TIn, TOut>>
+    public class GetRequestProfile<TEntity, TKey, TOut>
+        : CrudRequestProfile<GetRequest<TEntity, TKey, TOut>>
         where TEntity : class
     {
         public GetRequestProfile()

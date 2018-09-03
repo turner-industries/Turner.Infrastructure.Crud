@@ -123,26 +123,21 @@ namespace Turner.Infrastructure.Crud.Tests
         public GetByIdRequest(int id) : base(id) { }
     }
 
+    public class GetByIdRequestProfile<TEntity, TOut>
+        : CrudRequestProfile<GetByIdRequest<TEntity, TOut>>
+        where TEntity : class, IEntity
+    {
+        public GetByIdRequestProfile()
+        {
+            ForEntity<IEntity>()
+                .SelectForGetWith(builder => builder.Build("Key", "Id"));
+        }
+    }
+
     [DoNotValidate]
     public class GetUserByNameRequest : IGetRequest<User, UserGetDto>
     {
         public string Name { get; set; }
-    }
-
-    public class GetRequestProfile<TEntity, TOut> : CrudRequestProfile<IGetRequest<TEntity, TOut>>
-        where TEntity : class, IEntity
-    {
-        public GetRequestProfile()
-        {
-            ForEntity<IEntity>()
-                .SelectForGetWith(request =>
-                {
-                    if (request is GetRequest<TEntity, int, TOut> intRequest)
-                        return entity => intRequest.Data == entity.Id;
-
-                    return null;
-                });
-        }
     }
 
     public class GetUserByIdProfile : CrudRequestProfile<GetUserByIdRequest>

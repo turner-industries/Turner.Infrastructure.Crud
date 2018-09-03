@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Turner.Infrastructure.Crud.Utilities;
 
 namespace Turner.Infrastructure.Crud.Configuration.Builders
 {
@@ -144,10 +145,28 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForGetWith(
+            Func<SelectorBuilder<TRequest, TEntity>, Func<TRequest, Expression<Func<TEntity, bool>>>> build)
+        {
+            var builder = new SelectorBuilder<TRequest, TEntity>();
+            _selectEntityFromRequestForGet = Selector.From(build(builder));
+
+            return this;
+        }
+
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForUpdateWith(
             Func<TRequest, Expression<Func<TEntity, bool>>> selector)
         {
             _selectEntityFromRequestForUpdate = Selector.From(selector);
+
+            return this;
+        }
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForUpdateWith(
+            Func<SelectorBuilder<TRequest, TEntity>, Func<TRequest, Expression<Func<TEntity, bool>>>> build)
+        {
+            var builder = new SelectorBuilder<TRequest, TEntity>();
+            _selectEntityFromRequestForUpdate = Selector.From(build(builder));
 
             return this;
         }
