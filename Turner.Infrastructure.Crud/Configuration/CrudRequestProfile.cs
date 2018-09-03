@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration.Builders;
 using Turner.Infrastructure.Crud.Errors;
 
@@ -12,7 +13,7 @@ namespace Turner.Infrastructure.Crud.Configuration
         
         internal abstract void Inherit(IEnumerable<CrudRequestProfile> profile);
         internal abstract void Apply(ICrudRequestConfig config);
-        internal abstract void Apply<TRequest>(CrudRequestConfig<TRequest> config);
+        internal abstract void Apply<TRequest>(CrudRequestConfig<TRequest> config, ref List<Type> inherited);
     }
     
     public abstract class CrudRequestProfile<TRequest> 
@@ -23,6 +24,12 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         private readonly List<CrudRequestProfile> _inheritProfiles 
             = new List<CrudRequestProfile>();
+
+        private readonly List<Func<object, Task>> _preCreateActions
+            = new List<Func<object, Task>>();
+
+        private readonly List<Func<object, Task>> _preUpdateActions
+            = new List<Func<object, Task>>();
 
         private Action<CrudRequestErrorConfig> _errorConfig;
 
@@ -41,7 +48,39 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             return builder;
         }
+
+        protected void BeforeCreating(Func<TRequest, Task> preCreateAction)
+        {
+            if (preCreateAction != null)
+                _preCreateActions.Add(request => preCreateAction((TRequest) request));
+        }
+
+        protected void BeforeCreating(Action<TRequest> preCreateAction)
+        {
+            if (preCreateAction != null)
+                _preCreateActions.Add(request =>
+                {
+                    preCreateAction((TRequest) request);
+                    return Task.CompletedTask;
+                });
+        }
         
+        protected void BeforeUpdating(Func<TRequest, Task> preUpdateAction)
+        {
+            if (preUpdateAction != null)
+                _preUpdateActions.Add(request => preUpdateAction((TRequest) request));
+        }
+
+        protected void BeforeUpdating(Action<TRequest> preUpdateAction)
+        {
+            if (preUpdateAction != null)
+                _preUpdateActions.Add(request =>
+                {
+                    preUpdateAction((TRequest) request);
+                    return Task.CompletedTask;
+                });
+        }
+
         internal override void Inherit(IEnumerable<CrudRequestProfile> profiles)
         {
             _inheritProfiles.AddRange(profiles);
@@ -55,13 +94,25 @@ namespace Turner.Infrastructure.Crud.Configuration
                 throw new BadCrudConfigurationException(message);
             }
 
-            Apply(tConfig);
+            var inherited = new List<Type>();
+
+            Apply(tConfig, ref inherited);
         }
 
-        internal override void Apply<TPerspective>(CrudRequestConfig<TPerspective> config)
+        internal override void Apply<TPerspective>(CrudRequestConfig<TPerspective> config, ref List<Type> inherited)
         {
-            foreach (var profile in _inheritProfiles.Distinct())
-                profile.Apply(config);
+            foreach (var profile in _inheritProfiles)
+            {
+                if (inherited.Contains(profile.RequestType))
+                    continue;
+
+                inherited.Add(profile.RequestType);
+
+                profile.Apply(config, ref inherited);
+            }
+
+            config.AddPreCreateActions(_preCreateActions);
+            config.AddPreUpdateActions(_preUpdateActions);
 
             ApplyErrorConfig(config);
 
@@ -74,8 +125,11 @@ namespace Turner.Infrastructure.Crud.Configuration
             var errorConfig = new CrudRequestErrorConfig();
             _errorConfig?.Invoke(errorConfig);
 
-            if (errorConfig.FailedToFindIsError.HasValue)
-                config.SetFailedToFindIsError(errorConfig.FailedToFindIsError.Value);
+            if (errorConfig.FailedToFindInGetIsError.HasValue)
+                config.SetFailedToFindInGetIsError(errorConfig.FailedToFindInGetIsError.Value);
+
+            if (errorConfig.FailedToFindInUpdateIsError.HasValue)
+                config.SetFailedToFindInUpdateIsError(errorConfig.FailedToFindInUpdateIsError.Value);
         }
     }
 

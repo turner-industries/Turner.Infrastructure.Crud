@@ -28,8 +28,8 @@ namespace Turner.Infrastructure.Crud.Tests
             var user = Context.Set<User>().FirstOrDefault();
             Assert.IsNotNull(user);
             Assert.AreEqual("TestUser", user.Name);
-            Assert.AreEqual("PreMessage", user.PreMessage);
-            Assert.AreEqual("PostMessage/Entity/User", user.PostMessage);
+            Assert.AreEqual(null, user.PreMessage);
+            Assert.AreEqual("PostCreate/Entity/User", user.PostMessage);
         }
 
         [Test]
@@ -49,8 +49,8 @@ namespace Turner.Infrastructure.Crud.Tests
             var user = Context.Set<User>().FirstOrDefault();
             Assert.IsNotNull(user);
             Assert.AreEqual("TestUser", user.Name);
-            Assert.AreEqual("PreMessage", user.PreMessage);
-            Assert.AreEqual("PostMessage/Entity/User", user.PostMessage);
+            Assert.AreEqual(null, user.PreMessage);
+            Assert.AreEqual("PostCreate/Entity/User", user.PostMessage);
         }
 
         [Test]
@@ -68,8 +68,8 @@ namespace Turner.Infrastructure.Crud.Tests
             Assert.IsNotNull(response.Data);
             Assert.AreEqual("TestUser", response.Data.Name);
             Assert.AreEqual(response.Data.Id, Context.Set<User>().First().Id);
-            Assert.AreEqual("PreMessage/Entity/User", response.Data.PreMessage);
-            Assert.AreEqual("PostMessage/Entity", response.Data.PostMessage);
+            Assert.AreEqual("PreCreate/Entity/User", response.Data.PreMessage);
+            Assert.AreEqual("PostCreate/Entity", response.Data.PostMessage);
         }
 
         [Test]
@@ -88,7 +88,7 @@ namespace Turner.Infrastructure.Crud.Tests
             var user = Context.Set<User>().FirstOrDefault();
             Assert.IsNotNull(user);
             Assert.AreEqual("TestUser", user.Name);
-            Assert.AreEqual("PreMessage", user.PreMessage);
+            Assert.AreEqual(null, user.PreMessage);
             Assert.AreEqual("Default", user.PostMessage);
         }
 
@@ -103,8 +103,8 @@ namespace Turner.Infrastructure.Crud.Tests
             Assert.IsNotNull(response.Data);
             Assert.AreEqual("TestUser", response.Data.Name);
             Assert.AreEqual(response.Data.Id, Context.Set<User>().First().Id);
-            Assert.AreEqual("PreMessage", response.Data.PreMessage);
-            Assert.AreEqual("PostMessage/Entity", response.Data.PostMessage);
+            Assert.AreEqual(null, response.Data.PreMessage);
+            Assert.AreEqual("PostCreate/Entity", response.Data.PostMessage);
         }
     }
 

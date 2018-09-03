@@ -1,32 +1,68 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
+using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
+    public interface ICreateAlgorithm
+    {
+        Task<TEntity> CreateEntityAsync<TEntity>(DbContext context, TEntity entity)
+            where TEntity : class;
+
+        Task SaveChangesAsync(DbContext context);
+    }
+
+    public class StandardCreateAlgorithm : ICreateAlgorithm
+    {
+        private readonly IContextAccess _contextAccess;
+        private readonly IDbSetAccess _setAccess;
+
+        public StandardCreateAlgorithm(IContextAccess contextAccess, 
+            IDbSetAccess setAccess)
+        {
+            _contextAccess = contextAccess;
+            _setAccess = setAccess;
+        }
+
+        public Task<TEntity> CreateEntityAsync<TEntity>(DbContext context, TEntity entity)
+            where TEntity : class
+        {
+            var set = _contextAccess.GetEntities<TEntity>(context);
+            return _setAccess.CreateAsync(entity, set);
+        }
+
+        public Task SaveChangesAsync(DbContext context)
+        {
+            return _contextAccess.ApplyChangesAsync(context);
+        }
+    }
+
     internal abstract class CreateRequestHandlerBase<TRequest, TEntity>
+        : CrudRequestHandler<TRequest>
         where TEntity : class
     {
-        protected readonly DbContext Context;
-        protected readonly ICrudRequestConfig RequestConfig;
+        protected readonly ICreateAlgorithm Algorithm;
 
-        public CreateRequestHandlerBase(DbContext context, CrudConfigManager profileManager)
+        public CreateRequestHandlerBase(DbContext context, 
+            CrudConfigManager profileManager,
+            ICreateAlgorithm algorithm)
+            : base(context, profileManager)
         {
-            Context = context;
-            RequestConfig = profileManager.GetRequestConfigFor<TRequest>();
+            Algorithm = algorithm;
         }
 
         protected async Task<TEntity> CreateEntity(TRequest request)
         {
-            await RequestConfig.PreCreate<TEntity>(request);
+            await RequestConfig.PreCreate<TEntity>(request).Configure();
 
-            var entity = RequestConfig.CreateEntity<TEntity>(request);
-            await Context.Set<TEntity>().AddAsync(entity);
+            var entity = await RequestConfig.CreateEntity<TEntity>(request).Configure();
+            var newEntity = await Algorithm.CreateEntityAsync(Context, entity).Configure();
 
-            await RequestConfig.PostCreate(entity);
-            await Context.SaveChangesAsync();
+            await RequestConfig.PostCreate(entity).Configure();
+            await Algorithm.SaveChangesAsync(Context).Configure();
 
             return entity;
         }
@@ -38,14 +74,16 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
         where TRequest : ICreateRequest<TEntity>
     {
-        public CreateRequestHandler(DbContext context, CrudConfigManager profileManager)
-            : base(context, profileManager)
+        public CreateRequestHandler(DbContext context, 
+            CrudConfigManager profileManager,
+            ICreateAlgorithm algorithm)
+            : base(context, profileManager, algorithm)
         {
         }
 
         public async Task<Response> HandleAsync(TRequest request)
         {
-            await CreateEntity(request);
+            await CreateEntity(request).Configure();
 
             return Response.Success();
         }
@@ -57,14 +95,16 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
         where TRequest : ICreateRequest<TEntity, TOut>
     {
-        public CreateRequestHandler(DbContext context, CrudConfigManager profileManager)
-            : base(context, profileManager)
+        public CreateRequestHandler(DbContext context, 
+            CrudConfigManager profileManager,
+            ICreateAlgorithm algorithm)
+            : base(context, profileManager, algorithm)
         {
         }
 
         public async Task<Response<TOut>> HandleAsync(TRequest request)
         {
-            var entity = await CreateEntity(request);
+            var entity = await CreateEntity(request).Configure();
             var result = Mapper.Map<TOut>(entity);
 
             return new Response<TOut> { Data = result };

@@ -35,7 +35,7 @@ namespace Turner.Infrastructure.Crud
             Func<TRequest, Expression<Func<TEntity, bool>>> selector)
             where TEntity : class
         {
-            _selector = request => selector((TRequest)request);
+            _selector = request => selector((TRequest) request);
 
             _boundRequestType = typeof(TRequest);
             _boundEntityType = typeof(TEntity);
@@ -70,7 +70,7 @@ namespace Turner.Infrastructure.Crud
                 return null;
 
             if (typeof(TEntity) == _boundEntityType)
-                return (Expression<Func<TEntity, bool>>)selectExpr;
+                return (Expression<Func<TEntity, bool>>) selectExpr;
 
             var entityParam = Expression.Parameter(typeof(TEntity));
             var tParam = Expression.Convert(entityParam, _boundEntityType);
@@ -79,7 +79,7 @@ namespace Turner.Infrastructure.Crud
             return Expression.Lambda<Func<TEntity, bool>>(invocation, entityParam);
         }
     }
-
+    
     public static class SelectorExtensions
     {
         public static TEntity Select<TRequest, TEntity>(

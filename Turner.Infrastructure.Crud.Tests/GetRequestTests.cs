@@ -1,12 +1,10 @@
 ﻿using NUnit.Framework;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Tests.Fakes;
-using Turner.Infrastructure.Mediator;
 using Turner.Infrastructure.Mediator.Decorators;
 
 namespace Turner.Infrastructure.Crud.Tests
@@ -15,13 +13,17 @@ namespace Turner.Infrastructure.Crud.Tests
     public class GetRequestTests : BaseUnitTest
     {
         User _user;
+        Site _site;
 
         [SetUp]
         public void SetUp()
         {
             _user = new User { Name = "TestUser" };
+            _site = new Site { Guid = Guid.NewGuid() };
 
             Context.Add(_user);
+            Context.Add(_site);
+
             Context.SaveChanges();
         }
 
@@ -37,6 +39,20 @@ namespace Turner.Infrastructure.Crud.Tests
             Assert.AreEqual(_user.Name, response.Data.Name);
             Assert.AreEqual(_user.PreMessage, response.Data.PreMessage);
             Assert.AreEqual(_user.PostMessage, response.Data.PostMessage);
+        }
+
+        [Test]
+        public async Task Handle_GenericGetByGuidRequest_GetsSite()
+        {
+            var request = new GetByGuidRequest<Site, SiteGetDto>(_site.Guid);
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(_site.Id, response.Data.Id);
+            Assert.AreEqual(_site.Guid, response.Data.Guid);
+            Assert.AreEqual(_site.PreMessage, response.Data.PreMessage);
+            Assert.AreEqual(_site.PostMessage, response.Data.PostMessage);
         }
 
         [Test]
@@ -119,32 +135,10 @@ namespace Turner.Infrastructure.Crud.Tests
         public int Id { get; set; }
     }
     
-    public class GetByIdRequest<TEntity, TOut> : GetRequest<TEntity, int, TOut>
-        where TEntity : class, IEntity
-    {
-        public GetByIdRequest(int id) : base(id) { }
-    }
-
     [DoNotValidate]
     public class GetUserByNameRequest : IGetRequest<User, UserGetDto>
     {
         public string Name { get; set; }
-    }
-
-    public class GetRequestProfile<TEntity, TOut> : CrudRequestProfile<IGetRequest<TEntity, TOut>>
-        where TEntity : class, IEntity
-    {
-        public GetRequestProfile()
-        {
-            ForEntity<IEntity>()
-                .SelectWith(request =>
-                {
-                    if (request is GetRequest<TEntity, int, TOut> intRequest)
-                        return entity => intRequest.Data == entity.Id;
-
-                    return null;
-                });
-        }
     }
 
     public class GetUserByIdProfile : CrudRequestProfile<GetUserByIdRequest>
@@ -152,7 +146,7 @@ namespace Turner.Infrastructure.Crud.Tests
         public GetUserByIdProfile()
         {
             ForEntity<User>()
-                .SelectWith(r => e => e.Id == r.Id)
+                .SelectForAnyWith(r => e => e.Id == r.Id)
                 .UseDefault(new User { Name = "DefaultUser" });
         }
     }
@@ -163,10 +157,10 @@ namespace Turner.Infrastructure.Crud.Tests
         {
             ForEntity<User>()
                 .UseDefault(new User { Name = "DefaultUser" })
-                .SelectWith(request => entity =>
+                .SelectForGetWith(request => entity =>
                     string.Equals(entity.Name, request.Name, StringComparison.InvariantCultureIgnoreCase));
 
-            ConfigureErrors(config => config.FailedToFindIsError = false);
+            ConfigureErrors(config => config.FailedToFindInGetIsError = false);
         }
     }
 }

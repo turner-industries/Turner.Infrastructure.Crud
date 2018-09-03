@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace Turner.Infrastructure.Crud.Tests.Fakes
@@ -33,7 +34,7 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
     {
         public string Name { get; set; }
 
-        public string PreMessage { get; set; } = "PreMessage";
+        public string PreMessage { get; set; }
     }
     
     public class UserGetDto : UserDto
@@ -52,9 +53,35 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         }
     }
 
-    public class Site : Entity
+    public class Site : Entity, IHasPreMessage
     {
+        [Required]
+        public Guid Guid { get; set; }
 
+        public string PreMessage { get; set; }
+    }
+
+    public class SiteDto : IHasPreMessage
+    {
+        public Guid Guid { get; set; }
+
+        public string PreMessage { get; set; }
+    }
+
+    public class SiteGetDto : SiteDto
+    {
+        public int Id { get; set; }
+
+        public string PostMessage { get; set; }
+    }
+
+    public class SiteProfiles : Profile
+    {
+        public SiteProfiles()
+        {
+            CreateMap<SiteDto, Site>()
+                .ForMember(x => x.Id, o => o.Ignore());
+        }
     }
 
     public class NonEntity
