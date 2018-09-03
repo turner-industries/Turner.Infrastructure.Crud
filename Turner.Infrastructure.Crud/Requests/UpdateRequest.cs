@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using System;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Mediator;
 using Turner.Infrastructure.Mediator.Decorators;
@@ -97,7 +98,25 @@ namespace Turner.Infrastructure.Crud.Requests
         public UpdateByIdRequestProfile()
         {
             ForEntity<TEntity>()
-                .SelectForUpdateWith(builder => builder.Build("Key", "Id"));
+                .SelectForUpdateWith(builder => builder.Build(request => request.Key, "Id"));
+        }
+    }
+
+    [DoNotValidate]
+    public class UpdateByGuidRequest<TEntity, TIn, TOut> : UpdateRequest<TEntity, Guid, TIn, TOut>
+        where TEntity : class
+    {
+        public UpdateByGuidRequest(Guid guid, TIn data) : base(guid, data) { }
+    }
+
+    public class UpdateByGuidRequestProfile<TEntity, TIn, TOut>
+        : CrudRequestProfile<UpdateByGuidRequest<TEntity, TIn, TOut>>
+        where TEntity : class
+    {
+        public UpdateByGuidRequestProfile()
+        {
+            ForEntity<TEntity>()
+                .SelectForUpdateWith(builder => builder.Build(request => request.Key, "Guid"));
         }
     }
 }
