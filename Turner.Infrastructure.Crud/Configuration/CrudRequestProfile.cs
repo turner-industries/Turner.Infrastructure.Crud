@@ -25,13 +25,16 @@ namespace Turner.Infrastructure.Crud.Configuration
         private readonly List<CrudRequestProfile> _inheritProfiles 
             = new List<CrudRequestProfile>();
 
-        private readonly List<Func<object, Task>> _preCreateActions
-            = new List<Func<object, Task>>();
-
-        private readonly List<Func<object, Task>> _preUpdateActions
-            = new List<Func<object, Task>>();
+        private readonly Dictionary<ActionType, ActionList> _preActions
+            = new Dictionary<ActionType, ActionList>();
 
         private Action<CrudRequestErrorConfig> _errorConfig;
+
+        public CrudRequestProfile()
+        {
+            foreach (var type in (ActionType[]) Enum.GetValues(typeof(ActionType)))
+                _preActions[type] = new ActionList();
+        }
 
         public override Type RequestType => typeof(TRequest);
 
@@ -49,37 +52,23 @@ namespace Turner.Infrastructure.Crud.Configuration
             return builder;
         }
 
-        protected void BeforeCreating(Func<TRequest, Task> preCreateAction)
-        {
-            if (preCreateAction != null)
-                _preCreateActions.Add(request => preCreateAction((TRequest) request));
-        }
+        protected void BeforeCreating(Func<TRequest, Task> action)
+            => AddPreAction(ActionType.Create, action);
 
-        protected void BeforeCreating(Action<TRequest> preCreateAction)
-        {
-            if (preCreateAction != null)
-                _preCreateActions.Add(request =>
-                {
-                    preCreateAction((TRequest) request);
-                    return Task.CompletedTask;
-                });
-        }
-        
-        protected void BeforeUpdating(Func<TRequest, Task> preUpdateAction)
-        {
-            if (preUpdateAction != null)
-                _preUpdateActions.Add(request => preUpdateAction((TRequest) request));
-        }
+        protected void BeforeCreating(Action<TRequest> action)
+            => AddPreAction(ActionType.Create, action);
 
-        protected void BeforeUpdating(Action<TRequest> preUpdateAction)
-        {
-            if (preUpdateAction != null)
-                _preUpdateActions.Add(request =>
-                {
-                    preUpdateAction((TRequest) request);
-                    return Task.CompletedTask;
-                });
-        }
+        protected void BeforeUpdating(Func<TRequest, Task> action)
+            => AddPreAction(ActionType.Update, action);
+
+        protected void BeforeUpdating(Action<TRequest> action)
+            => AddPreAction(ActionType.Update, action);
+
+        protected void BeforeDeleting(Func<TRequest, Task> action)
+            => AddPreAction(ActionType.Delete, action);
+
+        protected void BeforeDeleting(Action<TRequest> action)
+            => AddPreAction(ActionType.Delete, action);
 
         internal override void Inherit(IEnumerable<CrudRequestProfile> profiles)
         {
@@ -111,8 +100,8 @@ namespace Turner.Infrastructure.Crud.Configuration
                 profile.Apply(config, ref inherited);
             }
 
-            config.AddPreCreateActions(_preCreateActions);
-            config.AddPreUpdateActions(_preUpdateActions);
+            foreach (var type in (ActionType[]) Enum.GetValues(typeof(ActionType)))
+                config.AddPreActions(type, _preActions[type]);
 
             ApplyErrorConfig(config);
 
@@ -126,10 +115,29 @@ namespace Turner.Infrastructure.Crud.Configuration
             _errorConfig?.Invoke(errorConfig);
 
             if (errorConfig.FailedToFindInGetIsError.HasValue)
-                config.SetFailedToFindInGetIsError(errorConfig.FailedToFindInGetIsError.Value);
+                config.ErrorConfig.FailedToFindInGetIsError = errorConfig.FailedToFindInGetIsError.Value;
 
             if (errorConfig.FailedToFindInUpdateIsError.HasValue)
-                config.SetFailedToFindInUpdateIsError(errorConfig.FailedToFindInUpdateIsError.Value);
+                config.ErrorConfig.FailedToFindInUpdateIsError = errorConfig.FailedToFindInUpdateIsError.Value;
+
+            if (errorConfig.FailedToFindInDeleteIsError.HasValue)
+                config.ErrorConfig.FailedToFindInDeleteIsError = errorConfig.FailedToFindInDeleteIsError.Value;
+        }
+
+        private void AddPreAction(ActionType type, Func<TRequest, Task> action)
+        {
+            if (action != null)
+                _preActions[type].Add(request => action((TRequest) request));
+        }
+
+        private void AddPreAction(ActionType type, Action<TRequest> action)
+        {
+            if (action != null)
+                _preActions[type].Add(request =>
+                {
+                    action((TRequest) request);
+                    return Task.CompletedTask;
+                });
         }
     }
 

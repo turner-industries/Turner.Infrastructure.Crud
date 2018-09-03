@@ -1,6 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Turner.Infrastructure.Crud.Tests.Fakes
 {
@@ -26,6 +29,24 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         {
             modelBuilder.Entity<User>();
             modelBuilder.Entity<Site>();
+        }
+
+        public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var deletedEntries = ChangeTracker.Entries()
+                .Where(x => x.State == EntityState.Deleted)
+                .ToList();
+
+            foreach (var entry in deletedEntries)
+            {
+                if (entry.Entity is IEntity entity)
+                {
+                    entity.IsDeleted = true;
+                    entry.State = EntityState.Modified;
+                }
+            }
+
+            return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
         }
     }
 }

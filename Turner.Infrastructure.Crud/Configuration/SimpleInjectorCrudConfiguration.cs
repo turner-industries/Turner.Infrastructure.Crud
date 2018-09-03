@@ -43,6 +43,11 @@ namespace Turner.Infrastructure.Crud.Configuration
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(UpdateRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(UpdateRequestHandler<,,>), IfNotHandled);
 
+            container.RegisterConditional(typeof(IDeleteAlgorithm), typeof(StandardDeleteAlgorithm), IfNotHandled);
+            container.Register(typeof(DeleteRequestHandler<,>), configAssemblies);
+            container.Register(typeof(DeleteRequestHandler<,,>), configAssemblies);
+            container.RegisterConditional(typeof(IRequestHandler<>), typeof(DeleteRequestHandler<,>), IfNotHandled);
+            container.RegisterConditional(typeof(IRequestHandler<,>), typeof(DeleteRequestHandler<,,>), IfNotHandled);
         }
     }
 }

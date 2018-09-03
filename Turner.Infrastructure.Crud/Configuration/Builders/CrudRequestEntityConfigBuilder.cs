@@ -16,121 +16,65 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         : ICrudRequestEntityConfigBuilder
         where TEntity : class
     {
-        private readonly List<Func<TRequest, Task>> _preCreateActions;
-        private readonly List<Func<TEntity, Task>> _postCreateActions;
-        private readonly List<Func<TRequest, Task>> _preUpdateActions;
-        private readonly List<Func<TEntity, Task>> _postUpdateActions;
+        private readonly Dictionary<SelectorType, ISelector> _selectors
+            = new Dictionary<SelectorType, ISelector>();
 
-        private TEntity _defaultValue;
-        private ISelector _selectEntityFromRequestForGet;
-        private ISelector _selectEntityFromRequestForUpdate;
-        private Func<TRequest, Task<TEntity>> _createEntityFromRequest;
-        private Func<TRequest, TEntity, Task> _updateEntityFromRequest;
+        private readonly Dictionary<ActionType, List<Func<TRequest, Task>>> _preActions
+            = new Dictionary<ActionType, List<Func<TRequest, Task>>>();
+
+        private readonly Dictionary<ActionType, List<Func<TEntity, Task>>> _postActions
+            = new Dictionary<ActionType, List<Func<TEntity, Task>>>();
+
+        private TEntity _defaultValue = null;
+        private Func<TRequest, Task<TEntity>> _createEntityFromRequest = null;
+        private Func<TRequest, TEntity, Task> _updateEntityFromRequest = null;
 
         public CrudRequestEntityConfigBuilder()
         {
-            _preCreateActions = new List<Func<TRequest, Task>>();
-            _postCreateActions = new List<Func<TEntity, Task>>();
-            _preUpdateActions = new List<Func<TRequest, Task>>();
-            _postUpdateActions = new List<Func<TEntity, Task>>();
-
-            _defaultValue = null;
-            _selectEntityFromRequestForGet = null;
-            _selectEntityFromRequestForUpdate = null;
-            _createEntityFromRequest = null;
-            _updateEntityFromRequest = null;
+            foreach (var type in (ActionType[]) Enum.GetValues(typeof(ActionType)))
+            {
+                _preActions[type] = new List<Func<TRequest, Task>>();
+                _postActions[type] = new List<Func<TEntity, Task>>();
+            }
         }
 
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> BeforeCreating(
-            Func<TRequest, Task> preCreateAction)
-        {
-            if (preCreateAction != null)
-                _preCreateActions.Add(preCreateAction);
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> BeforeCreating(Func<TRequest, Task> action) 
+            => AddPreAction(ActionType.Create, action);
 
-            return this;
-        }
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> BeforeCreating(Action<TRequest> action)
+            => AddPreAction(ActionType.Create, action);
 
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> BeforeCreating(
-            Action<TRequest> preCreateAction)
-        {
-            if (preCreateAction != null)
-                _preCreateActions.Add(request => 
-                {
-                    preCreateAction(request);
-                    return Task.CompletedTask;
-                });
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> AfterCreating(Func<TEntity, Task> action)
+            => AddPostAction(ActionType.Create, action);
 
-            return this;
-        }
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> AfterCreating(Action<TEntity> action)
+            => AddPostAction(ActionType.Create, action);
 
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> AfterCreating(
-            Func<TEntity, Task> postCreateAction)
-        {
-            if (postCreateAction != null)
-                _postCreateActions.Add(postCreateAction);
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> BeforeUpdating(Func<TRequest, Task> action)
+            => AddPreAction(ActionType.Update, action);
 
-            return this;
-        }
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> BeforeUpdating(Action<TRequest> action)
+            => AddPreAction(ActionType.Update, action);
 
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> AfterCreating(
-            Action<TEntity> postCreateAction)
-        {
-            if (postCreateAction != null)
-                _postCreateActions.Add(entity =>
-                {
-                    postCreateAction(entity);
-                    return Task.CompletedTask;
-                });
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> AfterUpdating(Func<TEntity, Task> action)
+            => AddPostAction(ActionType.Update, action);
 
-            return this;
-        }
-        
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> BeforeUpdating(
-            Func<TRequest, Task> preUpdateAction)
-        {
-            if (preUpdateAction != null)
-                _preUpdateActions.Add(preUpdateAction);
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> AfterUpdating(Action<TEntity> action)
+            => AddPostAction(ActionType.Update, action);
 
-            return this;
-        }
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> BeforeDeleting(Func<TRequest, Task> action)
+            => AddPreAction(ActionType.Delete, action);
 
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> BeforeUpdating(
-            Action<TRequest> preUpdateAction)
-        {
-            if (preUpdateAction != null)
-                _preUpdateActions.Add(request =>
-                {
-                    preUpdateAction(request);
-                    return Task.CompletedTask;
-                });
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> BeforeDeleting(Action<TRequest> action)
+            => AddPreAction(ActionType.Delete, action);
 
-            return this;
-        }
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> AfterDeleting(Func<TEntity, Task> action) 
+            => AddPostAction(ActionType.Delete, action);
 
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> AfterUpdating(
-            Func<TEntity, Task> postUpdateAction)
-        {
-            if (postUpdateAction != null)
-                _postUpdateActions.Add(postUpdateAction);
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> AfterDeleting(Action<TEntity> action)
+            => AddPostAction(ActionType.Delete, action);
 
-            return this;
-        }
-
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> AfterUpdating(
-            Action<TEntity> postUpdateAction)
-        {
-            if (postUpdateAction != null)
-                _postUpdateActions.Add(entity =>
-                {
-                    postUpdateAction(entity);
-                    return Task.CompletedTask;
-                });
-
-            return this;
-        }
-        
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> UseDefault(
-            TEntity defaultValue)
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> UseDefault(TEntity defaultValue)
         {
             _defaultValue = defaultValue;
 
@@ -140,7 +84,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForGetWith(
             Func<TRequest, Expression<Func<TEntity, bool>>> selector)
         {
-            _selectEntityFromRequestForGet = Selector.From(selector);
+            _selectors[SelectorType.Get] = Selector.From(selector);
 
             return this;
         }
@@ -149,7 +93,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             Func<SelectorBuilder<TRequest, TEntity>, Func<TRequest, Expression<Func<TEntity, bool>>>> build)
         {
             var builder = new SelectorBuilder<TRequest, TEntity>();
-            _selectEntityFromRequestForGet = Selector.From(build(builder));
+            _selectors[SelectorType.Get] = Selector.From(build(builder));
 
             return this;
         }
@@ -157,7 +101,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForUpdateWith(
             Func<TRequest, Expression<Func<TEntity, bool>>> selector)
         {
-            _selectEntityFromRequestForUpdate = Selector.From(selector);
+            _selectors[SelectorType.Update] = Selector.From(selector);
 
             return this;
         }
@@ -166,7 +110,24 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             Func<SelectorBuilder<TRequest, TEntity>, Func<TRequest, Expression<Func<TEntity, bool>>>> build)
         {
             var builder = new SelectorBuilder<TRequest, TEntity>();
-            _selectEntityFromRequestForUpdate = Selector.From(build(builder));
+            _selectors[SelectorType.Update] = Selector.From(build(builder));
+
+            return this;
+        }
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForDeleteWith(
+            Func<TRequest, Expression<Func<TEntity, bool>>> selector)
+        {
+            _selectors[SelectorType.Delete] = Selector.From(selector);
+
+            return this;
+        }
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForDeleteWith(
+            Func<SelectorBuilder<TRequest, TEntity>, Func<TRequest, Expression<Func<TEntity, bool>>>> build)
+        {
+            var builder = new SelectorBuilder<TRequest, TEntity>();
+            _selectors[SelectorType.Delete] = Selector.From(build(builder));
 
             return this;
         }
@@ -174,12 +135,26 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForAnyWith(
             Func<TRequest, Expression<Func<TEntity, bool>>> selector)
         {
-            _selectEntityFromRequestForGet = 
-            _selectEntityFromRequestForUpdate = Selector.From(selector);
+            var sel = Selector.From(selector);
+
+            foreach (var type in (SelectorType[])Enum.GetValues(typeof(SelectorType)))
+                _selectors[type] = sel;
 
             return this;
         }
 
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForAnyWith(
+            Func<SelectorBuilder<TRequest, TEntity>, Func<TRequest, Expression<Func<TEntity, bool>>>> build)
+        {
+            var builder = new SelectorBuilder<TRequest, TEntity>();
+            var sel = Selector.From(build(builder));
+
+            foreach (var type in (SelectorType[])Enum.GetValues(typeof(SelectorType)))
+                _selectors[type] = sel;
+
+            return this;
+        }
+        
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> CreateWith(
             Func<TRequest, Task<TEntity>> creator)
         {
@@ -220,11 +195,8 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         {
             config.SetDefault(_defaultValue);
 
-            if (_selectEntityFromRequestForGet != null)
-                config.SetEntitySelectorForGet<TEntity>(_selectEntityFromRequestForGet);
-
-            if (_selectEntityFromRequestForUpdate != null)
-                config.SetEntitySelectorForUpdate<TEntity>(_selectEntityFromRequestForUpdate);
+            foreach (var (type, selector) in _selectors)
+                config.SetEntitySelectorFor<TEntity>(type, selector);
 
             if (_createEntityFromRequest != null)
                 config.SetEntityCreator(request => _createEntityFromRequest((TRequest)request));
@@ -232,41 +204,65 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             if (_updateEntityFromRequest != null)
                 config.SetEntityUpdator<TEntity>((request, entity) => _updateEntityFromRequest((TRequest)request, entity));
 
-            if (_preCreateActions.Count > 0)
+            foreach (var type in (ActionType[]) Enum.GetValues(typeof(ActionType)))
             {
-                var actions = _preCreateActions
-                    .Select(action => new Func<object, Task>(x => action((TRequest) x)))
-                    .ToList();
+                Func<object, Task> ConvertAction<T>(Func<T, Task> action)
+                    => new Func<object, Task>(x => action((T) x));
 
-                config.SetPreCreateActions<TEntity>(actions);
+                var preActions = _preActions[type];
+                if (preActions.Count > 0)
+                {
+                    config.SetPreActionsFor<TEntity>(type, 
+                        new ActionList(preActions.Select(ConvertAction<TRequest>)));
+                }
+
+                var postActions = _postActions[type];
+                if (postActions.Count > 0)
+                {
+                    config.SetPostActionsFor<TEntity>(type,
+                        new ActionList(postActions.Select(ConvertAction<TEntity>)));
+                }
             }
+        }
 
-            if (_postCreateActions.Count > 0)
-            {
-                var actions = _postCreateActions
-                    .Select(action => new Func<object, Task>(x => action((TEntity) x)))
-                    .ToList();
+        private CrudRequestEntityConfigBuilder<TRequest, TEntity> AddPreAction(ActionType type, Func<TRequest, Task> action)
+        {
+            if (action != null)
+                _preActions[type].Add(action);
 
-                config.SetPostCreateActions<TEntity>(actions);
-            }
+            return this;
+        }
 
-            if (_preUpdateActions.Count > 0)
-            {
-                var actions = _preUpdateActions
-                    .Select(action => new Func<object, Task>(x => action((TRequest) x)))
-                    .ToList();
+        private CrudRequestEntityConfigBuilder<TRequest, TEntity> AddPreAction(ActionType type, Action<TRequest> action)
+        {
+            if (action != null)
+                _preActions[type].Add(request =>
+                {
+                    action(request);
+                    return Task.CompletedTask;
+                });
 
-                config.SetPreUpdateActions<TEntity>(actions);
-            }
+            return this;
+        }
 
-            if (_postUpdateActions.Count > 0)
-            {
-                var actions = _postUpdateActions
-                    .Select(action => new Func<object, Task>(x => action((TEntity) x)))
-                    .ToList();
+        private CrudRequestEntityConfigBuilder<TRequest, TEntity> AddPostAction(ActionType type, Func<TEntity, Task> action)
+        {
+            if (action != null)
+                _postActions[type].Add(action);
 
-                config.SetPostUpdateActions<TEntity>(actions);
-            }
+            return this;
+        }
+
+        private CrudRequestEntityConfigBuilder<TRequest, TEntity> AddPostAction(ActionType type, Action<TEntity> action)
+        {
+            if (action != null)
+                _postActions[type].Add(request =>
+                {
+                    action(request);
+                    return Task.CompletedTask;
+                });
+
+            return this;
         }
     }
 }

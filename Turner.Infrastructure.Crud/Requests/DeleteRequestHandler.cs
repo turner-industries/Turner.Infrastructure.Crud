@@ -8,21 +8,27 @@ using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-    public interface IUpdateAlgorithm
+    public interface IDeleteAlgorithm
     {
         DbSet<TEntity> GetEntities<TEntity>(DbContext context)
+            where TEntity : class;
+
+        Task<TEntity> DeleteEntityAsync<TEntity>(DbContext context, TEntity entity)
             where TEntity : class;
 
         Task SaveChangesAsync(DbContext context);
     }
 
-    public class StandardUpdateAlgorithm : IUpdateAlgorithm
+    public class StandardDeleteAlgorithm : IDeleteAlgorithm
     {
         private readonly IContextAccess _contextAccess;
+        private readonly IDbSetAccess _setAccess;
 
-        public StandardUpdateAlgorithm(IContextAccess contextAccess)
+        public StandardDeleteAlgorithm(IContextAccess contextAccess, 
+            IDbSetAccess setAccess)
         {
             _contextAccess = contextAccess;
+            _setAccess = setAccess;
         }
 
         public DbSet<TEntity> GetEntities<TEntity>(DbContext context)
@@ -31,21 +37,28 @@ namespace Turner.Infrastructure.Crud.Requests
             return _contextAccess.GetEntities<TEntity>(context);
         }
 
+        public Task<TEntity> DeleteEntityAsync<TEntity>(DbContext context, TEntity entity)
+            where TEntity : class
+        {
+            var set = _contextAccess.GetEntities<TEntity>(context);
+            return _setAccess.DeleteAsync(entity, set);
+        }
+
         public Task SaveChangesAsync(DbContext context)
         {
             return _contextAccess.ApplyChangesAsync(context);
         }
     }
 
-    internal abstract class UpdateRequestHandlerBase<TRequest, TEntity>
+    internal abstract class DeleteRequestHandlerBase<TRequest, TEntity>
         : CrudRequestHandler<TRequest>
         where TEntity : class
     {
-        protected readonly IUpdateAlgorithm Algorithm;
+        protected readonly IDeleteAlgorithm Algorithm;
 
-        public UpdateRequestHandlerBase(DbContext context, 
+        public DeleteRequestHandlerBase(DbContext context, 
             CrudConfigManager profileManager,
-            IUpdateAlgorithm algorithm)
+            IDeleteAlgorithm algorithm)
             : base(context, profileManager)
         {
             Algorithm = algorithm;
@@ -53,12 +66,12 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity> GetEntity(TRequest request)
         {
-            var selector = RequestConfig.GetSelectorFor<TEntity>(SelectorType.Update);
+            var selector = RequestConfig.GetSelectorFor<TEntity>(SelectorType.Delete);
             var entity = await Algorithm.GetEntities<TEntity>(Context)
                 .SelectAsync(request, selector)
                 .Configure();
-            
-            if (entity == null && RequestConfig.ErrorConfig.FailedToFindInUpdateIsError)
+
+            if (entity == null && RequestConfig.ErrorConfig.FailedToFindInDeleteIsError)
             {
                 throw new FailedToFindException("Failed to find entity.")
                 {
@@ -70,25 +83,25 @@ namespace Turner.Infrastructure.Crud.Requests
             return entity;
         }
 
-        protected async Task UpdateEntity(TRequest request, TEntity entity)
+        protected async Task DeleteEntity(TRequest request, TEntity entity)
         {
-            await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Update, request).Configure();
-            await RequestConfig.UpdateEntity(request, entity).Configure();
-            await RequestConfig.RunPostActionsFor(ActionType.Update, entity).Configure();
+            await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Delete, request).Configure();
+            await Algorithm.DeleteEntityAsync(Context, entity).Configure();
+            await RequestConfig.RunPostActionsFor(ActionType.Delete, entity).Configure();
 
             await Algorithm.SaveChangesAsync(Context).Configure();
         }
     }
 
-    internal class UpdateRequestHandler<TRequest, TEntity>
-        : UpdateRequestHandlerBase<TRequest, TEntity>,
+    internal class DeleteRequestHandler<TRequest, TEntity>
+        : DeleteRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest>
         where TEntity : class
-        where TRequest : IUpdateRequest<TEntity>
+        where TRequest : IDeleteRequest<TEntity>
     {
-        public UpdateRequestHandler(DbContext context, 
+        public DeleteRequestHandler(DbContext context, 
             CrudConfigManager profileManager,
-            IUpdateAlgorithm algorithm)
+            IDeleteAlgorithm algorithm)
             : base(context, profileManager, algorithm)
         {
         }
@@ -97,21 +110,21 @@ namespace Turner.Infrastructure.Crud.Requests
         {
             var entity = await GetEntity(request).Configure();
             if (entity != null)
-                await UpdateEntity(request, entity).Configure();
+                await DeleteEntity(request, entity).Configure();
 
             return Response.Success();
         }
     }
 
-    internal class UpdateRequestHandler<TRequest, TEntity, TOut>
-        : UpdateRequestHandlerBase<TRequest, TEntity>,
+    internal class DeleteRequestHandler<TRequest, TEntity, TOut>
+        : DeleteRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest, TOut>
         where TEntity : class
-        where TRequest : IUpdateRequest<TEntity, TOut>
+        where TRequest : IDeleteRequest<TEntity, TOut>
     {
-        public UpdateRequestHandler(DbContext context, 
+        public DeleteRequestHandler(DbContext context, 
             CrudConfigManager profileManager,
-            IUpdateAlgorithm algorithm)
+            IDeleteAlgorithm algorithm)
             : base(context, profileManager, algorithm)
         {
         }
@@ -123,7 +136,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
             if (entity != null)
             {
-                await UpdateEntity(request, entity).Configure();
+                await DeleteEntity(request, entity).Configure();
                 result = Mapper.Map<TOut>(entity);
             }
 

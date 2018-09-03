@@ -47,7 +47,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response<TOut>> HandleAsync(TRequest request)
         {
-            var selector = RequestConfig.GetSelector<TEntity>();
+            var selector = RequestConfig.GetSelectorFor<TEntity>(SelectorType.Get);
             var entity = await Algorithm.GetEntities<TEntity>(Context)
                 .SelectAsync(request, selector)
                 .Configure();
@@ -59,7 +59,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 
             var result = Mapper.Map<TOut>(entity);
 
-            if (failedToFind && RequestConfig.FailedToFindInGetIsError)
+            if (failedToFind && RequestConfig.ErrorConfig.FailedToFindInGetIsError)
             {
                 throw new FailedToFindException("Failed to find entity.")
                 {

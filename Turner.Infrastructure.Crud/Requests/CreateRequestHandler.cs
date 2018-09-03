@@ -56,12 +56,12 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity> CreateEntity(TRequest request)
         {
-            await RequestConfig.PreCreate<TEntity>(request).Configure();
+            await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Create, request).Configure();
 
             var entity = await RequestConfig.CreateEntity<TEntity>(request).Configure();
             var newEntity = await Algorithm.CreateEntityAsync(Context, entity).Configure();
 
-            await RequestConfig.PostCreate(entity).Configure();
+            await RequestConfig.RunPostActionsFor(ActionType.Create, entity).Configure();
             await Algorithm.SaveChangesAsync(Context).Configure();
 
             return entity;
