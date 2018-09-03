@@ -146,7 +146,7 @@ namespace Turner.Infrastructure.Crud.Tests
         public GetUserByIdProfile()
         {
             ForEntity<User>()
-                .SelectForAnyWith(r => e => e.Id == r.Id)
+                .SelectForAnyWith(builder => builder.Build("Id"))
                 .UseDefault(new User { Name = "DefaultUser" });
         }
     }
@@ -157,8 +157,9 @@ namespace Turner.Infrastructure.Crud.Tests
         {
             ForEntity<User>()
                 .UseDefault(new User { Name = "DefaultUser" })
-                .SelectForGetWith(request => entity =>
-                    string.Equals(entity.Name, request.Name, StringComparison.InvariantCultureIgnoreCase));
+                .SelectForGetWith(builder =>
+                    builder.Build(request => entity =>
+                        string.Equals(entity.Name, request.Name, StringComparison.InvariantCultureIgnoreCase)));
 
             ConfigureErrors(config => config.FailedToFindInGetIsError = false);
         }

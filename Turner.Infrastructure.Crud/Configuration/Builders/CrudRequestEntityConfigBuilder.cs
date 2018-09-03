@@ -110,14 +110,6 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         }
 
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForGetWith(
-            Func<TRequest, Expression<Func<TEntity, bool>>> selector)
-        {
-            _selectors[SelectorType.Get] = Selector.From(selector);
-
-            return this;
-        }
-
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForGetWith(
             Func<SelectorBuilder<TRequest, TEntity>, Func<TRequest, Expression<Func<TEntity, bool>>>> build)
         {
             var builder = new SelectorBuilder<TRequest, TEntity>();
@@ -125,15 +117,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
 
             return this;
         }
-
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForUpdateWith(
-            Func<TRequest, Expression<Func<TEntity, bool>>> selector)
-        {
-            _selectors[SelectorType.Update] = Selector.From(selector);
-
-            return this;
-        }
-
+        
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForUpdateWith(
             Func<SelectorBuilder<TRequest, TEntity>, Func<TRequest, Expression<Func<TEntity, bool>>>> build)
         {
@@ -142,15 +126,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
 
             return this;
         }
-
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForDeleteWith(
-            Func<TRequest, Expression<Func<TEntity, bool>>> selector)
-        {
-            _selectors[SelectorType.Delete] = Selector.From(selector);
-
-            return this;
-        }
-
+        
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForDeleteWith(
             Func<SelectorBuilder<TRequest, TEntity>, Func<TRequest, Expression<Func<TEntity, bool>>>> build)
         {
@@ -160,17 +136,6 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
         
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForAnyWith(
-            Func<TRequest, Expression<Func<TEntity, bool>>> selector)
-        {
-            var sel = Selector.From(selector);
-
-            foreach (var type in (SelectorType[])Enum.GetValues(typeof(SelectorType)))
-                _selectors[type] = sel;
-
-            return this;
-        }
-
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForAnyWith(
             Func<SelectorBuilder<TRequest, TEntity>, Func<TRequest, Expression<Func<TEntity, bool>>>> build)
         {

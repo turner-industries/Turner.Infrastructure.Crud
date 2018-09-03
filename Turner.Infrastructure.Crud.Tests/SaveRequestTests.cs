@@ -183,7 +183,7 @@ namespace Turner.Infrastructure.Crud.Tests
         public SaveUserWithoutResponseProfile()
         {
             ForEntity<User>()
-                .SelectForUpdateWith(request => user => request.Id == user.Id)
+                .SelectForUpdateWith(builder => builder.Build(r => r.Id, e => e.Id))
                 .CreateWith(request => Mapper.Map<User>(request.User))
                 .UpdateWith((request, entity) => Mapper.Map(request.User, entity))
                 .AfterSaving(entity => entity.PostMessage += "/Save")
@@ -196,7 +196,7 @@ namespace Turner.Infrastructure.Crud.Tests
         public SaveUserWithResponseProfile()
         {
             ForEntity<User>()
-                .SelectForUpdateWith(request => user => request.Name == user.Name)
+                .SelectForUpdateWith(builder => builder.Build("Name"))
                 .AfterUpdating(entity => entity.PostMessage = "PostUpdate/Entity")
                 .AfterSaving(entity => entity.PostMessage += "/Save")
                 .ConfigureOptions(options => options.SuppressUpdateActionsInSave = true);
@@ -209,7 +209,7 @@ namespace Turner.Infrastructure.Crud.Tests
         public DefaultSaveWithoutResponseRequestProfile()
         {
             ForEntity<User>()
-                .SelectForUpdateWith(request => entity => request.Data.Id == entity.Id);
+                .SelectForUpdateWith(builder => builder.Build(r => e => r.Data.Id == e.Id));
 
             AfterSaving(request => request.Data.Name = "PostSave");
         }
@@ -221,7 +221,7 @@ namespace Turner.Infrastructure.Crud.Tests
         public DefaultSaveWithResponseRequestProfile()
         {
             ForEntity<User>()
-                .SelectForUpdateWith(request => entity => request.Data.Id == entity.Id);
+                .SelectForUpdateWith(builder => builder.Build(request => entity => request.Data.Id == entity.Id));
         }
     }
 }
