@@ -13,11 +13,13 @@ namespace Turner.Infrastructure.Crud.Tests
     public class GetRequestTests : BaseUnitTest
     {
         User _user;
+        Site _site;
 
         [SetUp]
         public void SetUp()
         {
             _user = new User { Name = "TestUser" };
+            _site = new Site { Guid = Guid.NewGuid() };
 
             Context.Add(_user);
             Context.SaveChanges();
@@ -35,6 +37,20 @@ namespace Turner.Infrastructure.Crud.Tests
             Assert.AreEqual(_user.Name, response.Data.Name);
             Assert.AreEqual(_user.PreMessage, response.Data.PreMessage);
             Assert.AreEqual(_user.PostMessage, response.Data.PostMessage);
+        }
+
+        [Test]
+        public async Task Handle_GenericGetByGuidRequest_GetsSite()
+        {
+            var request = new GetByGuidRequest<Site, SiteGetDto>(_site.Guid);
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(_site.Id, response.Data.Id);
+            Assert.AreEqual(_site.Guid, response.Data.Guid);
+            Assert.AreEqual(_site.PreMessage, response.Data.PreMessage);
+            Assert.AreEqual(_site.PostMessage, response.Data.PostMessage);
         }
 
         [Test]
@@ -117,23 +133,6 @@ namespace Turner.Infrastructure.Crud.Tests
         public int Id { get; set; }
     }
     
-    public class GetByIdRequest<TEntity, TOut> : GetRequest<TEntity, int, TOut>
-        where TEntity : class, IEntity
-    {
-        public GetByIdRequest(int id) : base(id) { }
-    }
-
-    public class GetByIdRequestProfile<TEntity, TOut>
-        : CrudRequestProfile<GetByIdRequest<TEntity, TOut>>
-        where TEntity : class, IEntity
-    {
-        public GetByIdRequestProfile()
-        {
-            ForEntity<IEntity>()
-                .SelectForGetWith(builder => builder.Build("Key", "Id"));
-        }
-    }
-
     [DoNotValidate]
     public class GetUserByNameRequest : IGetRequest<User, UserGetDto>
     {

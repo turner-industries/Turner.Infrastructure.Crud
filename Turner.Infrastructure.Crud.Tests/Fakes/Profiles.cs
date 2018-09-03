@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq.Expressions;
-using Turner.Infrastructure.Crud.Configuration;
+﻿using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Requests;
 
 namespace Turner.Infrastructure.Crud.Tests.Fakes
