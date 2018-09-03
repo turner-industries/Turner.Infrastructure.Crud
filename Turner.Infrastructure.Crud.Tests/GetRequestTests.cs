@@ -22,6 +22,8 @@ namespace Turner.Infrastructure.Crud.Tests
             _site = new Site { Guid = Guid.NewGuid() };
 
             Context.Add(_user);
+            Context.Add(_site);
+
             Context.SaveChanges();
         }
 
