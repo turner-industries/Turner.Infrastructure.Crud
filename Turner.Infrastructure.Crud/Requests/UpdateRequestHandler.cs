@@ -53,12 +53,12 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity> GetEntity(TRequest request)
         {
-            var selector = RequestConfig.UpdateSelector<TEntity>();
+            var selector = RequestConfig.GetSelectorFor<TEntity>(SelectorType.Update);
             var entity = await Algorithm.GetEntities<TEntity>(Context)
                 .SelectAsync(request, selector)
                 .Configure();
             
-            if (entity == null && RequestConfig.FailedToFindInUpdateIsError)
+            if (entity == null && RequestConfig.ErrorConfig.FailedToFindInUpdateIsError)
             {
                 throw new FailedToFindException("Failed to find entity.")
                 {
@@ -72,9 +72,9 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task UpdateEntity(TRequest request, TEntity entity)
         {
-            await RequestConfig.PreUpdate<TEntity>(request).Configure();
+            await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Update, request).Configure();
             await RequestConfig.UpdateEntity(request, entity).Configure();
-            await RequestConfig.PostUpdate(entity).Configure();
+            await RequestConfig.RunPostActionsFor(ActionType.Update, entity).Configure();
 
             await Algorithm.SaveChangesAsync(Context).Configure();
         }

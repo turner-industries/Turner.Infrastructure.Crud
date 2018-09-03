@@ -66,12 +66,12 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity> GetEntity(TRequest request)
         {
-            var selector = RequestConfig.DeleteSelector<TEntity>();
+            var selector = RequestConfig.GetSelectorFor<TEntity>(SelectorType.Delete);
             var entity = await Algorithm.GetEntities<TEntity>(Context)
                 .SelectAsync(request, selector)
                 .Configure();
 
-            if (entity == null && RequestConfig.FailedToFindInDeleteIsError)
+            if (entity == null && RequestConfig.ErrorConfig.FailedToFindInDeleteIsError)
             {
                 throw new FailedToFindException("Failed to find entity.")
                 {
@@ -85,9 +85,9 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task DeleteEntity(TRequest request, TEntity entity)
         {
-            await RequestConfig.PreDelete<TEntity>(request).Configure();
+            await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Delete, request).Configure();
             await Algorithm.DeleteEntityAsync(Context, entity).Configure();
-            await RequestConfig.PostDelete(entity).Configure();
+            await RequestConfig.RunPostActionsFor(ActionType.Delete, entity).Configure();
 
             await Algorithm.SaveChangesAsync(Context).Configure();
         }
