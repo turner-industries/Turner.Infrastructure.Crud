@@ -46,6 +46,10 @@ namespace Turner.Infrastructure.Crud.Configuration
             container.Register(typeof(GetRequestHandler<,,>), configAssemblies);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(GetRequestHandler<,,>), IfNotHandled);
 
+            container.RegisterConditional(typeof(IGetAllAlgorithm), typeof(StandardGetAllAlgorithm), IfNotHandled);
+            container.Register(typeof(GetAllRequestHandler<,,>), configAssemblies);
+            container.RegisterConditional(typeof(IRequestHandler<,>), typeof(GetAllRequestHandler<,,>), IfNotHandled);
+
             container.RegisterConditional(typeof(IUpdateAlgorithm), typeof(StandardUpdateAlgorithm), IfNotHandled);
             container.Register(typeof(UpdateRequestHandler<,>), configAssemblies);
             container.Register(typeof(UpdateRequestHandler<,,>), configAssemblies);

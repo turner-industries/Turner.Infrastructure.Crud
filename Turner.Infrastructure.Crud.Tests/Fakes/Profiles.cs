@@ -25,6 +25,14 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
                     tRequest.PreMessage += "PreDelete";
             });
 
+            ConfigureErrors(config =>
+            {
+                config.FailedToFindInDeleteIsError = true;
+                config.FailedToFindInGetAllIsError = true;
+                config.FailedToFindInGetIsError = true;
+                config.FailedToFindInUpdateIsError = true;
+            });
+
             ForEntity<NonEntity>()
                 .ConfigureOptions(config => config.UseProjection = false);
 
@@ -32,11 +40,6 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
                 .AfterCreating(entity => entity.PostMessage = "PostCreate/Entity")
                 .AfterUpdating(entity => entity.PostMessage = "PostUpdate/Entity")
                 .AfterDeleting(entity => entity.PostMessage = "PostDelete/Entity");
-
-            ConfigureErrors(config =>
-            {
-                config.FailedToFindInAnyIsError = true;
-            });
         }
     }
 
