@@ -21,14 +21,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public GetRequest(TKey key) { Key = key; }
         public TKey Key { get; }
     }
-
-    public class GetRequestProfile<TEntity, TKey, TOut>
-        : CrudRequestProfile<GetRequest<TEntity, TKey, TOut>>
-        where TEntity : class
-    {
-        public GetRequestProfile() { }
-    }
-
+    
     [DoNotValidate]
     public class GetByIdRequest<TEntity, TOut> : GetRequest<TEntity, int, TOut>
         where TEntity : class

@@ -69,7 +69,7 @@ namespace Turner.Infrastructure.Crud.Requests
         {
             var selector = RequestConfig.GetSelectorFor<TEntity>(SelectorType.Delete);
             var entity = await Algorithm.GetEntities<TEntity>(Context)
-                .SelectAsync(request, selector)
+                .SelectSingleAsync(request, selector)
                 .Configure();
 
             return entity;
@@ -162,7 +162,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 result = Mapper.Map<TOut>(entity);
             }
 
-            return new Response<TOut> { Data = result };
+            return result.AsResponse();
         }
     }
 }

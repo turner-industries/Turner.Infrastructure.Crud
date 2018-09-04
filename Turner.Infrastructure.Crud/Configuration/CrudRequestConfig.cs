@@ -42,6 +42,9 @@ namespace Turner.Infrastructure.Crud.Configuration
         private readonly Dictionary<Type, CrudOptionsConfig> _entityOptionOverrides
             = new Dictionary<Type, CrudOptionsConfig>();
 
+        private readonly Dictionary<Type, RequestOptions> _optionsCache
+            = new Dictionary<Type, RequestOptions>();
+
         private readonly Dictionary<Type, Func<object, Task<object>>> _entityCreators
             = new Dictionary<Type, Func<object, Task<object>>>();
 
@@ -51,6 +54,12 @@ namespace Turner.Infrastructure.Crud.Configuration
         private readonly Dictionary<Type, object> _defaultValues
             = new Dictionary<Type, object>();
         
+        internal void SetOptions(CrudOptionsConfig options)
+        {
+            if (options != null)
+                OverrideOptions(_options, options);
+        }
+
         internal void SetOptionsFor<TEntity>(CrudOptionsConfig options)
         {
             _entityOptionOverrides[typeof(TEntity)] = options;
@@ -110,8 +119,13 @@ namespace Turner.Infrastructure.Crud.Configuration
         public RequestOptions GetOptionsFor<TEntity>()
             where TEntity : class
         {
+            if (_optionsCache.TryGetValue(typeof(TEntity), out var cachedOptions))
+                return cachedOptions;
+
             var options = _options.Clone();
             OverrideOptions(options, typeof(TEntity));
+
+            _optionsCache[typeof(TEntity)] = options;
 
             return options;
         }
@@ -211,14 +225,20 @@ namespace Turner.Infrastructure.Crud.Configuration
             foreach (var type in tEntity.BuildTypeHierarchyDown())
             {
                 if (_entityOptionOverrides.TryGetValue(type, out var entityOptions))
-                {
-                    if (entityOptions.SuppressCreateActionsInSave.HasValue)
-                        options.SuppressCreateActionsInSave = entityOptions.SuppressCreateActionsInSave.Value;
-
-                    if (entityOptions.SuppressUpdateActionsInSave.HasValue)
-                        options.SuppressUpdateActionsInSave = entityOptions.SuppressUpdateActionsInSave.Value;
-                }
+                    OverrideOptions(options, entityOptions);
             }
+        }
+
+        private void OverrideOptions(RequestOptions options, CrudOptionsConfig config)
+        {
+            if (config.SuppressCreateActionsInSave.HasValue)
+                options.SuppressCreateActionsInSave = config.SuppressCreateActionsInSave.Value;
+
+            if (config.SuppressUpdateActionsInSave.HasValue)
+                options.SuppressUpdateActionsInSave = config.SuppressUpdateActionsInSave.Value;
+
+            if (config.UseProjection.HasValue)
+                options.UseProjection = config.UseProjection.Value;
         }
     }
 }
