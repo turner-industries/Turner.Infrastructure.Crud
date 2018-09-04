@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Errors;
+using Turner.Infrastructure.Crud.Exceptions;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -86,7 +87,17 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response> HandleAsync(TRequest request)
         {
-            var entity = await GetEntity(request).Configure();
+            var entity = default(TEntity);
+
+            try
+            {
+                entity = await GetEntity(request).Configure();
+            }
+            catch (CrudRequestFailedException e)
+            {
+                var error = new RequestFailedError(request, e);
+                return ErrorDispatcher.Dispatch(error);
+            }
 
             if (entity == null && RequestConfig.ErrorConfig.FailedToFindInUpdateIsError)
                 return ErrorDispatcher.Dispatch(new FailedToFindError(request, typeof(TEntity)));
@@ -113,12 +124,22 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response<TOut>> HandleAsync(TRequest request)
         {
-            var entity = await GetEntity(request).Configure();
-            TOut result = default(TOut);
+            var entity = default(TEntity);
+            var result = default(TOut);
 
+            try
+            {
+                entity = await GetEntity(request).Configure();
+            }
+            catch (CrudRequestFailedException e)
+            {
+                var error = new RequestFailedError(request, e);
+                return ErrorDispatcher.Dispatch<TOut>(error);
+            }
+            
             if (entity == null && RequestConfig.ErrorConfig.FailedToFindInUpdateIsError)
             {
-                var error = new FailedToFindError(request, typeof(TEntity), result);
+                var error = new FailedToFindError(request, typeof(TEntity));
                 return ErrorDispatcher.Dispatch<TOut>(error);
             }
 

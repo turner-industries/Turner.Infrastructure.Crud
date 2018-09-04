@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.Errors;
+using Turner.Infrastructure.Crud.Exceptions;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -148,7 +150,18 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response> HandleAsync(TRequest request)
         {
-            var entity = await GetEntity(request).Configure();
+            var entity = default(TEntity);
+
+            try
+            {
+                entity = await GetEntity(request).Configure();
+            }
+            catch (CrudRequestFailedException e)
+            {
+                var error = new RequestFailedError(request, e);
+                return ErrorDispatcher.Dispatch(error);
+            }
+
             await SaveEntity(request, entity).Configure();
 
             return Response.Success();
@@ -170,7 +183,18 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response<TOut>> HandleAsync(TRequest request)
         {
-            var entity = await GetEntity(request).Configure();
+            var entity = default(TEntity);
+
+            try
+            {
+                entity = await GetEntity(request).Configure();
+            }
+            catch (CrudRequestFailedException e)
+            {
+                var error = new RequestFailedError(request, e);
+                return ErrorDispatcher.Dispatch<TOut>(error);
+            }
+
             var newEntity = await SaveEntity(request, entity).Configure();
             var result = Mapper.Map<TOut>(newEntity);
 
