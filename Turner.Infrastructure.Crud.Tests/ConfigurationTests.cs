@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.Tests.RequestTests;
 
 namespace Turner.Infrastructure.Crud.Tests
 {
