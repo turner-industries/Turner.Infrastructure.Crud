@@ -7,7 +7,7 @@ using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Tests.Fakes;
 using Turner.Infrastructure.Mediator.Decorators;
 
-namespace Turner.Infrastructure.Crud.Tests
+namespace Turner.Infrastructure.Crud.Tests.RequestTests
 {
     [TestFixture]
     public class CreateRequestTests : BaseUnitTest

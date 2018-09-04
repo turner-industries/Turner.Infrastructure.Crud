@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Utilities;
 
 namespace Turner.Infrastructure.Crud.Configuration.Builders
@@ -29,6 +30,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         private TEntity _defaultValue = null;
         private Func<TRequest, Task<TEntity>> _createEntityFromRequest = null;
         private Func<TRequest, TEntity, Task> _updateEntityFromRequest = null;
+        private Func<ICrudErrorHandler> _errorHandlerFactory = null;
 
         public CrudRequestEntityConfigBuilder()
         {
@@ -50,6 +52,13 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
                 _optionsConfig = new CrudOptionsConfig();
                 config(_optionsConfig);
             }
+
+            return this;
+        }
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> UseErrorHandlerFactory(Func<ICrudErrorHandler> handlerFactory)
+        {
+            _errorHandlerFactory = handlerFactory;
 
             return this;
         }
@@ -188,6 +197,9 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         {
             if (_optionsConfig != null)
                 config.SetOptionsFor<TEntity>(_optionsConfig);
+
+            if (_errorHandlerFactory != null)
+                config.ErrorConfig.SetErrorHandlerFor(typeof(TEntity), _errorHandlerFactory);
 
             config.SetDefault(_defaultValue);
 

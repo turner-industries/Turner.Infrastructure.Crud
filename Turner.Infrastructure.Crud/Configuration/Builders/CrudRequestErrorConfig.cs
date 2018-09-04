@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using Turner.Infrastructure.Crud.Errors;
 
 namespace Turner.Infrastructure.Crud.Configuration.Builders
 {
@@ -29,5 +31,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
                 FailedToFindInDeleteIsError = value;
             }
         }
+
+        public Func<ICrudErrorHandler> ErrorHandlerFactory { get; set; }
     }
 }

@@ -3,7 +3,7 @@ using System;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 
-namespace Turner.Infrastructure.Crud.Errors
+namespace Turner.Infrastructure.Crud.Exceptions
 {
     [Serializable]
     public class CrudRequestFailedException : Exception

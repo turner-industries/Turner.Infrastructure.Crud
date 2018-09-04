@@ -91,6 +91,8 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
 
     public class NonEntity
     {
+        [Key, Required]
+        public int Id { get; set; }
     }
 
     public class NonEntityDto

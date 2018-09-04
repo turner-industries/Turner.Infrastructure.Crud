@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Turner.Infrastructure.Crud.Errors;
+using Turner.Infrastructure.Crud.Exceptions;
 using Turner.Infrastructure.Crud.Requests;
 
 namespace Turner.Infrastructure.Crud.Configuration

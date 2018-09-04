@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Errors;
+using Turner.Infrastructure.Crud.Exceptions;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -31,7 +32,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     internal class GetRequestHandler<TRequest, TEntity, TOut>
-        : CrudRequestHandler<TRequest>, IRequestHandler<TRequest, TOut>
+        : CrudRequestHandler<TRequest, TEntity>, IRequestHandler<TRequest, TOut>
         where TEntity : class
         where TRequest : IGetRequest<TEntity, TOut>
     {
@@ -47,10 +48,20 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response<TOut>> HandleAsync(TRequest request)
         {
-            var selector = RequestConfig.GetSelectorFor<TEntity>(SelectorType.Get);
-            var entity = await Algorithm.GetEntities<TEntity>(Context)
-                .SelectAsync(request, selector)
-                .Configure();
+            var entity = default(TEntity);
+            
+            try
+            {
+                var selector = RequestConfig.GetSelectorFor<TEntity>(SelectorType.Get);
+                entity = await Algorithm.GetEntities<TEntity>(Context)
+                    .SelectAsync(request, selector)
+                    .Configure();
+            }
+            catch(CrudRequestFailedException e)
+            {
+                var error = new RequestFailedError(request, e);
+                return ErrorDispatcher.Dispatch<TOut>(error);
+            }
 
             var failedToFind = entity == null;
             
@@ -61,12 +72,8 @@ namespace Turner.Infrastructure.Crud.Requests
 
             if (failedToFind && RequestConfig.ErrorConfig.FailedToFindInGetIsError)
             {
-                throw new FailedToFindException("Failed to find entity.")
-                {
-                    RequestTypeProperty = request.GetType(),
-                    QueryTypeProperty = typeof(TEntity),
-                    ResponseData = result
-                };
+                var error = new FailedToFindError(request, typeof(TEntity), result);
+                return ErrorDispatcher.Dispatch<TOut>(error);
             }
 
             return new Response<TOut> { Data = result };

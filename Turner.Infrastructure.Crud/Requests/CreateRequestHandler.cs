@@ -41,7 +41,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     internal abstract class CreateRequestHandlerBase<TRequest, TEntity>
-        : CrudRequestHandler<TRequest>
+        : CrudRequestHandler<TRequest, TEntity>
         where TEntity : class
     {
         protected readonly ICreateAlgorithm Algorithm;
@@ -61,7 +61,7 @@ namespace Turner.Infrastructure.Crud.Requests
             var entity = await RequestConfig.CreateEntity<TEntity>(request).Configure();
             var newEntity = await Algorithm.CreateEntityAsync(Context, entity).Configure();
 
-            await RequestConfig.RunPostActionsFor(ActionType.Create, request, entity).Configure();
+            await RequestConfig.RunPostActionsFor(ActionType.Create, request, newEntity).Configure();
             await Algorithm.SaveChangesAsync(Context).Configure();
 
             return entity;

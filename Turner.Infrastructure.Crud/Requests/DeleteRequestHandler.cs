@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Errors;
+using Turner.Infrastructure.Crud.Exceptions;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -51,7 +52,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     internal abstract class DeleteRequestHandlerBase<TRequest, TEntity>
-        : CrudRequestHandler<TRequest>
+        : CrudRequestHandler<TRequest, TEntity>
         where TEntity : class
     {
         protected readonly IDeleteAlgorithm Algorithm;
@@ -70,15 +71,6 @@ namespace Turner.Infrastructure.Crud.Requests
             var entity = await Algorithm.GetEntities<TEntity>(Context)
                 .SelectAsync(request, selector)
                 .Configure();
-
-            if (entity == null && RequestConfig.ErrorConfig.FailedToFindInDeleteIsError)
-            {
-                throw new FailedToFindException("Failed to find entity.")
-                {
-                    RequestTypeProperty = request.GetType(),
-                    QueryTypeProperty = typeof(TEntity)
-                };
-            }
 
             return entity;
         }
@@ -108,7 +100,21 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response> HandleAsync(TRequest request)
         {
-            var entity = await GetEntity(request).Configure();
+            var entity = default(TEntity);
+
+            try
+            {
+                entity = await GetEntity(request).Configure();
+            }
+            catch (CrudRequestFailedException e)
+            {
+                var error = new RequestFailedError(request, e);
+                return ErrorDispatcher.Dispatch(error);
+            }
+
+            if (entity == null && RequestConfig.ErrorConfig.FailedToFindInDeleteIsError)
+                return ErrorDispatcher.Dispatch(new FailedToFindError(request, typeof(TEntity)));
+
             if (entity != null)
                 await DeleteEntity(request, entity).Configure();
 
@@ -131,8 +137,24 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response<TOut>> HandleAsync(TRequest request)
         {
-            var entity = await GetEntity(request).Configure();
-            TOut result = default(TOut);
+            var entity = default(TEntity);
+            var result = default(TOut);
+
+            try
+            {
+                entity = await GetEntity(request).Configure();
+            }
+            catch (CrudRequestFailedException e)
+            {
+                var error = new RequestFailedError(request, e);
+                return ErrorDispatcher.Dispatch<TOut>(error);
+            }
+
+            if (entity == null && RequestConfig.ErrorConfig.FailedToFindInDeleteIsError)
+            {
+                var error = new FailedToFindError(request, typeof(TEntity));
+                return ErrorDispatcher.Dispatch<TOut>(error);
+            }
 
             if (entity != null)
             {

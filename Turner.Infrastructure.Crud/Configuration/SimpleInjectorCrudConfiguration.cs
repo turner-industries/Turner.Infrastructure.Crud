@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Turner.Infrastructure.Crud.Algorithms;
+using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Mediator;
 
@@ -23,6 +24,14 @@ namespace Turner.Infrastructure.Crud.Configuration
             container.RegisterSingleton(() => new CrudConfigManager(configAssemblies));
             
             bool IfNotHandled(PredicateContext c) => !c.Handled;
+
+            container.RegisterInitializer<ICrudRequestHandler>(handler =>
+            {
+                if (handler.ErrorDispatcher.Handler == null)
+                    handler.ErrorDispatcher.Handler = container.GetInstance<ICrudErrorHandler>();
+            });
+
+            container.Register(typeof(ICrudErrorHandler), typeof(CrudErrorHandler), Lifestyle.Singleton);
 
             container.RegisterConditional(typeof(IContextAccess), typeof(StandardContextAccess), IfNotHandled);
             container.RegisterConditional(typeof(IDbSetAccess), typeof(StandardDbSetAccess), IfNotHandled);
