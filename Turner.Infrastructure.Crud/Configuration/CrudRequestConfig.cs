@@ -54,6 +54,12 @@ namespace Turner.Infrastructure.Crud.Configuration
         private readonly Dictionary<Type, object> _defaultValues
             = new Dictionary<Type, object>();
         
+        internal void SetOptions(CrudOptionsConfig options)
+        {
+            if (options != null)
+                OverrideOptions(_options, options);
+        }
+
         internal void SetOptionsFor<TEntity>(CrudOptionsConfig options)
         {
             _entityOptionOverrides[typeof(TEntity)] = options;
@@ -219,17 +225,20 @@ namespace Turner.Infrastructure.Crud.Configuration
             foreach (var type in tEntity.BuildTypeHierarchyDown())
             {
                 if (_entityOptionOverrides.TryGetValue(type, out var entityOptions))
-                {
-                    if (entityOptions.SuppressCreateActionsInSave.HasValue)
-                        options.SuppressCreateActionsInSave = entityOptions.SuppressCreateActionsInSave.Value;
-
-                    if (entityOptions.SuppressUpdateActionsInSave.HasValue)
-                        options.SuppressUpdateActionsInSave = entityOptions.SuppressUpdateActionsInSave.Value;
-
-                    if (entityOptions.UseProjection.HasValue)
-                        options.UseProjection = entityOptions.UseProjection.Value;
-                }
+                    OverrideOptions(options, entityOptions);
             }
+        }
+
+        private void OverrideOptions(RequestOptions options, CrudOptionsConfig config)
+        {
+            if (config.SuppressCreateActionsInSave.HasValue)
+                options.SuppressCreateActionsInSave = config.SuppressCreateActionsInSave.Value;
+
+            if (config.SuppressUpdateActionsInSave.HasValue)
+                options.SuppressUpdateActionsInSave = config.SuppressUpdateActionsInSave.Value;
+
+            if (config.UseProjection.HasValue)
+                options.UseProjection = config.UseProjection.Value;
         }
     }
 }

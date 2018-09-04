@@ -141,6 +141,13 @@ namespace Turner.Infrastructure.Crud.Configuration
                 profile.Apply(config, ref inherited);
             }
 
+            if (_optionsConfig != null)
+            {
+                var options = new CrudOptionsConfig();
+                _optionsConfig(options);
+                config.SetOptions(options);
+            }
+
             foreach (var type in (ActionType[])Enum.GetValues(typeof(ActionType)))
             {
                 config.AddPreActions(type, _preActions[type]);
@@ -160,7 +167,7 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             if (errorConfig.FailedToFindInGetIsError.HasValue)
                 config.ErrorConfig.FailedToFindInGetIsError = errorConfig.FailedToFindInGetIsError.Value;
-
+            
             if (errorConfig.FailedToFindInUpdateIsError.HasValue)
                 config.ErrorConfig.FailedToFindInUpdateIsError = errorConfig.FailedToFindInUpdateIsError.Value;
 
