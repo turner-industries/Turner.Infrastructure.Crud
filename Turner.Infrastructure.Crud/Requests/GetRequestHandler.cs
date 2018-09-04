@@ -97,7 +97,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 return ErrorDispatcher.Dispatch<TOut>(error);
             }
 
-            return new Response<TOut> { Data = result };
+            return result.AsResponse();
         }
     }
 }

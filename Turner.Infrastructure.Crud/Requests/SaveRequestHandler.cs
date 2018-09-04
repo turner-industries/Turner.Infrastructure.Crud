@@ -198,7 +198,7 @@ namespace Turner.Infrastructure.Crud.Requests
             var newEntity = await SaveEntity(request, entity).Configure();
             var result = Mapper.Map<TOut>(newEntity);
 
-            return new Response<TOut> { Data = result };
+            return result.AsResponse();
         }
     }
 }

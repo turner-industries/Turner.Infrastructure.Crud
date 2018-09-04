@@ -149,7 +149,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 result = Mapper.Map<TOut>(entity);
             }
 
-            return new Response<TOut> { Data = result };
+            return result.AsResponse();
         }
     }
 }
