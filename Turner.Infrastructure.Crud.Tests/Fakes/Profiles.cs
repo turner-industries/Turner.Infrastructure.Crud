@@ -25,6 +25,9 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
                     tRequest.PreMessage += "PreDelete";
             });
 
+            ForEntity<NonEntity>()
+                .ConfigureOptions(config => config.UseProjection = false);
+
             ForEntity<IEntity>()
                 .AfterCreating(entity => entity.PostMessage = "PostCreate/Entity")
                 .AfterUpdating(entity => entity.PostMessage = "PostUpdate/Entity")

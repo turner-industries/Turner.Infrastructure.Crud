@@ -37,6 +37,7 @@ namespace Turner.Infrastructure.Crud.Requests
         where TRequest : IGetRequest<TEntity, TOut>
     {
         protected readonly IGetAlgorithm Algorithm;
+        protected readonly RequestOptions Options;
 
         public GetRequestHandler(DbContext context, 
             CrudConfigManager profileManager,
@@ -44,31 +45,51 @@ namespace Turner.Infrastructure.Crud.Requests
             : base(context, profileManager)
         {
             Algorithm = algorithm;
+            Options = RequestConfig.GetOptionsFor<TEntity>();
         }
 
         public async Task<Response<TOut>> HandleAsync(TRequest request)
         {
             var entity = default(TEntity);
-            
+            var result = default(TOut);
+            bool failedToFind = false;
+
             try
             {
                 var selector = RequestConfig.GetSelectorFor<TEntity>(SelectorType.Get);
-                entity = await Algorithm.GetEntities<TEntity>(Context)
-                    .SelectAsync(request, selector)
-                    .Configure();
+
+                if (Options.UseProjection)
+                {
+                    result = await Algorithm.GetEntities<TEntity>(Context)
+                        .ProjectSingleAsync<TRequest, TEntity, TOut>(request, selector)
+                        .Configure();
+
+                    if (result == null)
+                    {
+                        failedToFind = true;
+                        result = Mapper.Map<TOut>(RequestConfig.GetDefault<TEntity>());
+                    }
+                }
+                else
+                {
+                    entity = await Algorithm.GetEntities<TEntity>(Context)
+                        .SelectSingleAsync(request, selector)
+                        .Configure();
+
+                    if (entity == null)
+                    {
+                        failedToFind = true;
+                        entity = RequestConfig.GetDefault<TEntity>();
+                    }
+
+                    result = Mapper.Map<TOut>(entity);
+                }
             }
             catch(CrudRequestFailedException e)
             {
                 var error = new RequestFailedError(request, e);
                 return ErrorDispatcher.Dispatch<TOut>(error);
             }
-
-            var failedToFind = entity == null;
-            
-            if (failedToFind)
-                entity = RequestConfig.GetDefault<TEntity>();
-                
-            var result = Mapper.Map<TOut>(entity);
 
             if (failedToFind && RequestConfig.ErrorConfig.FailedToFindInGetIsError)
             {
