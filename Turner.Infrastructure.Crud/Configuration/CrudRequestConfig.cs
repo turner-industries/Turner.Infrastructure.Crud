@@ -42,6 +42,9 @@ namespace Turner.Infrastructure.Crud.Configuration
         private readonly Dictionary<Type, CrudOptionsConfig> _entityOptionOverrides
             = new Dictionary<Type, CrudOptionsConfig>();
 
+        private readonly Dictionary<Type, RequestOptions> _optionsCache
+            = new Dictionary<Type, RequestOptions>();
+
         private readonly Dictionary<Type, Func<object, Task<object>>> _entityCreators
             = new Dictionary<Type, Func<object, Task<object>>>();
 
@@ -110,8 +113,13 @@ namespace Turner.Infrastructure.Crud.Configuration
         public RequestOptions GetOptionsFor<TEntity>()
             where TEntity : class
         {
+            if (_optionsCache.TryGetValue(typeof(TEntity), out var cachedOptions))
+                return cachedOptions;
+
             var options = _options.Clone();
             OverrideOptions(options, typeof(TEntity));
+
+            _optionsCache[typeof(TEntity)] = options;
 
             return options;
         }
@@ -217,6 +225,9 @@ namespace Turner.Infrastructure.Crud.Configuration
 
                     if (entityOptions.SuppressUpdateActionsInSave.HasValue)
                         options.SuppressUpdateActionsInSave = entityOptions.SuppressUpdateActionsInSave.Value;
+
+                    if (entityOptions.UseProjection.HasValue)
+                        options.UseProjection = entityOptions.UseProjection.Value;
                 }
             }
         }
