@@ -51,7 +51,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     internal abstract class DeleteRequestHandlerBase<TRequest, TEntity>
-        : CrudRequestHandler<TRequest>
+        : CrudRequestHandler<TRequest, TEntity>
         where TEntity : class
     {
         protected readonly IDeleteAlgorithm Algorithm;

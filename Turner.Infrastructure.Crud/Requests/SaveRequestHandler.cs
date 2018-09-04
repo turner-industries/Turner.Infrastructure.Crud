@@ -54,7 +54,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     internal abstract class SaveRequestHandlerBase<TRequest, TEntity>
-        : CrudRequestHandler<TRequest>
+        : CrudRequestHandler<TRequest, TEntity>
         where TEntity : class
     {
         protected readonly ISaveAlgorithm Algorithm;

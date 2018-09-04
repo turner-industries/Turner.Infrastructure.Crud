@@ -39,7 +39,6 @@ namespace Turner.Infrastructure.Crud.Configuration
         private readonly SelectorConfig _selectors = new SelectorConfig();
         private readonly ActionConfig _actions = new ActionConfig();
         private readonly RequestOptions _options = new RequestOptions();
-
         private readonly Dictionary<Type, CrudOptionsConfig> _entityOptionOverrides
             = new Dictionary<Type, CrudOptionsConfig>();
 

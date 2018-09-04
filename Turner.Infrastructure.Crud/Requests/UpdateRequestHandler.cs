@@ -38,7 +38,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     internal abstract class UpdateRequestHandlerBase<TRequest, TEntity>
-        : CrudRequestHandler<TRequest>
+        : CrudRequestHandler<TRequest, TEntity>
         where TEntity : class
     {
         protected readonly IUpdateAlgorithm Algorithm;

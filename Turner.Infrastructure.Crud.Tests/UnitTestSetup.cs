@@ -34,7 +34,7 @@ namespace Turner.Infrastructure.Crud.Tests
             Container = container;
         }
 
-        private static void ConfigureDatabase(Container container)
+        public static void ConfigureDatabase(Container container)
         {
             container.Register<DbContext>(() =>
             {
@@ -48,7 +48,7 @@ namespace Turner.Infrastructure.Crud.Tests
             Lifestyle.Scoped);
         }
 
-        private static void ConfigureAutoMapper(Container container, Assembly[] assemblies)
+        public static void ConfigureAutoMapper(Container container, Assembly[] assemblies)
         {
             Mapper.Reset();
             Mapper.Initialize(config =>

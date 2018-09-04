@@ -166,6 +166,9 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             if (errorConfig.FailedToFindInDeleteIsError.HasValue)
                 config.ErrorConfig.FailedToFindInDeleteIsError = errorConfig.FailedToFindInDeleteIsError.Value;
+
+            if (errorConfig.ErrorHandlerFactory != null)
+                config.ErrorConfig.SetErrorHandler(errorConfig.ErrorHandlerFactory);
         }
 
         private void AddPreAction(ActionType type, Func<TRequest, Task> action)

@@ -39,7 +39,7 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
 
     public class DefaultGetRequestProfile<TEntity, TKey, TOut> 
         : CrudRequestProfile<GetRequest<TEntity, TKey, TOut>>
-        where TEntity : class, IEntity
+        where TEntity : class
     {
         public DefaultGetRequestProfile()
         {
@@ -50,7 +50,7 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
 
     public class DefaultUpdateRequestProfile<TEntity, TKey, TIn, TOut>
         : CrudRequestProfile<UpdateRequest<TEntity, TKey, TIn, TOut>>
-        where TEntity : class, IEntity
+        where TEntity : class
     {
         public DefaultUpdateRequestProfile()
         {
@@ -61,7 +61,7 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
 
     public class DefaultSaveRequestProfile<TEntity, TKey, TIn, TOut>
         : CrudRequestProfile<SaveRequest<TEntity, TKey, TIn, TOut>>
-        where TEntity : class, IEntity
+        where TEntity : class
     {
         public DefaultSaveRequestProfile()
         {

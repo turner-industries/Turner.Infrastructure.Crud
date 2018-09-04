@@ -31,7 +31,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     internal class GetRequestHandler<TRequest, TEntity, TOut>
-        : CrudRequestHandler<TRequest>, IRequestHandler<TRequest, TOut>
+        : CrudRequestHandler<TRequest, TEntity>, IRequestHandler<TRequest, TOut>
         where TEntity : class
         where TRequest : IGetRequest<TEntity, TOut>
     {
@@ -61,12 +61,14 @@ namespace Turner.Infrastructure.Crud.Requests
 
             if (failedToFind && RequestConfig.ErrorConfig.FailedToFindInGetIsError)
             {
-                throw new FailedToFindException("Failed to find entity.")
+                var error = new FailedToFindException("Failed to find entity.")
                 {
                     RequestTypeProperty = request.GetType(),
                     QueryTypeProperty = typeof(TEntity),
                     ResponseData = result
                 };
+
+                return ErrorDispatcher.Dispatch<TOut>(error);
             }
 
             return new Response<TOut> { Data = result };
