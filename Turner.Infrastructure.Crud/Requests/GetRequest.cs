@@ -43,7 +43,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public GetByIdRequestProfile()
         {
             ForEntity<TEntity>()
-                .SelectForGetWith(builder => builder.Build("Key", "Id"));
+                .SelectForGetWith(builder => builder.Build(request => request.Key, "Id"));
         }
     }
 
@@ -61,7 +61,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public GetByGuidRequestProfile()
         {
             ForEntity<TEntity>()
-                .SelectForGetWith(builder => builder.Build("Key", "Guid"));
+                .SelectForGetWith(builder => builder.Build(request => request.Key, "Guid"));
         }
     }
 }

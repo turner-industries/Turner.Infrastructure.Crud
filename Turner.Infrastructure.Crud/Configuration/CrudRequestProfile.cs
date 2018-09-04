@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration.Builders;
 using Turner.Infrastructure.Crud.Errors;
@@ -28,15 +27,27 @@ namespace Turner.Infrastructure.Crud.Configuration
         private readonly Dictionary<ActionType, ActionList> _preActions
             = new Dictionary<ActionType, ActionList>();
 
+        private readonly Dictionary<ActionType, ActionList> _postActions
+            = new Dictionary<ActionType, ActionList>();
+
+        private Action<CrudOptionsConfig> _optionsConfig;
         private Action<CrudRequestErrorConfig> _errorConfig;
 
         public CrudRequestProfile()
         {
             foreach (var type in (ActionType[]) Enum.GetValues(typeof(ActionType)))
+            {
                 _preActions[type] = new ActionList();
+                _postActions[type] = new ActionList();
+            }
         }
 
         public override Type RequestType => typeof(TRequest);
+
+        protected void ConfigureOptions(Action<CrudOptionsConfig> config)
+        {
+            _optionsConfig = config;
+        }
 
         protected void ConfigureErrors(Action<CrudRequestErrorConfig> config)
         {
@@ -58,17 +69,47 @@ namespace Turner.Infrastructure.Crud.Configuration
         protected void BeforeCreating(Action<TRequest> action)
             => AddPreAction(ActionType.Create, action);
 
+        protected void AfterCreating(Func<TRequest, Task> action)
+            => AddPostAction(ActionType.Create, action);
+
+        protected void AfterCreating(Action<TRequest> action)
+            => AddPostAction(ActionType.Create, action);
+
         protected void BeforeUpdating(Func<TRequest, Task> action)
             => AddPreAction(ActionType.Update, action);
 
         protected void BeforeUpdating(Action<TRequest> action)
             => AddPreAction(ActionType.Update, action);
 
+        protected void AfterUpdating(Func<TRequest, Task> action)
+            => AddPostAction(ActionType.Update, action);
+
+        protected void AfterUpdating(Action<TRequest> action)
+            => AddPostAction(ActionType.Update, action);
+
         protected void BeforeDeleting(Func<TRequest, Task> action)
             => AddPreAction(ActionType.Delete, action);
 
         protected void BeforeDeleting(Action<TRequest> action)
             => AddPreAction(ActionType.Delete, action);
+
+        protected void AfterDeleting(Func<TRequest, Task> action)
+            => AddPostAction(ActionType.Delete, action);
+
+        protected void AfterDeleting(Action<TRequest> action)
+            => AddPostAction(ActionType.Delete, action);
+        
+        protected void BeforeSaving(Func<TRequest, Task> action)
+            => AddPreAction(ActionType.Save, action);
+
+        protected void BeforeSaving(Action<TRequest> action)
+            => AddPreAction(ActionType.Save, action);
+
+        protected void AfterSaving(Func<TRequest, Task> action)
+            => AddPostAction(ActionType.Save, action);
+
+        protected void AfterSaving(Action<TRequest> action)
+            => AddPostAction(ActionType.Save, action);
 
         internal override void Inherit(IEnumerable<CrudRequestProfile> profiles)
         {
@@ -100,8 +141,11 @@ namespace Turner.Infrastructure.Crud.Configuration
                 profile.Apply(config, ref inherited);
             }
 
-            foreach (var type in (ActionType[]) Enum.GetValues(typeof(ActionType)))
+            foreach (var type in (ActionType[])Enum.GetValues(typeof(ActionType)))
+            {
                 config.AddPreActions(type, _preActions[type]);
+                config.AddPostActions(type, _postActions[type]);
+            }
 
             ApplyErrorConfig(config);
 
@@ -136,6 +180,22 @@ namespace Turner.Infrastructure.Crud.Configuration
                 _preActions[type].Add(request =>
                 {
                     action((TRequest) request);
+                    return Task.CompletedTask;
+                });
+        }
+
+        private void AddPostAction(ActionType type, Func<TRequest, Task> action)
+        {
+            if (action != null)
+                _postActions[type].Add(request => action((TRequest)request));
+        }
+
+        private void AddPostAction(ActionType type, Action<TRequest> action)
+        {
+            if (action != null)
+                _postActions[type].Add(request =>
+                {
+                    action((TRequest)request);
                     return Task.CompletedTask;
                 });
         }

@@ -63,7 +63,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public DeleteByIdRequestProfile()
         {
             ForEntity<TEntity>()
-                .SelectForDeleteWith(builder => builder.Build("Key", "Id"));
+                .SelectForDeleteWith(builder => builder.Build(request => request.Key, "Id"));
         }
     }
 
@@ -81,7 +81,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public DeleteByIdRequestProfile()
         {
             ForEntity<TEntity>()
-                .SelectForDeleteWith(builder => builder.Build("Key", "Id"));
+                .SelectForDeleteWith(builder => builder.Build(request => request.Key, "Id"));
         }
     }
 
@@ -99,7 +99,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public DeleteByGuidRequestProfile()
         {
             ForEntity<TEntity>()
-                .SelectForDeleteWith(builder => builder.Build("Key", "Guid"));
+                .SelectForDeleteWith(builder => builder.Build(request => request.Key, "Guid"));
         }
     }
 
@@ -117,7 +117,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public DeleteByGuidRequestProfile()
         {
             ForEntity<TEntity>()
-                .SelectForDeleteWith(builder => builder.Build("Key", "Guid"));
+                .SelectForDeleteWith(builder => builder.Build(request => request.Key, "Guid"));
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Turner.Infrastructure.Crud.Configuration
@@ -9,7 +8,8 @@ namespace Turner.Infrastructure.Crud.Configuration
     {
         Create,
         Update,
-        Delete
+        Delete,
+        Save
     }
 
     public class ActionConfig
@@ -31,6 +31,9 @@ namespace Turner.Infrastructure.Crud.Configuration
         private readonly ActionList _requestPreActions 
             = new ActionList();
 
+        private readonly ActionList _requestPostActions
+            = new ActionList();
+
         private readonly Dictionary<Type, ActionList> _entityPreActions
             = new Dictionary<Type, ActionList>();
 
@@ -40,6 +43,11 @@ namespace Turner.Infrastructure.Crud.Configuration
         internal void AddPreActions(ActionList actions)
         {
             _requestPreActions.InsertRange(0, actions);
+        }
+
+        internal void AddPostActions(ActionList actions)
+        {
+            _requestPostActions.InsertRange(0, actions);
         }
 
         internal void SetPreActionsFor(Type tEntity, ActionList actions)
@@ -57,7 +65,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             foreach (var requestAction in _requestPreActions)
                 await requestAction(request).Configure();
             
-            foreach (var type in BuildEntityHierarchy(tEntity))
+            foreach (var type in tEntity.BuildTypeHierarchyDown())
             {
                 if (_entityPreActions.TryGetValue(type, out var actions))
                 {
@@ -67,9 +75,12 @@ namespace Turner.Infrastructure.Crud.Configuration
             }
         }
 
-        internal async Task RunPostActionsFor(Type tEntity, object entity)
+        internal async Task RunPostActionsFor(Type tEntity, object request, object entity)
         {
-            foreach (var type in BuildEntityHierarchy(tEntity))
+            foreach (var requestAction in _requestPostActions)
+                await requestAction(request).Configure();
+
+            foreach (var type in tEntity.BuildTypeHierarchyDown())
             {
                 if (_entityPostActions.TryGetValue(type, out var actions))
                 {
@@ -77,19 +88,6 @@ namespace Turner.Infrastructure.Crud.Configuration
                         await action(entity).Configure();
                 }
             }
-        }
-
-        private IEnumerable<Type> BuildEntityHierarchy(Type tEntity)
-        {
-            var entityParents = new[] { tEntity.BaseType }
-                .Concat(tEntity.GetInterfaces())
-                .Where(x => x != null);
-
-            foreach (var parent in entityParents)
-                foreach (var item in BuildEntityHierarchy(parent))
-                    yield return item;
-
-            yield return tEntity;
         }
     }
 
