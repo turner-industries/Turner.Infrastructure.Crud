@@ -58,22 +58,12 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         }
 
         [Test]
-        public async Task Handle_InvalidDeleteUserByNameRequest_ThrowsException()
+        public async Task Handle_InvalidDeleteUserByNameRequest_ReturnsError()
         {
-            FailedToFindException error = null;
-
             var request = new DeleteUserByNameRequest { Name = "NonUser" };
-
-            try
-            {
-                await Mediator.HandleAsync(request);
-            }
-            catch (FailedToFindException e)
-            {
-                error = e;
-            }
-
-            Assert.IsNotNull(error);
+            var response = await Mediator.HandleAsync(request);
+            
+            Assert.IsTrue(response.HasErrors);
             Assert.IsFalse(Context.Set<User>().First().IsDeleted);
         }
 

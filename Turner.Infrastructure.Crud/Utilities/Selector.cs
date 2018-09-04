@@ -3,7 +3,7 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Turner.Infrastructure.Crud.Errors;
+using Turner.Infrastructure.Crud.Exceptions;
 
 namespace Turner.Infrastructure.Crud
 {

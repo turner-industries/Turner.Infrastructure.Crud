@@ -65,22 +65,12 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         }
 
         [Test]
-        public async Task Handle_InvalidUpdateUserByNameRequest_ThrowsException()
+        public async Task Handle_InvalidUpdateUserByNameRequest_ReturnsError()
         {
-            FailedToFindException error = null;
-
             var request = new UpdateUserByNameRequest { Name = "NonUser", Data = new UserDto() };
-
-            try
-            {
-                await Mediator.HandleAsync(request);
-            }
-            catch (FailedToFindException e)
-            {
-                error = e;
-            }
-
-            Assert.IsNotNull(error);
+            var response = await Mediator.HandleAsync(request);
+            
+            Assert.IsTrue(response.HasErrors);
         }
 
         [Test]

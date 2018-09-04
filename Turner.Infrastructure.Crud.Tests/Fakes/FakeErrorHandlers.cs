@@ -1,14 +1,14 @@
-﻿using Turner.Infrastructure.Crud.Errors;
+﻿using System;
+using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Tests.Fakes
 {
-    public class TestErrorHandler : ICrudErrorHandler
+    public class TestErrorHandler : CrudErrorHandler
     {
-        public Response Handle(CrudError error)
-            => Error.AsResponse(error.Exception.Message);
-
-        public Response<TResult> Handle<TResult>(CrudError<TResult> error)
-            => Error.AsResponse<TResult>(error.Exception.Message);
+        protected override Response HandleError(FailedToFindError error)
+        {
+            throw new Exception(error.Reason);
+        }
     }
 }

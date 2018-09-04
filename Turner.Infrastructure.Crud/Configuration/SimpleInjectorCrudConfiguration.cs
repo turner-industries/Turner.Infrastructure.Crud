@@ -31,7 +31,7 @@ namespace Turner.Infrastructure.Crud.Configuration
                     handler.ErrorDispatcher.Handler = container.GetInstance<ICrudErrorHandler>();
             });
 
-            container.Register(typeof(ICrudErrorHandler), typeof(DefaultCrudErrorHandler), Lifestyle.Singleton);
+            container.Register(typeof(ICrudErrorHandler), typeof(CrudErrorHandler), Lifestyle.Singleton);
 
             container.RegisterConditional(typeof(IContextAccess), typeof(StandardContextAccess), IfNotHandled);
             container.RegisterConditional(typeof(IDbSetAccess), typeof(StandardDbSetAccess), IfNotHandled);

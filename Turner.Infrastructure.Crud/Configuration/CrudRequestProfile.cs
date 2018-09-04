@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration.Builders;
-using Turner.Infrastructure.Crud.Errors;
+using Turner.Infrastructure.Crud.Exceptions;
 
 namespace Turner.Infrastructure.Crud.Configuration
 {

@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using SimpleInjector;
 using SimpleInjector.Lifestyles;
+using System;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Errors;
@@ -59,11 +60,20 @@ namespace Turner.Infrastructure.Crud.Tests
         [Test]
         public async Task Handle_FailingRequest_UsesTestErrorHandler()
         {
-            var request = new GetByIdRequest<NonEntity, NonEntity>(1);
-            var response = await Mediator.HandleAsync(request);
+            Exception exception = null;
 
-            Assert.IsTrue(response.HasErrors);
-            Assert.AreEqual("Failed to find entity.", response.Errors[0].ErrorMessage);
+            try
+            {
+                var request = new GetByIdRequest<NonEntity, NonEntity>(1);
+                await Mediator.HandleAsync(request);
+            }
+            catch (Exception e)
+            {
+                exception = e;
+            }
+
+            Assert.IsNotNull(exception);
+            Assert.AreEqual("Failed to find entity.", exception.Message);
         }
     }
 
@@ -73,38 +83,49 @@ namespace Turner.Infrastructure.Crud.Tests
         [Test]
         public async Task Handle_UseDefaultErrorHandler_UsesDefaultErrorHandler()
         {
-            FailedToFindException exception = null;
+            var request = new UseDefaultErrorHandler { Id = 1 };
+            var response = await Mediator.HandleAsync(request);
             
-            try
-            {
-                await Mediator.HandleAsync(new UseDefaultErrorHandler { Id = 1 });
-            }
-            catch(FailedToFindException e)
-            {
-                exception = e;
-            }
-
-            Assert.IsNotNull(exception);
+            Assert.IsTrue(response.HasErrors);
+            Assert.AreEqual("Failed to find entity.", response.Errors[0].ErrorMessage);
         }
 
         [Test]
         public async Task Handle_UseCustomErrorHandlerForRequest_UsesCustomErrorHandler()
         {
-            var request = new UseCustomErrorHandlerForRequest { Id = 1 };
-            var response = await Mediator.HandleAsync(request);
+            Exception exception = null;
 
-            Assert.IsTrue(response.HasErrors);
-            Assert.AreEqual("Failed to find entity.", response.Errors[0].ErrorMessage);
+            try
+            {
+                var request = new UseCustomErrorHandlerForRequest { Id = 1 };
+                await Mediator.HandleAsync(request);
+            }
+            catch (Exception e)
+            {
+                exception = e;
+            }
+
+            Assert.IsNotNull(exception);
+            Assert.AreEqual("Failed to find entity.", exception.Message);
         }
 
         [Test]
         public async Task Handle_UseCustomErrorHandlerForEntity_UsesCustomErrorHandler()
         {
-            var request = new UseCustomErrorHandlerForEntity { Id = 1 };
-            var response = await Mediator.HandleAsync(request);
+            Exception exception = null;
 
-            Assert.IsTrue(response.HasErrors);
-            Assert.AreEqual("Failed to find entity.", response.Errors[0].ErrorMessage);
+            try
+            {
+                var request = new UseCustomErrorHandlerForEntity { Id = 1 };
+                await Mediator.HandleAsync(request);
+            }
+            catch (Exception e)
+            {
+                exception = e;
+            }
+
+            Assert.IsNotNull(exception);
+            Assert.AreEqual("Failed to find entity.", exception.Message);
         }
     }
 

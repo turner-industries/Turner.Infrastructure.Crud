@@ -84,23 +84,12 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         }
 
         [Test]
-        public async Task Handle_InvalidGetUserByIdRequest_ThrowsException()
+        public async Task Handle_InvalidGetUserByIdRequest_ReturnsError()
         {
-            FailedToFindException error = null;
-            
             var request = new GetUserByIdRequest { Id = 100 };
-
-            try
-            {
-                await Mediator.HandleAsync(request);
-            }
-            catch(FailedToFindException e)
-            {
-                error = e;
-            }
-
-            Assert.IsNotNull(error);
-            Assert.IsNotNull(error.ResponseData);
+            var response = await Mediator.HandleAsync(request);
+            
+            Assert.IsTrue(response.HasErrors);
         }
 
         [Test]

@@ -1,4 +1,5 @@
-﻿using Turner.Infrastructure.Mediator;
+﻿using System;
+using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Errors
 {
@@ -11,22 +12,24 @@ namespace Turner.Infrastructure.Crud.Errors
             Handler = handler;
         }
 
-        public Response Dispatch(CrudRequestFailedException requestFailedException)
+        public Response Dispatch(CrudError error)
         {
-            var error = new CrudError { Exception = requestFailedException };
-
             return Handler.Handle(error);
         }
 
-        public Response<TResult> Dispatch<TResult>(CrudRequestFailedException requestFailedException)
+        public Response<TResult> Dispatch<TResult>(CrudError error)
         {
-            var error = new CrudError<TResult>
-            {
-                Exception = requestFailedException,
-                Result = requestFailedException.ResponseData
-            };
+            return Handler.Handle<TResult>(error);
+        }
 
-            return Handler.Handle(error);
+        public Response Dispatch(Exception exception)
+        {
+            return Handler.Handle(new CrudError(exception));
+        }
+
+        public Response<TResult> Dispatch<TResult>(Exception exception, TResult result = default(TResult))
+        {
+            return Handler.Handle<TResult>(new CrudError(exception, result));
         }
     }
 }

@@ -61,13 +61,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
             if (failedToFind && RequestConfig.ErrorConfig.FailedToFindInGetIsError)
             {
-                var error = new FailedToFindException("Failed to find entity.")
-                {
-                    RequestTypeProperty = request.GetType(),
-                    QueryTypeProperty = typeof(TEntity),
-                    ResponseData = result
-                };
-
+                var error = new FailedToFindError(request, typeof(TEntity), result);
                 return ErrorDispatcher.Dispatch<TOut>(error);
             }
 

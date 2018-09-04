@@ -4,11 +4,13 @@ namespace Turner.Infrastructure.Crud.Errors
 {
     public class CrudError
     {
-        public Exception Exception { get; set; }
-    }
+        public CrudError(Exception exception = null, object result = null)
+        {
+            Exception = exception;
+            Result = result;
+        }
 
-    public class CrudError<TResult> : CrudError
-    {
-        public object Result { get; set; }
+        public Exception Exception { get; }
+        public object Result { get; }
     }
 }

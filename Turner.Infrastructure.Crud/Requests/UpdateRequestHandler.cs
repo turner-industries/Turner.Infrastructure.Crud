@@ -58,15 +58,6 @@ namespace Turner.Infrastructure.Crud.Requests
                 .SelectAsync(request, selector)
                 .Configure();
             
-            if (entity == null && RequestConfig.ErrorConfig.FailedToFindInUpdateIsError)
-            {
-                throw new FailedToFindException("Failed to find entity.")
-                {
-                    RequestTypeProperty = request.GetType(),
-                    QueryTypeProperty = typeof(TEntity)
-                };
-            }
-
             return entity;
         }
 
@@ -96,6 +87,10 @@ namespace Turner.Infrastructure.Crud.Requests
         public async Task<Response> HandleAsync(TRequest request)
         {
             var entity = await GetEntity(request).Configure();
+
+            if (entity == null && RequestConfig.ErrorConfig.FailedToFindInUpdateIsError)
+                return ErrorDispatcher.Dispatch(new FailedToFindError(request, typeof(TEntity)));
+
             if (entity != null)
                 await UpdateEntity(request, entity).Configure();
 
@@ -120,6 +115,12 @@ namespace Turner.Infrastructure.Crud.Requests
         {
             var entity = await GetEntity(request).Configure();
             TOut result = default(TOut);
+
+            if (entity == null && RequestConfig.ErrorConfig.FailedToFindInUpdateIsError)
+            {
+                var error = new FailedToFindError(request, typeof(TEntity), result);
+                return ErrorDispatcher.Dispatch<TOut>(error);
+            }
 
             if (entity != null)
             {
