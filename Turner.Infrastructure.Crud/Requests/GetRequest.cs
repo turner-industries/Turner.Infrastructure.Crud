@@ -2,6 +2,7 @@
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Mediator;
 using Turner.Infrastructure.Mediator.Decorators;
+// ReSharper disable UnusedTypeParameter
 
 namespace Turner.Infrastructure.Crud.Requests
 {
@@ -19,6 +20,7 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
     {
         public GetRequest(TKey key) { Key = key; }
+
         public TKey Key { get; }
     }
     

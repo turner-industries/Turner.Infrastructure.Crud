@@ -93,8 +93,10 @@ namespace Turner.Infrastructure.Crud.Configuration
 
     public class ActionList : List<Func<object, Task>>
     {
-        public ActionList() : base() { }
+        public ActionList() { }
+
         public ActionList(int capacity) : base(capacity) { }
+
         public ActionList(IEnumerable<Func<object, Task>> actions) : base(actions) { }
     }
 }

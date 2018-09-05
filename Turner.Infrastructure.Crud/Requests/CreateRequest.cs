@@ -2,6 +2,7 @@
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Mediator;
 using Turner.Infrastructure.Mediator.Decorators;
+// ReSharper disable UnusedTypeParameter
 
 namespace Turner.Infrastructure.Crud.Requests
 {

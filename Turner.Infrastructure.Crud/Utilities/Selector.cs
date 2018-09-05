@@ -51,8 +51,7 @@ namespace Turner.Infrastructure.Crud
         private Expression<Func<TEntity, bool>> Select<TEntity>(object request)
             where TEntity : class
         {
-            if (request == null ||
-                !_boundRequestType.IsAssignableFrom(request.GetType()))
+            if (!_boundRequestType.IsInstanceOfType(request))
             {
                 var message =
                     $"Unable to create a selector for entity '{typeof(TEntity)}' " +

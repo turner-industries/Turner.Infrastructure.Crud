@@ -11,7 +11,9 @@ namespace Turner.Infrastructure.Crud.Configuration
         public abstract Type RequestType { get; }
         
         internal abstract void Inherit(IEnumerable<CrudRequestProfile> profile);
+
         internal abstract void Apply(ICrudRequestConfig config);
+
         internal abstract void Apply<TRequest>(CrudRequestConfig<TRequest> config, ref List<Type> inherited);
     }
     
@@ -33,7 +35,7 @@ namespace Turner.Infrastructure.Crud.Configuration
         private Action<CrudOptionsConfig> _optionsConfig;
         private Action<CrudRequestErrorConfig> _errorConfig;
 
-        public CrudRequestProfile()
+        protected CrudRequestProfile()
         {
             foreach (var type in (ActionType[]) Enum.GetValues(typeof(ActionType)))
             {
@@ -120,7 +122,7 @@ namespace Turner.Infrastructure.Crud.Configuration
         {
             if (!(config is CrudRequestConfig<TRequest> tConfig))
             {
-                var message = "Apply() should only be called internally.";
+                const string message = "Apply() should only be called internally.";
                 throw new BadCrudConfigurationException(message);
             }
 

@@ -11,6 +11,7 @@ namespace Turner.Infrastructure.Crud.Errors
         }
 
         public Exception Exception { get; }
+
         public object Result { get; }
     }
 }

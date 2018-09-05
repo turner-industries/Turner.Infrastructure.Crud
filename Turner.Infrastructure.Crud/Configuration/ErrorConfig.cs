@@ -8,16 +8,16 @@ namespace Turner.Infrastructure.Crud.Configuration
     {
         private Func<ICrudErrorHandler> _requestErrorHandlerFactory;
 
-        private Dictionary<Type, Func<ICrudErrorHandler>> _errorHandlerFactoryCache
+        private readonly Dictionary<Type, Func<ICrudErrorHandler>> _errorHandlerFactoryCache
             = new Dictionary<Type, Func<ICrudErrorHandler>>();
 
-        private Dictionary<Type, Func<ICrudErrorHandler>> _errorHandlerFactories
+        private readonly Dictionary<Type, Func<ICrudErrorHandler>> _errorHandlerFactories
             = new Dictionary<Type, Func<ICrudErrorHandler>>();
 
         public bool FailedToFindInGetIsError { get; set; } = true;
-        public bool FailedToFindInGetAllIsError { get; set; } = false;
+        public bool FailedToFindInGetAllIsError { get; set; }
         public bool FailedToFindInUpdateIsError { get; set; } = true;
-        public bool FailedToFindInDeleteIsError { get; set; } = false;
+        public bool FailedToFindInDeleteIsError { get; set; }
 
         public ICrudErrorHandler GetErrorHandlerFor<TEntity>()
             where TEntity : class
