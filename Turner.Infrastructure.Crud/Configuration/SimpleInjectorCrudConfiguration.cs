@@ -32,37 +32,37 @@ namespace Turner.Infrastructure.Crud.Configuration
             });
 
             container.Register(typeof(ICrudErrorHandler), typeof(CrudErrorHandler), Lifestyle.Singleton);
+            
+            container.Register(typeof(IContextAccess), typeof(StandardContextAccess), Lifestyle.Singleton);
+            container.Register(typeof(IDbSetAccess), typeof(StandardDbSetAccess), Lifestyle.Singleton);
+            container.Register(typeof(ICreateAlgorithm), typeof(StandardCreateAlgorithm), Lifestyle.Singleton);
+            container.Register(typeof(IGetAlgorithm), typeof(StandardGetAlgorithm), Lifestyle.Singleton);
+            container.Register(typeof(IGetAllAlgorithm), typeof(StandardGetAllAlgorithm), Lifestyle.Singleton);
+            container.Register(typeof(IUpdateAlgorithm), typeof(StandardUpdateAlgorithm), Lifestyle.Singleton);
+            container.Register(typeof(IDeleteAlgorithm), typeof(StandardDeleteAlgorithm), Lifestyle.Singleton);
+            container.Register(typeof(ISaveAlgorithm), typeof(StandardSaveAlgorithm), Lifestyle.Singleton);
 
-            container.RegisterConditional(typeof(IContextAccess), typeof(StandardContextAccess), IfNotHandled);
-            container.RegisterConditional(typeof(IDbSetAccess), typeof(StandardDbSetAccess), IfNotHandled);
-
-            container.RegisterConditional(typeof(ICreateAlgorithm), typeof(StandardCreateAlgorithm), IfNotHandled);
             container.Register(typeof(CreateRequestHandler<,>), configAssemblies);
             container.Register(typeof(CreateRequestHandler<,,>), configAssemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(CreateRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(CreateRequestHandler<,,>), IfNotHandled);
 
-            container.RegisterConditional(typeof(IGetAlgorithm), typeof(StandardGetAlgorithm), IfNotHandled);
             container.Register(typeof(GetRequestHandler<,,>), configAssemblies);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(GetRequestHandler<,,>), IfNotHandled);
 
-            container.RegisterConditional(typeof(IGetAllAlgorithm), typeof(StandardGetAllAlgorithm), IfNotHandled);
             container.Register(typeof(GetAllRequestHandler<,,>), configAssemblies);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(GetAllRequestHandler<,,>), IfNotHandled);
 
-            container.RegisterConditional(typeof(IUpdateAlgorithm), typeof(StandardUpdateAlgorithm), IfNotHandled);
             container.Register(typeof(UpdateRequestHandler<,>), configAssemblies);
             container.Register(typeof(UpdateRequestHandler<,,>), configAssemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(UpdateRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(UpdateRequestHandler<,,>), IfNotHandled);
 
-            container.RegisterConditional(typeof(IDeleteAlgorithm), typeof(StandardDeleteAlgorithm), IfNotHandled);
             container.Register(typeof(DeleteRequestHandler<,>), configAssemblies);
             container.Register(typeof(DeleteRequestHandler<,,>), configAssemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(DeleteRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(DeleteRequestHandler<,,>), IfNotHandled);
 
-            container.RegisterConditional(typeof(ISaveAlgorithm), typeof(StandardSaveAlgorithm), IfNotHandled);
             container.Register(typeof(SaveRequestHandler<,>), configAssemblies);
             container.Register(typeof(SaveRequestHandler<,,>), configAssemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(SaveRequestHandler<,>), IfNotHandled);
