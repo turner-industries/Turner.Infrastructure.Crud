@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using System;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Requests;
@@ -10,6 +11,26 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     [TestFixture]
     public class GetAllRequestTests : BaseUnitTest
     {
+        [Test]
+        public async Task Handle_SortedGetAllRequest_ReturnsAllEntitiesSorted()
+        {
+            await Context.AddRangeAsync(
+                new User { Name = "BUser" },
+                new User { Name = "AUser" },
+                new User { Name = "CUser" });
+            await Context.SaveChangesAsync();
+
+            var request = new GetSortedUsers();
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(3, response.Data.Count);
+            Assert.AreEqual("AUser", response.Data[0].Name);
+            Assert.AreEqual("BUser", response.Data[1].Name);
+            Assert.AreEqual("CUser", response.Data[2].Name);
+        }
+
         [Test]
         public async Task Handle_GetUsersWithDefaultWithError_ReturnsDefaultAndError()
         {
@@ -84,6 +105,47 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsFalse(response.HasErrors);
             Assert.IsNotNull(response.Data);
             Assert.AreEqual(2, response.Data.Count);
+        }
+    }
+
+    public static class GetUsersSortColumn
+    {
+        public const string Id = "Id";
+        public const string Name = "Name";
+        public const string IsDeleted = "IsDeleted";
+    };
+
+    [DoNotValidate]
+    public class GetSortedUsers 
+        : IGetAllRequest<User, UserGetDto>
+    {
+        public bool NameFirst { get; set; }
+        public string SortColumn { get; set; }
+    }
+
+    public class GetSortedUsersProfile : CrudRequestProfile<GetSortedUsers>
+    {
+        public GetSortedUsersProfile()
+        {
+            ForEntity<User>()
+                .SortForAnyWith(builder => builder.SortBy(x => x.Id))
+
+                .SortForGetAllWith(builder => builder
+                    .SortBy(x => x.Name).Ascending().ThenBy(x => x.Id).Descending().When(r => r.NameFirst)
+                    .SortBy(x => x.Id).ThenBy(x => x.Name).When(r => !r.NameFirst));
+                
+                /*
+                .SortForGetAllWith(builder => builder
+                    .SwitchSortOn(r => r.SortColumn)
+                    .SortBy(x => x.Id).Ascending().ThenBy(x => x.Name).When(GetUsersSortColumn.Id)
+                    .SortBy(x => x.Name).When(GetUsersSortColumn.Name)
+                    .SortBy(x => x.IsDeleted).Descending().When(GetUsersSortColumn.IsDeleted)
+                    .SortBy(x => x.Name).Otherwise());
+                */
+
+                /*
+                .SortForGetAllWith(queryable => queryable.OrderBy(x => x.Id));
+                */
         }
     }
 

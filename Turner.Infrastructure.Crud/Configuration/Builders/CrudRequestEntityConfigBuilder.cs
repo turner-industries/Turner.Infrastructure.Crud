@@ -19,6 +19,9 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         private readonly Dictionary<SelectorType, ISelector> _selectors
             = new Dictionary<SelectorType, ISelector>();
 
+        private readonly Dictionary<SorterType, List<ISorter>> _sorters
+            = new Dictionary<SorterType, List<ISorter>>();
+
         private readonly Dictionary<ActionType, List<Func<TRequest, Task>>> _preActions
             = new Dictionary<ActionType, List<Func<TRequest, Task>>>();
 
@@ -150,12 +153,37 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             var builder = new SelectorBuilder<TRequest, TEntity>();
             var sel = Selector.From(build(builder));
 
-            foreach (var type in (SelectorType[])Enum.GetValues(typeof(SelectorType)))
+            foreach (var type in (SelectorType[]) Enum.GetValues(typeof(SelectorType)))
                 _selectors[type] = sel;
 
             return this;
         }
-        
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SortForGetAllWith(
+            Action<SortBuilder<TRequest, TEntity>> build)
+        {
+            var builder = new SortBuilder<TRequest, TEntity>();
+            build(builder);
+
+            _sorters[SorterType.GetAll] = builder.Build();
+
+            return this;
+        }
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SortForAnyWith(
+            Action<SortBuilder<TRequest, TEntity>> build)
+        {
+            var builder = new SortBuilder<TRequest, TEntity>();
+            build(builder);
+
+            var sorters = builder.Build();
+
+            foreach (var type in (SorterType[]) Enum.GetValues(typeof(SorterType)))
+                _sorters[type] = sorters;
+
+            return this;
+        }
+
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> CreateWith(
             Func<TRequest, Task<TEntity>> creator)
         {
@@ -204,6 +232,9 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
 
             foreach (var (type, selector) in _selectors)
                 config.SetEntitySelectorFor<TEntity>(type, selector);
+
+            foreach (var (type, sorters) in _sorters)
+                config.SetEntitySortersFor<TEntity>(type, sorters);
 
             if (_createEntityFromRequest != null)
                 config.SetEntityCreator(request => _createEntityFromRequest((TRequest)request));

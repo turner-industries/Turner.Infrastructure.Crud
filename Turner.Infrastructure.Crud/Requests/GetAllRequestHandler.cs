@@ -2,6 +2,7 @@
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
@@ -52,21 +53,42 @@ namespace Turner.Infrastructure.Crud.Requests
         public async Task<Response<List<TOut>>> HandleAsync(TRequest request)
         {
             List<TOut> result;
+
+            var entities = Algorithm
+                .GetEntities<TEntity>(Context)
+                .AsQueryable();
             
+            var sorters = RequestConfig.GetSortersFor<TEntity>(SorterType.GetAll);
+
+            if (sorters != null)
+            {
+                IOrderedQueryable<TEntity> sortedEntities = null;
+
+                foreach (var sorter in sorters)
+                {
+                    sortedEntities = sorter.Sort(request, entities);
+                    if (sortedEntities != null)
+                        break;
+                }
+
+                if (sortedEntities != null)
+                    entities = sortedEntities;
+            }
+
             if (Options.UseProjection)
             {
-                result = await Algorithm.GetEntities<TEntity>(Context)
+                result = await entities
                     .ProjectTo<TOut>()
                     .ToListAsync()
                     .Configure();
             }
             else
             {
-                var entities = await Algorithm.GetEntities<TEntity>(Context)
+                var resultEntities = await entities   
                     .ToListAsync()
                     .Configure();
 
-                result = Mapper.Map<List<TOut>>(entities);
+                result = Mapper.Map<List<TOut>>(resultEntities);
             }
 
             if (result.Count == 0)

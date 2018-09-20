@@ -1,7 +1,7 @@
 ﻿using System;
 using Turner.Infrastructure.Crud.Errors;
 
-namespace Turner.Infrastructure.Crud.Configuration.Builders
+namespace Turner.Infrastructure.Crud.Configuration
 {
     public class CrudRequestErrorConfig
     {

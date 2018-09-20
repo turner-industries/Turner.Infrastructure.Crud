@@ -1,8 +1,38 @@
-﻿using Turner.Infrastructure.Crud.Configuration;
+﻿using System;
+using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.Configuration.Builders;
 using Turner.Infrastructure.Crud.Requests;
 
 namespace Turner.Infrastructure.Crud.Tests.Fakes
 {
+    public enum SortKeys
+    {
+        Key1, Key2, Key3, Key4
+    }
+
+    public static class SortKeys2
+    {
+        public const string Key1 = "Key1";
+        public const string Key2 = "Key2";
+        public const string Key3 = "Key3";
+    }
+
+    public class SortEntity : IEntity
+    {
+        public int Id { get; set; }
+        public string PostMessage { get; set; }
+        public bool IsDeleted { get; set; }
+
+        public int Col1 { get; set; }
+        public string Col2 { get; set; }
+        public long Col3 { get; set; }
+    }
+
+    public class SortTestRequest : GetAllRequest<SortEntity, UserGetDto>
+    {
+        public SortKeys SortKey { get; set; }
+    }
+
     public class CrudRequestProfile : CrudRequestProfile<ICrudRequest>
     {
         public CrudRequestProfile()
