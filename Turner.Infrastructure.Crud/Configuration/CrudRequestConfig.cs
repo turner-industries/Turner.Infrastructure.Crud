@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Turner.Infrastructure.Crud.Configuration.Builders;
 using Turner.Infrastructure.Crud.Exceptions;
 
 namespace Turner.Infrastructure.Crud.Configuration
@@ -16,7 +15,10 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         ISelector GetSelectorFor<TEntity>(SelectorType type)
             where TEntity : class;
-        
+
+        ISorter GetSorterFor<TEntity>(SorterType type)
+            where TEntity : class;
+
         Task RunPreActionsFor<TEntity>(ActionType type, object request)
             where TEntity : class;
 
@@ -37,6 +39,7 @@ namespace Turner.Infrastructure.Crud.Configuration
         : ICrudRequestConfig
     {
         private readonly SelectorConfig _selectors = new SelectorConfig();
+        private readonly SorterConfig _sorters = new SorterConfig();
         private readonly ActionConfig _actions = new ActionConfig();
         private readonly RequestOptions _options = new RequestOptions();
         private readonly Dictionary<Type, CrudOptionsConfig> _entityOptionOverrides
@@ -71,6 +74,12 @@ namespace Turner.Infrastructure.Crud.Configuration
             _selectors.Set(type, typeof(TEntity), selector);
         }
         
+        internal void SetEntitySorterFor<TEntity>(SorterType type, ISorter sorter)
+            where TEntity : class
+        {
+            _sorters.Set(type, typeof(TEntity), sorter);
+        }
+
         internal void AddPreActions(ActionType type, ActionList actions)
         {
             _actions[type].AddPreActions(actions);
@@ -139,6 +148,12 @@ namespace Turner.Infrastructure.Crud.Configuration
                     $"for request '{typeof(TRequest)}'.");
 
             return selector;
+        }
+
+        public ISorter GetSorterFor<TEntity>(SorterType type)
+            where TEntity : class
+        {
+            return _sorters[type].GetSorterFor(typeof(TEntity));
         }
 
         public Task RunPreActionsFor<TEntity>(ActionType type, object request)

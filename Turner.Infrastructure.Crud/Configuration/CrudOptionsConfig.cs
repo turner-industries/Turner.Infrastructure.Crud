@@ -1,4 +1,4 @@
-﻿namespace Turner.Infrastructure.Crud.Configuration.Builders
+﻿namespace Turner.Infrastructure.Crud.Configuration
 {
     public class CrudOptionsConfig
     {
