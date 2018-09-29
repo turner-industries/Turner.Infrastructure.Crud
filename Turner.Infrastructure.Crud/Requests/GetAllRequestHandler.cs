@@ -34,7 +34,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     internal class GetAllRequestHandler<TRequest, TEntity, TOut>
-        : CrudRequestHandler<TRequest, TEntity>, IRequestHandler<TRequest, List<TOut>>
+        : CrudRequestHandler<TRequest, TEntity>, IRequestHandler<TRequest, GetAllResult<TOut>>
         where TEntity : class
         where TRequest : IGetAllRequest<TEntity, TOut>
     {
@@ -50,9 +50,9 @@ namespace Turner.Infrastructure.Crud.Requests
             Options = RequestConfig.GetOptionsFor<TEntity>();
         }
 
-        public async Task<Response<List<TOut>>> HandleAsync(TRequest request)
+        public async Task<Response<GetAllResult<TOut>>> HandleAsync(TRequest request)
         {
-            List<TOut> result;
+            List<TOut> items;
 
             var entities = Algorithm
                 .GetEntities<TEntity>(Context)
@@ -63,7 +63,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
             if (Options.UseProjection)
             {
-                result = await entities
+                items = await entities
                     .ProjectTo<TOut>()
                     .ToListAsync()
                     .Configure();
@@ -74,21 +74,25 @@ namespace Turner.Infrastructure.Crud.Requests
                     .ToListAsync()
                     .Configure();
 
-                result = Mapper.Map<List<TOut>>(resultEntities);
+                items = Mapper.Map<List<TOut>>(resultEntities);
             }
 
-            if (result.Count == 0)
+            if (items.Count == 0)
             {
                 var defaultValue = RequestConfig.GetDefault<TEntity>();
                 if (defaultValue != null)
-                    result.Add(Mapper.Map<TOut>(defaultValue));
+                    items.Add(Mapper.Map<TOut>(defaultValue));
 
                 if (RequestConfig.ErrorConfig.FailedToFindInGetAllIsError)
                 {
-                    var error = new FailedToFindError(request, typeof(TEntity), result);
-                    return ErrorDispatcher.Dispatch<List<TOut>>(error);
+                    var errorResult = new GetAllResult<TOut>(items);
+                    var error = new FailedToFindError(request, typeof(TEntity), errorResult);
+
+                    return ErrorDispatcher.Dispatch<GetAllResult<TOut>>(error);
                 }
             }
+
+            var result = new GetAllResult<TOut>(items);
 
             return result.AsResponse();
         }
