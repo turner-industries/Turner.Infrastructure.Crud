@@ -46,7 +46,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         protected readonly ICreateAlgorithm Algorithm;
 
-        public CreateRequestHandlerBase(DbContext context, 
+        protected CreateRequestHandlerBase(DbContext context, 
             CrudConfigManager profileManager,
             ICreateAlgorithm algorithm)
             : base(context, profileManager)

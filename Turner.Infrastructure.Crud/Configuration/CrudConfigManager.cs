@@ -87,7 +87,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             profiles.AddRange(new[] { tRequest.BaseType }
                 .Concat(tRequest.GetInterfaces())
                 .Where(x => x != null && typeof(ICrudRequest).IsAssignableFrom(x))
-                .Select(x => GetRequestProfileFor(x)));
+                .Select(GetRequestProfileFor));
 
             profile = profiles.First();
             profile.Inherit(profiles.Skip(1).Where(x => x != null));

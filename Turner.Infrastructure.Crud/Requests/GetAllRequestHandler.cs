@@ -51,7 +51,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response<List<TOut>>> HandleAsync(TRequest request)
         {
-            var result = default(List<TOut>);
+            List<TOut> result;
             
             if (Options.UseProjection)
             {

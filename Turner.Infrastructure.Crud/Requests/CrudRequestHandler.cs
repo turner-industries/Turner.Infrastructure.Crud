@@ -24,6 +24,6 @@ namespace Turner.Infrastructure.Crud.Requests
             ErrorDispatcher = new CrudErrorDispatcher(errorHandler);
         }
 
-        public CrudErrorDispatcher ErrorDispatcher { get; private set; }
+        public CrudErrorDispatcher ErrorDispatcher { get; }
     }
 }

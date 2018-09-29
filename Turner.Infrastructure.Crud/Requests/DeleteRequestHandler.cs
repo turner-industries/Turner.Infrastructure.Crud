@@ -57,7 +57,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         protected readonly IDeleteAlgorithm Algorithm;
 
-        public DeleteRequestHandlerBase(DbContext context, 
+        protected DeleteRequestHandlerBase(DbContext context, 
             CrudConfigManager profileManager,
             IDeleteAlgorithm algorithm)
             : base(context, profileManager)
@@ -100,7 +100,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response> HandleAsync(TRequest request)
         {
-            var entity = default(TEntity);
+            TEntity entity;
 
             try
             {
@@ -137,7 +137,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response<TOut>> HandleAsync(TRequest request)
         {
-            var entity = default(TEntity);
+            TEntity entity;
             var result = default(TOut);
 
             try

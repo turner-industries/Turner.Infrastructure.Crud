@@ -89,7 +89,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsNotNull(user);
             Assert.AreEqual("TestUser", user.Name);
             Assert.AreEqual(null, user.PreMessage);
-            Assert.AreEqual("PostCreate/Entity", user.PostMessage);
+            Assert.AreEqual("Default", user.PostMessage);
         }
 
         [Test]

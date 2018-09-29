@@ -2,6 +2,7 @@
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Mediator;
 using Turner.Infrastructure.Mediator.Decorators;
+// ReSharper disable UnusedTypeParameter
 
 namespace Turner.Infrastructure.Crud.Requests
 {
@@ -24,14 +25,8 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
     {
         public DeleteRequest(TKey key) { Key = key; }
-        public TKey Key { get; }
-    }
 
-    public class DeleteRequestProfile<TEntity, TKey> 
-        : CrudRequestProfile<CreateRequest<TEntity, TKey>>
-        where TEntity : class
-    {
-        public DeleteRequestProfile() { }
+        public TKey Key { get; }
     }
 
     [DoNotValidate]
@@ -39,14 +34,8 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
     {
         public DeleteRequest(TKey key) { Key = key; }
-        public TKey Key { get; }
-    }
 
-    public class DeleteRequestProfile<TEntity, TKey, TOut>
-        : CrudRequestProfile<CreateRequest<TEntity, TKey, TOut>>
-        where TEntity : class
-    {
-        public DeleteRequestProfile() { }
+        public TKey Key { get; }
     }
 
     [DoNotValidate]

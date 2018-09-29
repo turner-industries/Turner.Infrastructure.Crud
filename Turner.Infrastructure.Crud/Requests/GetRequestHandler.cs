@@ -50,9 +50,8 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response<TOut>> HandleAsync(TRequest request)
         {
-            var entity = default(TEntity);
-            var result = default(TOut);
-            bool failedToFind = false;
+            TOut result;
+            var failedToFind = false;
 
             try
             {
@@ -72,7 +71,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 }
                 else
                 {
-                    entity = await Algorithm.GetEntities<TEntity>(Context)
+                    var entity = await Algorithm.GetEntities<TEntity>(Context)
                         .SelectSingleAsync(request, selector)
                         .Configure();
 

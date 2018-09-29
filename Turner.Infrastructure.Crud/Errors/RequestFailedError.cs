@@ -12,6 +12,7 @@ namespace Turner.Infrastructure.Crud.Errors
         }
 
         public object Request { get; }
+
         public string Reason { get; protected set; }
     }
 }

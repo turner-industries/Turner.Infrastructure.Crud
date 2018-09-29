@@ -13,6 +13,6 @@ namespace Turner.Infrastructure.Crud.Errors
             Reason = DefaultReason;
         }
 
-        public Type EntityType { get; set; }
+        public Type EntityType { get; }
     }
 }

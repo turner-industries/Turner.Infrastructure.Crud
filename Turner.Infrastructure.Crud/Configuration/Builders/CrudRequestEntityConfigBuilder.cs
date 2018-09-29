@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Errors;
-using Turner.Infrastructure.Crud.Utilities;
 
 namespace Turner.Infrastructure.Crud.Configuration.Builders
 {
@@ -26,11 +25,11 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         private readonly Dictionary<ActionType, List<Func<TEntity, Task>>> _postActions
             = new Dictionary<ActionType, List<Func<TEntity, Task>>>();
 
-        private CrudOptionsConfig _optionsConfig = null;
-        private TEntity _defaultValue = null;
-        private Func<TRequest, Task<TEntity>> _createEntityFromRequest = null;
-        private Func<TRequest, TEntity, Task> _updateEntityFromRequest = null;
-        private Func<ICrudErrorHandler> _errorHandlerFactory = null;
+        private CrudOptionsConfig _optionsConfig;
+        private TEntity _defaultValue;
+        private Func<TRequest, Task<TEntity>> _createEntityFromRequest;
+        private Func<TRequest, TEntity, Task> _updateEntityFromRequest;
+        private Func<ICrudErrorHandler> _errorHandlerFactory;
 
         public CrudRequestEntityConfigBuilder()
         {
@@ -214,8 +213,8 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
 
             foreach (var type in (ActionType[]) Enum.GetValues(typeof(ActionType)))
             {
-                Func<object, Task> ConvertAction<T>(Func<T, Task> action)
-                    => new Func<object, Task>(x => action((T) x));
+                Func<object, Task> ConvertAction<TArg>(Func<TArg, Task> action)
+                    => x => action((TArg) x);
 
                 var preActions = _preActions[type];
                 if (preActions.Count > 0)

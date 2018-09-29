@@ -62,7 +62,7 @@ namespace Turner.Infrastructure.Crud.Requests
         protected readonly ISaveAlgorithm Algorithm;
         protected readonly RequestOptions Options;
 
-        public SaveRequestHandlerBase(DbContext context,
+        protected SaveRequestHandlerBase(DbContext context,
             CrudConfigManager profileManager,
             ISaveAlgorithm algorithm)
             : base(context, profileManager)
@@ -114,7 +114,7 @@ namespace Turner.Infrastructure.Crud.Requests
             var newEntity = await Algorithm.CreateEntityAsync(Context, entity).Configure();
 
             if (!Options.SuppressCreateActionsInSave)
-                await RequestConfig.RunPostActionsFor(ActionType.Create, request, entity).Configure();
+                await RequestConfig.RunPostActionsFor(ActionType.Create, request, newEntity).Configure();
             
             return entity;
         }
@@ -150,7 +150,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response> HandleAsync(TRequest request)
         {
-            var entity = default(TEntity);
+            TEntity entity;
 
             try
             {
@@ -183,7 +183,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response<TOut>> HandleAsync(TRequest request)
         {
-            var entity = default(TEntity);
+            TEntity entity;
 
             try
             {

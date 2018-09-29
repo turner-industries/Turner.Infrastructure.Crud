@@ -9,6 +9,7 @@ namespace Turner.Infrastructure.Crud.Exceptions
     public class CrudRequestFailedException : Exception
     {
         public Type RequestTypeProperty { get; set; }
+
         public object ResponseData { get; set; }
         
         public CrudRequestFailedException()

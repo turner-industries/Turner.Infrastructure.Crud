@@ -8,6 +8,7 @@ namespace Turner.Infrastructure.Crud.Errors
     public interface ICrudErrorHandler
     {
         Response Handle(CrudError error);
+
         Response<TResult> Handle<TResult>(CrudError error);
     }
 
@@ -15,7 +16,7 @@ namespace Turner.Infrastructure.Crud.Errors
     {
         public const string GenericErrorMessage = "An error has occurred.";
 
-        private Dictionary<Type, Func<CrudError, Response>> _dispatchers;
+        private readonly Dictionary<Type, Func<CrudError, Response>> _dispatchers;
 
         public CrudErrorHandler()
         {
