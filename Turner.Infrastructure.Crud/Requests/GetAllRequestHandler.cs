@@ -31,6 +31,26 @@ namespace Turner.Infrastructure.Crud.Requests
         {
             return _contextAccess.GetEntities<TEntity>(context);
         }
+        
+        internal static async Task<List<TOut>> ProjectResultItems<TEntity, TOut>(
+            RequestOptions options, IQueryable<TEntity> entities)
+        {
+            if (options.UseProjection)
+            {
+                return await entities
+                    .ProjectTo<TOut>()
+                    .ToListAsync()
+                    .Configure();
+            }
+            else
+            {
+                var resultEntities = await entities
+                    .ToListAsync()
+                    .Configure();
+
+                return Mapper.Map<List<TOut>>(resultEntities);
+            }
+        }
     }
 
     internal class GetAllRequestHandler<TRequest, TEntity, TOut>
@@ -61,21 +81,8 @@ namespace Turner.Infrastructure.Crud.Requests
             var sorter = RequestConfig.GetSorterFor<TEntity>(SorterType.GetAll);
             entities = sorter?.Sort(request, entities) ?? entities;
 
-            if (Options.UseProjection)
-            {
-                items = await entities
-                    .ProjectTo<TOut>()
-                    .ToListAsync()
-                    .Configure();
-            }
-            else
-            {
-                var resultEntities = await entities   
-                    .ToListAsync()
-                    .Configure();
-
-                items = Mapper.Map<List<TOut>>(resultEntities);
-            }
+            items = await StandardGetAllAlgorithm
+                .ProjectResultItems<TEntity, TOut>(Options, entities);
 
             if (items.Count == 0)
             {
