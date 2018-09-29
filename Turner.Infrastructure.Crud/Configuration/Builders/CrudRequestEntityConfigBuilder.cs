@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Turner.Infrastructure.Crud.Configuration.Builders.Sort;
 using Turner.Infrastructure.Crud.Errors;
 
 namespace Turner.Infrastructure.Crud.Configuration.Builders
@@ -19,8 +20,8 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         private readonly Dictionary<SelectorType, ISelector> _selectors
             = new Dictionary<SelectorType, ISelector>();
 
-        private readonly Dictionary<SorterType, List<ISorter>> _sorters
-            = new Dictionary<SorterType, List<ISorter>>();
+        private readonly Dictionary<SorterType, ISorter> _sorters
+            = new Dictionary<SorterType, ISorter>();
 
         private readonly Dictionary<ActionType, List<Func<TRequest, Task>>> _preActions
             = new Dictionary<ActionType, List<Func<TRequest, Task>>>();
@@ -159,7 +160,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SortForGetAllWith(
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SortGetAllWith(
             Action<SortBuilder<TRequest, TEntity>> build)
         {
             var builder = new SortBuilder<TRequest, TEntity>();
@@ -170,19 +171,27 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SortForAnyWith(
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SortGetAllWith(
+            Func<TRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
+            => SortGetAllWith(builder => builder.Custom(sortFunc));
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SortAnyWith(
             Action<SortBuilder<TRequest, TEntity>> build)
         {
             var builder = new SortBuilder<TRequest, TEntity>();
             build(builder);
 
-            var sorters = builder.Build();
+            var sorter = builder.Build();
 
             foreach (var type in (SorterType[]) Enum.GetValues(typeof(SorterType)))
-                _sorters[type] = sorters;
+                _sorters[type] = sorter;
 
             return this;
         }
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SortAnyWith(
+            Func<TRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
+            => SortAnyWith(builder => builder.Custom(sortFunc));
 
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> CreateWith(
             Func<TRequest, Task<TEntity>> creator)
@@ -233,8 +242,8 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             foreach (var (type, selector) in _selectors)
                 config.SetEntitySelectorFor<TEntity>(type, selector);
 
-            foreach (var (type, sorters) in _sorters)
-                config.SetEntitySortersFor<TEntity>(type, sorters);
+            foreach (var (type, sorter) in _sorters)
+                config.SetEntitySorterFor<TEntity>(type, sorter);
 
             if (_createEntityFromRequest != null)
                 config.SetEntityCreator(request => _createEntityFromRequest((TRequest)request));

@@ -21,18 +21,18 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         public SorterConfigSet this[SorterType type] => _sorters[type];
 
-        internal void Set(SorterType type, Type tEntity, List<ISorter> sorters)
+        internal void Set(SorterType type, Type tEntity, ISorter sorter)
         {
-            _sorters[type].SetSortersFor(tEntity, sorters);
+            _sorters[type].SetSorterFor(tEntity, sorter);
         }
     }
 
     public class SorterConfigSet
     {
-        private readonly Dictionary<Type, List<ISorter>> _entitySorters
-            = new Dictionary<Type, List<ISorter>>();
+        private readonly Dictionary<Type, ISorter> _entitySorters
+            = new Dictionary<Type, ISorter>();
 
-        public List<ISorter> GetSortersFor(Type tEntity)
+        public ISorter GetSorterFor(Type tEntity)
         {
             foreach (var type in tEntity.BuildTypeHierarchyUp())
             {
@@ -43,9 +43,9 @@ namespace Turner.Infrastructure.Crud.Configuration
             return null;
         }
 
-        internal void SetSortersFor(Type tEntity, List<ISorter> sorters)
+        internal void SetSorterFor(Type tEntity, ISorter sorter)
         {
-            _entitySorters[tEntity] = sorters;
+            _entitySorters[tEntity] = sorter;
         }
     }
 }

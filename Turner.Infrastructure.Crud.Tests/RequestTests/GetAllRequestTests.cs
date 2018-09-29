@@ -1,5 +1,5 @@
 ﻿using NUnit.Framework;
-using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Requests;
@@ -11,24 +11,213 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     [TestFixture]
     public class GetAllRequestTests : BaseUnitTest
     {
-        [Test]
-        public async Task Handle_SortedGetAllRequest_ReturnsAllEntitiesSorted()
+        private async Task SeedSortEntities()
         {
             await Context.AddRangeAsync(
-                new User { Name = "BUser" },
-                new User { Name = "AUser" },
-                new User { Name = "CUser" });
-            await Context.SaveChangesAsync();
+                new User { Name = "BUser", IsDeleted = true },
+                new User { Name = "AUser", IsDeleted = false },
+                new User { Name = "CUser", IsDeleted = false },
+                new User { Name = "FUser", IsDeleted = true },
+                new User { Name = "DUser", IsDeleted = true },
+                new User { Name = "EUser", IsDeleted = false }
+            );
 
-            var request = new GetSortedUsers();
+            await Context.SaveChangesAsync();
+        }
+
+        [Test]
+        public async Task Handle_GetAllSimpleSortedUsersRequest_ReturnsAllEntitiesSorted()
+        {
+            await SeedSortEntities();
+
+            var request = new GetAllSimpleSortedUsers();
+
             var response = await Mediator.HandleAsync(request);
 
             Assert.IsFalse(response.HasErrors);
             Assert.IsNotNull(response.Data);
-            Assert.AreEqual(3, response.Data.Count);
+            Assert.AreEqual(6, response.Data.Count);
+            Assert.AreEqual("FUser", response.Data[0].Name);
+            Assert.AreEqual("EUser", response.Data[1].Name);
+            Assert.AreEqual("DUser", response.Data[2].Name);
+            Assert.AreEqual("CUser", response.Data[3].Name);
+            Assert.AreEqual("BUser", response.Data[4].Name);
+            Assert.AreEqual("AUser", response.Data[5].Name);
+        }
+
+        [Test]
+        public async Task Handle_GetAllCustomSortedUsersRequest_ReturnsAllEntitiesSorted()
+        {
+            await SeedSortEntities();
+
+            var request = new GetAllCustomSortedUsers();
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(6, response.Data.Count);
+            Assert.AreEqual("FUser", response.Data[0].Name);
+            Assert.AreEqual("EUser", response.Data[1].Name);
+            Assert.AreEqual("DUser", response.Data[2].Name);
+            Assert.AreEqual("CUser", response.Data[3].Name);
+            Assert.AreEqual("BUser", response.Data[4].Name);
+            Assert.AreEqual("AUser", response.Data[5].Name);
+        }
+        
+        [Test]
+        public async Task Handle_GetAllBasicSortedUsersRequest_Ungrouped_ReturnsAllEntitiesSorted()
+        {
+            await SeedSortEntities();
+
+            var request = new GetAllBasicSortedUsers { GroupDeleted = false };
+
+            var response = await Mediator.HandleAsync(request);
+            
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(6, response.Data.Count);
             Assert.AreEqual("AUser", response.Data[0].Name);
             Assert.AreEqual("BUser", response.Data[1].Name);
             Assert.AreEqual("CUser", response.Data[2].Name);
+            Assert.AreEqual("DUser", response.Data[3].Name);
+            Assert.AreEqual("EUser", response.Data[4].Name);
+            Assert.AreEqual("FUser", response.Data[5].Name);
+        }
+
+        [Test]
+        public async Task Handle_GetAllBasicSortedUsersRequest_Grouped_ReturnsAllEntitiesSorted()
+        {
+            await SeedSortEntities();
+
+            var request = new GetAllBasicSortedUsers { GroupDeleted = true };
+
+            var response = await Mediator.HandleAsync(request);
+            
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(6, response.Data.Count);
+            Assert.AreEqual("EUser", response.Data[0].Name);
+            Assert.AreEqual("CUser", response.Data[1].Name);
+            Assert.AreEqual("AUser", response.Data[2].Name);
+            Assert.AreEqual("FUser", response.Data[3].Name);
+            Assert.AreEqual("DUser", response.Data[4].Name);
+            Assert.AreEqual("BUser", response.Data[5].Name);
+        }
+        
+        [Test]
+        public async Task Handle_GetAllSwitchSortedUsersRequest_Case_ReturnsAllEntitiesSorted()
+        {
+            await SeedSortEntities();
+
+            var request = new GetAllSwitchSortedUsers { Case = UsersSortColumn.Name };
+
+            var response = await Mediator.HandleAsync(request);
+            
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(6, response.Data.Count);
+            Assert.AreEqual("FUser", response.Data[0].Name);
+            Assert.AreEqual("EUser", response.Data[1].Name);
+            Assert.AreEqual("DUser", response.Data[2].Name);
+            Assert.AreEqual("CUser", response.Data[3].Name);
+            Assert.AreEqual("BUser", response.Data[4].Name);
+            Assert.AreEqual("AUser", response.Data[5].Name);
+        }
+
+        [Test]
+        public async Task Handle_GetAllSwitchSortedUsersRequest_Default_ReturnsAllEntitiesSorted()
+        {
+            await SeedSortEntities();
+
+            var request = new GetAllSwitchSortedUsers { Case = "BadCase" };
+
+            var response = await Mediator.HandleAsync(request);
+            
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(6, response.Data.Count);
+            Assert.AreEqual("EUser", response.Data[0].Name);
+            Assert.AreEqual("CUser", response.Data[1].Name);
+            Assert.AreEqual("AUser", response.Data[2].Name);
+            Assert.AreEqual("FUser", response.Data[3].Name);
+            Assert.AreEqual("DUser", response.Data[4].Name);
+            Assert.AreEqual("BUser", response.Data[5].Name);
+        }
+
+        [Test]
+        public async Task Handle_GetAllTableSortedUsersRequest_ByIsDeletedThenByNameDesc_ReturnsAllEntitiesSorted()
+        {
+            await SeedSortEntities();
+
+            var request = new GetAllTableSortedUsers
+            {
+                PrimaryColumn = UsersSortColumn.IsDeleted,
+                SecondaryColumn = UsersSortColumn.Name,
+                SecondaryDirection = 1
+            };
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(6, response.Data.Count);
+            Assert.AreEqual("EUser", response.Data[0].Name);
+            Assert.AreEqual("CUser", response.Data[1].Name);
+            Assert.AreEqual("AUser", response.Data[2].Name);
+            Assert.AreEqual("FUser", response.Data[3].Name);
+            Assert.AreEqual("DUser", response.Data[4].Name);
+            Assert.AreEqual("BUser", response.Data[5].Name);
+        }
+
+        [Test]
+        public async Task Handle_GetAllTableSortedUsersRequest_ByIsDeletedThenByNameAsc_ReturnsAllEntitiesSorted()
+        {
+            await SeedSortEntities();
+            
+            var request = new GetAllTableSortedUsers
+            {
+                PrimaryColumn = UsersSortColumn.IsDeleted,
+                SecondaryColumn = UsersSortColumn.Name,
+                SecondaryDirection = 0
+            };
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(6, response.Data.Count);
+            Assert.AreEqual("AUser", response.Data[0].Name);
+            Assert.AreEqual("CUser", response.Data[1].Name);
+            Assert.AreEqual("EUser", response.Data[2].Name);
+            Assert.AreEqual("BUser", response.Data[3].Name);
+            Assert.AreEqual("DUser", response.Data[4].Name);
+            Assert.AreEqual("FUser", response.Data[5].Name);
+        }
+
+        [Test]
+        public async Task Handle_GetAllTableSortedUsersRequest_ByNameThenByIsDeleted_ReturnsAllEntitiesSorted()
+        {
+            await SeedSortEntities();
+            
+            var request = new GetAllTableSortedUsers
+            {
+                PrimaryColumn = UsersSortColumn.Name,
+                SecondaryColumn = UsersSortColumn.IsDeleted,
+                SecondaryDirection = 1
+            };
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(6, response.Data.Count);
+            Assert.AreEqual("AUser", response.Data[0].Name);
+            Assert.AreEqual("BUser", response.Data[1].Name);
+            Assert.AreEqual("CUser", response.Data[2].Name);
+            Assert.AreEqual("DUser", response.Data[3].Name);
+            Assert.AreEqual("EUser", response.Data[4].Name);
+            Assert.AreEqual("FUser", response.Data[5].Name);
         }
 
         [Test]
@@ -108,44 +297,97 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         }
     }
 
-    public static class GetUsersSortColumn
+    public static class UsersSortColumn
     {
-        public const string Id = "Id";
         public const string Name = "Name";
         public const string IsDeleted = "IsDeleted";
     };
 
     [DoNotValidate]
-    public class GetSortedUsers 
-        : IGetAllRequest<User, UserGetDto>
+    public class GetAllSimpleSortedUsers : IGetAllRequest<User, UserGetDto>
     {
-        public bool NameFirst { get; set; }
-        public string SortColumn { get; set; }
     }
 
-    public class GetSortedUsersProfile : CrudRequestProfile<GetSortedUsers>
+    public class GetAllSimpleSortedUsersProfile : CrudRequestProfile<GetAllSimpleSortedUsers>
     {
-        public GetSortedUsersProfile()
+        public GetAllSimpleSortedUsersProfile()
+        {
+            ForEntity<User>().SortAnyWith(builder => builder.SortBy(x => x.Name).Descending());
+        }
+    }
+
+    [DoNotValidate]
+    public class GetAllCustomSortedUsers : IGetAllRequest<User, UserGetDto>
+    {
+    }
+
+    public class GetAllCustomSortedUsersProfile : CrudRequestProfile<GetAllCustomSortedUsers>
+    {
+        public GetAllCustomSortedUsersProfile()
         {
             ForEntity<User>()
-                .SortForAnyWith(builder => builder.SortBy(x => x.Id))
+                .SortAnyWith((req, users) => users.OrderByDescending(user => user.Name));
+        }
+    }
+    
+    [DoNotValidate]
+    public class GetAllBasicSortedUsers : IGetAllRequest<User, UserGetDto>
+    {
+        public bool GroupDeleted { get; set; }
+    }
 
-                .SortForGetAllWith(builder => builder
-                    .SortBy(x => x.Name).Ascending().ThenBy(x => x.Id).Descending().When(r => r.NameFirst)
-                    .SortBy(x => x.Id).ThenBy(x => x.Name).When(r => !r.NameFirst));
-                
-                /*
-                .SortForGetAllWith(builder => builder
-                    .SwitchSortOn(r => r.SortColumn)
-                    .SortBy(x => x.Id).Ascending().ThenBy(x => x.Name).When(GetUsersSortColumn.Id)
-                    .SortBy(x => x.Name).When(GetUsersSortColumn.Name)
-                    .SortBy(x => x.IsDeleted).Descending().When(GetUsersSortColumn.IsDeleted)
-                    .SortBy(x => x.Name).Otherwise());
-                */
+    public class GetAllBasicSortedUsersProfile : CrudRequestProfile<GetAllBasicSortedUsers>
+    {
+        public GetAllBasicSortedUsersProfile()
+        {
+            ForEntity<User>()
+                .SortAnyWith(builder => builder
+                    .SortBy(user => user.IsDeleted).Ascending()
+                        .ThenBy("Name").Descending()
+                        .When(r => r.GroupDeleted)
+                    .SortBy("Name")
+                        .Otherwise());
+        }
+    }
 
-                /*
-                .SortForGetAllWith(queryable => queryable.OrderBy(x => x.Id));
-                */
+    [DoNotValidate]
+    public class GetAllSwitchSortedUsers : IGetAllRequest<User, UserGetDto>
+    {
+        public string Case { get; set; }
+    }
+
+    public class GetAllSwitchSortedUsersProfile : CrudRequestProfile<GetAllSwitchSortedUsers>
+    {
+        public GetAllSwitchSortedUsersProfile()
+        {
+            ForEntity<User>()
+                .SortGetAllWith(builder => builder
+                    .AsSwitchSort<string>("Case")
+                    .ForCase(UsersSortColumn.Name).SortBy("Name").Descending()
+                    .ForDefault().SortBy(user => user.IsDeleted).ThenBy("Name").Descending());
+        }
+    }
+
+    [DoNotValidate]
+    public class GetAllTableSortedUsers : IGetAllRequest<User, UserGetDto>
+    {
+        public string PrimaryColumn { get; set; }
+        public string SecondaryColumn { get; set; }
+        
+        public int SecondaryDirection { get; set; }
+    }
+    
+    public class GetAllTableSortedUsersProfile : CrudRequestProfile<GetAllTableSortedUsers>
+    {
+        public GetAllTableSortedUsersProfile()
+        {
+            ForEntity<User>()
+                .SortAnyWith(builder => builder
+                    .AsTableSort<string>()
+                    .WithControl(r => r.PrimaryColumn, SortDirection.Ascending)
+                    .WithControl("SecondaryColumn", "SecondaryDirection")
+                    .WithColumn(UsersSortColumn.Name, "Name")
+                    .WithColumn(UsersSortColumn.IsDeleted, user => user.IsDeleted));
         }
     }
 
@@ -214,3 +456,4 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         }
     }
 }
+ 

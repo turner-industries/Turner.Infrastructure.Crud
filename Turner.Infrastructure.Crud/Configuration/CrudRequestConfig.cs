@@ -16,7 +16,7 @@ namespace Turner.Infrastructure.Crud.Configuration
         ISelector GetSelectorFor<TEntity>(SelectorType type)
             where TEntity : class;
 
-        List<ISorter> GetSortersFor<TEntity>(SorterType type)
+        ISorter GetSorterFor<TEntity>(SorterType type)
             where TEntity : class;
 
         Task RunPreActionsFor<TEntity>(ActionType type, object request)
@@ -74,10 +74,10 @@ namespace Turner.Infrastructure.Crud.Configuration
             _selectors.Set(type, typeof(TEntity), selector);
         }
         
-        internal void SetEntitySortersFor<TEntity>(SorterType type, List<ISorter> sorters)
+        internal void SetEntitySorterFor<TEntity>(SorterType type, ISorter sorter)
             where TEntity : class
         {
-            _sorters.Set(type, typeof(TEntity), sorters);
+            _sorters.Set(type, typeof(TEntity), sorter);
         }
 
         internal void AddPreActions(ActionType type, ActionList actions)
@@ -150,10 +150,10 @@ namespace Turner.Infrastructure.Crud.Configuration
             return selector;
         }
 
-        public List<ISorter> GetSortersFor<TEntity>(SorterType type)
+        public ISorter GetSorterFor<TEntity>(SorterType type)
             where TEntity : class
         {
-            return _sorters[type].GetSortersFor(typeof(TEntity));
+            return _sorters[type].GetSorterFor(typeof(TEntity));
         }
 
         public Task RunPreActionsFor<TEntity>(ActionType type, object request)

@@ -57,23 +57,9 @@ namespace Turner.Infrastructure.Crud.Requests
             var entities = Algorithm
                 .GetEntities<TEntity>(Context)
                 .AsQueryable();
-            
-            var sorters = RequestConfig.GetSortersFor<TEntity>(SorterType.GetAll);
 
-            if (sorters != null)
-            {
-                IOrderedQueryable<TEntity> sortedEntities = null;
-
-                foreach (var sorter in sorters)
-                {
-                    sortedEntities = sorter.Sort(request, entities);
-                    if (sortedEntities != null)
-                        break;
-                }
-
-                if (sortedEntities != null)
-                    entities = sortedEntities;
-            }
+            var sorter = RequestConfig.GetSorterFor<TEntity>(SorterType.GetAll);
+            entities = sorter?.Sort(request, entities) ?? entities;
 
             if (Options.UseProjection)
             {
