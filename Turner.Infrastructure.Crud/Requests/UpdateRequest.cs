@@ -66,14 +66,15 @@ namespace Turner.Infrastructure.Crud.Requests
         : IUpdateRequest<TEntity, TOut>
         where TEntity : class
     {
+        public TKey Key { get; }
+
+        public TIn Data { get; }
+
         public UpdateRequest(TKey key, TIn data)
         {
             Key = key;
             Data = data;
         }
-
-        public TKey Key { get; }
-        public TIn Data { get; }
     }
 
     public class UpdateRequestProfile<TEntity, TKey, TIn, TOut>

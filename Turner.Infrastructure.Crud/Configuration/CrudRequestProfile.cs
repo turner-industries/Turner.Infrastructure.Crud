@@ -46,6 +46,55 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         public override Type RequestType => typeof(TRequest);
 
+        internal override void Inherit(IEnumerable<CrudRequestProfile> profiles)
+        {
+            _inheritProfiles.AddRange(profiles);
+        }
+
+        internal override void Apply(ICrudRequestConfig config)
+        {
+            if (!(config is CrudRequestConfig<TRequest> tConfig))
+            {
+                const string message = "Apply() should only be called internally.";
+                throw new BadCrudConfigurationException(message);
+            }
+
+            var inherited = new List<Type>();
+
+            Apply(tConfig, ref inherited);
+        }
+
+        internal override void Apply<TPerspective>(CrudRequestConfig<TPerspective> config, ref List<Type> inherited)
+        {
+            foreach (var profile in _inheritProfiles)
+            {
+                if (inherited.Contains(profile.RequestType))
+                    continue;
+
+                inherited.Add(profile.RequestType);
+
+                profile.Apply(config, ref inherited);
+            }
+
+            if (_optionsConfig != null)
+            {
+                var options = new CrudOptionsConfig();
+                _optionsConfig(options);
+                config.SetOptions(options);
+            }
+
+            foreach (var type in (ActionType[])Enum.GetValues(typeof(ActionType)))
+            {
+                config.AddPreActions(type, _preActions[type]);
+                config.AddPostActions(type, _postActions[type]);
+            }
+
+            ApplyErrorConfig(config);
+
+            foreach (var builder in _requestEntityBuilders.Values)
+                builder.Build(config);
+        }
+
         protected void ConfigureOptions(Action<CrudOptionsConfig> config)
         {
             _optionsConfig = config;
@@ -112,56 +161,7 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         protected void AfterSaving(Action<TRequest> action)
             => AddPostAction(ActionType.Save, action);
-
-        internal override void Inherit(IEnumerable<CrudRequestProfile> profiles)
-        {
-            _inheritProfiles.AddRange(profiles);
-        }
-
-        internal override void Apply(ICrudRequestConfig config)
-        {
-            if (!(config is CrudRequestConfig<TRequest> tConfig))
-            {
-                const string message = "Apply() should only be called internally.";
-                throw new BadCrudConfigurationException(message);
-            }
-
-            var inherited = new List<Type>();
-
-            Apply(tConfig, ref inherited);
-        }
-
-        internal override void Apply<TPerspective>(CrudRequestConfig<TPerspective> config, ref List<Type> inherited)
-        {
-            foreach (var profile in _inheritProfiles)
-            {
-                if (inherited.Contains(profile.RequestType))
-                    continue;
-
-                inherited.Add(profile.RequestType);
-
-                profile.Apply(config, ref inherited);
-            }
-
-            if (_optionsConfig != null)
-            {
-                var options = new CrudOptionsConfig();
-                _optionsConfig(options);
-                config.SetOptions(options);
-            }
-
-            foreach (var type in (ActionType[])Enum.GetValues(typeof(ActionType)))
-            {
-                config.AddPreActions(type, _preActions[type]);
-                config.AddPostActions(type, _postActions[type]);
-            }
-
-            ApplyErrorConfig(config);
-
-            foreach (var builder in _requestEntityBuilders.Values)
-                builder.Build(config);
-        }
-
+        
         private void ApplyErrorConfig<TPerspective>(CrudRequestConfig<TPerspective> config)
         {
             var errorConfig = new CrudRequestErrorConfig();

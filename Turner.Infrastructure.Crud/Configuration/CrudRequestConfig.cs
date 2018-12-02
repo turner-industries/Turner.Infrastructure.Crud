@@ -61,72 +61,6 @@ namespace Turner.Infrastructure.Crud.Configuration
         private readonly Dictionary<Type, object> _defaultValues
             = new Dictionary<Type, object>();
         
-        internal void SetOptions(CrudOptionsConfig options)
-        {
-            if (options != null)
-                OverrideOptions(_options, options);
-        }
-
-        internal void SetOptionsFor<TEntity>(CrudOptionsConfig options)
-        {
-            _entityOptionOverrides[typeof(TEntity)] = options;
-        }
-        
-        internal void AddPreActions(ActionType type, ActionList actions)
-        {
-            _actions[type].AddPreActions(actions);
-        }
-
-        internal void AddPostActions(ActionType type, ActionList actions)
-        {
-            _actions[type].AddPostActions(actions);
-        }
-        
-        internal void SetPreActionsFor<TEntity>(ActionType type, ActionList actions)
-            where TEntity : class
-        {
-            _actions[type].SetPreActionsFor(typeof(TEntity), actions);
-        }
-        
-        internal void SetPostActionsFor<TEntity>(ActionType type, ActionList actions)
-            where TEntity : class
-        {
-            _actions[type].SetPostActionsFor(typeof(TEntity), actions);
-        }
-
-        internal void SetEntitySorter<TEntity>(ISorter sorter)
-            where TEntity : class
-        {
-            _entitySorters[typeof(TEntity)] = sorter;
-        }
-
-        internal void SetEntitySelector<TEntity>(ISelector selector)
-            where TEntity : class
-        {
-            _entitySelectors[typeof(TEntity)] = selector;
-        }
-
-        internal void SetEntityCreator<TEntity>(
-            Func<object, Task<TEntity>> creator)
-            where TEntity : class
-        {
-            _entityCreators[typeof(TEntity)] = async request => await creator(request).Configure();
-        }
-
-        internal void SetEntityUpdator<TEntity>(
-            Func<object, TEntity, Task> updator)
-            where TEntity : class
-        {
-            _entityUpdators[typeof(TEntity)] = (request, entity) => updator(request, (TEntity)entity);
-        }
-
-        internal void SetEntityDefault<TEntity>(
-            TEntity defaultValue)
-            where TEntity : class
-        {
-            _defaultValues[typeof(TEntity)] = defaultValue;
-        }
-        
         public ErrorConfig ErrorConfig { get; private set; } = new ErrorConfig();
 
         public RequestOptions GetOptionsFor<TEntity>()
@@ -246,6 +180,72 @@ namespace Turner.Infrastructure.Crud.Configuration
                 return (TEntity) entity;
 
             return null;
+        }
+
+        internal void SetOptions(CrudOptionsConfig options)
+        {
+            if (options != null)
+                OverrideOptions(_options, options);
+        }
+
+        internal void SetOptionsFor<TEntity>(CrudOptionsConfig options)
+        {
+            _entityOptionOverrides[typeof(TEntity)] = options;
+        }
+
+        internal void AddPreActions(ActionType type, ActionList actions)
+        {
+            _actions[type].AddPreActions(actions);
+        }
+
+        internal void AddPostActions(ActionType type, ActionList actions)
+        {
+            _actions[type].AddPostActions(actions);
+        }
+
+        internal void SetPreActionsFor<TEntity>(ActionType type, ActionList actions)
+            where TEntity : class
+        {
+            _actions[type].SetPreActionsFor(typeof(TEntity), actions);
+        }
+
+        internal void SetPostActionsFor<TEntity>(ActionType type, ActionList actions)
+            where TEntity : class
+        {
+            _actions[type].SetPostActionsFor(typeof(TEntity), actions);
+        }
+
+        internal void SetEntitySorter<TEntity>(ISorter sorter)
+            where TEntity : class
+        {
+            _entitySorters[typeof(TEntity)] = sorter;
+        }
+
+        internal void SetEntitySelector<TEntity>(ISelector selector)
+            where TEntity : class
+        {
+            _entitySelectors[typeof(TEntity)] = selector;
+        }
+
+        internal void SetEntityCreator<TEntity>(
+            Func<object, Task<TEntity>> creator)
+            where TEntity : class
+        {
+            _entityCreators[typeof(TEntity)] = async request => await creator(request).Configure();
+        }
+
+        internal void SetEntityUpdator<TEntity>(
+            Func<object, TEntity, Task> updator)
+            where TEntity : class
+        {
+            _entityUpdators[typeof(TEntity)] = (request, entity) => updator(request, (TEntity)entity);
+        }
+
+        internal void SetEntityDefault<TEntity>(
+            TEntity defaultValue)
+            where TEntity : class
+        {
+            _defaultValues[typeof(TEntity)] = defaultValue;
         }
 
         private void OverrideOptions(RequestOptions options, Type tEntity)

@@ -68,15 +68,15 @@ namespace Turner.Infrastructure.Crud.Requests
         : ISaveRequest<TEntity, TOut>
         where TEntity : class
     {
+        public TKey Key { get; }
+
+        public TIn Data { get; }
+
         public SaveRequest(TKey key, TIn data)
         {
             Key = key;
             Data = data;
         }
-
-        public TKey Key { get; }
-
-        public TIn Data { get; }
     }
 
     public class SaveRequestProfile<TEntity, TKey, TIn, TOut>
