@@ -28,7 +28,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
 
         private CrudOptionsConfig _optionsConfig;
         private TEntity _defaultValue;
-        private Selector _selectEntityFromRequest;
+        private ISelector _selectEntityFromRequest;
         private Func<TRequest, Task<TEntity>> _createEntityFromRequest;
         private Func<TRequest, TEntity, Task> _updateEntityFromRequest;
         private Func<ICrudErrorHandler> _errorHandlerFactory;
@@ -120,7 +120,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         }
         
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectWith(
-            Func<SelectorBuilder<TRequest, TEntity>, Selector> build)
+            Func<SelectorBuilder<TRequest, TEntity>, ISelector> build)
         {
             var builder = new SelectorBuilder<TRequest, TEntity>();
             _selectEntityFromRequest = build(builder);
