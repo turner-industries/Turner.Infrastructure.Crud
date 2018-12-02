@@ -36,13 +36,13 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
 
             Assert.IsFalse(response.HasErrors);
             Assert.IsNotNull(response.Data);
-            Assert.AreEqual(6, response.Data.Count);
-            Assert.AreEqual("FUser", response.Data[0].Name);
-            Assert.AreEqual("EUser", response.Data[1].Name);
-            Assert.AreEqual("DUser", response.Data[2].Name);
-            Assert.AreEqual("CUser", response.Data[3].Name);
-            Assert.AreEqual("BUser", response.Data[4].Name);
-            Assert.AreEqual("AUser", response.Data[5].Name);
+            Assert.AreEqual(6, response.Data.Items.Count);
+            Assert.AreEqual("FUser", response.Data.Items[0].Name);
+            Assert.AreEqual("EUser", response.Data.Items[1].Name);
+            Assert.AreEqual("DUser", response.Data.Items[2].Name);
+            Assert.AreEqual("CUser", response.Data.Items[3].Name);
+            Assert.AreEqual("BUser", response.Data.Items[4].Name);
+            Assert.AreEqual("AUser", response.Data.Items[5].Name);
         }
 
         [Test]
@@ -56,13 +56,13 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
 
             Assert.IsFalse(response.HasErrors);
             Assert.IsNotNull(response.Data);
-            Assert.AreEqual(6, response.Data.Count);
-            Assert.AreEqual("FUser", response.Data[0].Name);
-            Assert.AreEqual("EUser", response.Data[1].Name);
-            Assert.AreEqual("DUser", response.Data[2].Name);
-            Assert.AreEqual("CUser", response.Data[3].Name);
-            Assert.AreEqual("BUser", response.Data[4].Name);
-            Assert.AreEqual("AUser", response.Data[5].Name);
+            Assert.AreEqual(6, response.Data.Items.Count);
+            Assert.AreEqual("FUser", response.Data.Items[0].Name);
+            Assert.AreEqual("EUser", response.Data.Items[1].Name);
+            Assert.AreEqual("DUser", response.Data.Items[2].Name);
+            Assert.AreEqual("CUser", response.Data.Items[3].Name);
+            Assert.AreEqual("BUser", response.Data.Items[4].Name);
+            Assert.AreEqual("AUser", response.Data.Items[5].Name);
         }
         
         [Test]
@@ -76,13 +76,13 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             
             Assert.IsFalse(response.HasErrors);
             Assert.IsNotNull(response.Data);
-            Assert.AreEqual(6, response.Data.Count);
-            Assert.AreEqual("AUser", response.Data[0].Name);
-            Assert.AreEqual("BUser", response.Data[1].Name);
-            Assert.AreEqual("CUser", response.Data[2].Name);
-            Assert.AreEqual("DUser", response.Data[3].Name);
-            Assert.AreEqual("EUser", response.Data[4].Name);
-            Assert.AreEqual("FUser", response.Data[5].Name);
+            Assert.AreEqual(6, response.Data.Items.Count);
+            Assert.AreEqual("AUser", response.Data.Items[0].Name);
+            Assert.AreEqual("BUser", response.Data.Items[1].Name);
+            Assert.AreEqual("CUser", response.Data.Items[2].Name);
+            Assert.AreEqual("DUser", response.Data.Items[3].Name);
+            Assert.AreEqual("EUser", response.Data.Items[4].Name);
+            Assert.AreEqual("FUser", response.Data.Items[5].Name);
         }
 
         [Test]
@@ -96,13 +96,13 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             
             Assert.IsFalse(response.HasErrors);
             Assert.IsNotNull(response.Data);
-            Assert.AreEqual(6, response.Data.Count);
-            Assert.AreEqual("EUser", response.Data[0].Name);
-            Assert.AreEqual("CUser", response.Data[1].Name);
-            Assert.AreEqual("AUser", response.Data[2].Name);
-            Assert.AreEqual("FUser", response.Data[3].Name);
-            Assert.AreEqual("DUser", response.Data[4].Name);
-            Assert.AreEqual("BUser", response.Data[5].Name);
+            Assert.AreEqual(6, response.Data.Items.Count);
+            Assert.AreEqual("EUser", response.Data.Items[0].Name);
+            Assert.AreEqual("CUser", response.Data.Items[1].Name);
+            Assert.AreEqual("AUser", response.Data.Items[2].Name);
+            Assert.AreEqual("FUser", response.Data.Items[3].Name);
+            Assert.AreEqual("DUser", response.Data.Items[4].Name);
+            Assert.AreEqual("BUser", response.Data.Items[5].Name);
         }
         
         [Test]
@@ -116,13 +116,13 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             
             Assert.IsFalse(response.HasErrors);
             Assert.IsNotNull(response.Data);
-            Assert.AreEqual(6, response.Data.Count);
-            Assert.AreEqual("FUser", response.Data[0].Name);
-            Assert.AreEqual("EUser", response.Data[1].Name);
-            Assert.AreEqual("DUser", response.Data[2].Name);
-            Assert.AreEqual("CUser", response.Data[3].Name);
-            Assert.AreEqual("BUser", response.Data[4].Name);
-            Assert.AreEqual("AUser", response.Data[5].Name);
+            Assert.AreEqual(6, response.Data.Items.Count);
+            Assert.AreEqual("FUser", response.Data.Items[0].Name);
+            Assert.AreEqual("EUser", response.Data.Items[1].Name);
+            Assert.AreEqual("DUser", response.Data.Items[2].Name);
+            Assert.AreEqual("CUser", response.Data.Items[3].Name);
+            Assert.AreEqual("BUser", response.Data.Items[4].Name);
+            Assert.AreEqual("AUser", response.Data.Items[5].Name);
         }
 
         [Test]
@@ -136,13 +136,13 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             
             Assert.IsFalse(response.HasErrors);
             Assert.IsNotNull(response.Data);
-            Assert.AreEqual(6, response.Data.Count);
-            Assert.AreEqual("EUser", response.Data[0].Name);
-            Assert.AreEqual("CUser", response.Data[1].Name);
-            Assert.AreEqual("AUser", response.Data[2].Name);
-            Assert.AreEqual("FUser", response.Data[3].Name);
-            Assert.AreEqual("DUser", response.Data[4].Name);
-            Assert.AreEqual("BUser", response.Data[5].Name);
+            Assert.AreEqual(6, response.Data.Items.Count);
+            Assert.AreEqual("EUser", response.Data.Items[0].Name);
+            Assert.AreEqual("CUser", response.Data.Items[1].Name);
+            Assert.AreEqual("AUser", response.Data.Items[2].Name);
+            Assert.AreEqual("FUser", response.Data.Items[3].Name);
+            Assert.AreEqual("DUser", response.Data.Items[4].Name);
+            Assert.AreEqual("BUser", response.Data.Items[5].Name);
         }
 
         [Test]
@@ -161,13 +161,13 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
 
             Assert.IsFalse(response.HasErrors);
             Assert.IsNotNull(response.Data);
-            Assert.AreEqual(6, response.Data.Count);
-            Assert.AreEqual("EUser", response.Data[0].Name);
-            Assert.AreEqual("CUser", response.Data[1].Name);
-            Assert.AreEqual("AUser", response.Data[2].Name);
-            Assert.AreEqual("FUser", response.Data[3].Name);
-            Assert.AreEqual("DUser", response.Data[4].Name);
-            Assert.AreEqual("BUser", response.Data[5].Name);
+            Assert.AreEqual(6, response.Data.Items.Count);
+            Assert.AreEqual("EUser", response.Data.Items[0].Name);
+            Assert.AreEqual("CUser", response.Data.Items[1].Name);
+            Assert.AreEqual("AUser", response.Data.Items[2].Name);
+            Assert.AreEqual("FUser", response.Data.Items[3].Name);
+            Assert.AreEqual("DUser", response.Data.Items[4].Name);
+            Assert.AreEqual("BUser", response.Data.Items[5].Name);
         }
 
         [Test]
@@ -186,13 +186,13 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
 
             Assert.IsFalse(response.HasErrors);
             Assert.IsNotNull(response.Data);
-            Assert.AreEqual(6, response.Data.Count);
-            Assert.AreEqual("AUser", response.Data[0].Name);
-            Assert.AreEqual("CUser", response.Data[1].Name);
-            Assert.AreEqual("EUser", response.Data[2].Name);
-            Assert.AreEqual("BUser", response.Data[3].Name);
-            Assert.AreEqual("DUser", response.Data[4].Name);
-            Assert.AreEqual("FUser", response.Data[5].Name);
+            Assert.AreEqual(6, response.Data.Items.Count);
+            Assert.AreEqual("AUser", response.Data.Items[0].Name);
+            Assert.AreEqual("CUser", response.Data.Items[1].Name);
+            Assert.AreEqual("EUser", response.Data.Items[2].Name);
+            Assert.AreEqual("BUser", response.Data.Items[3].Name);
+            Assert.AreEqual("DUser", response.Data.Items[4].Name);
+            Assert.AreEqual("FUser", response.Data.Items[5].Name);
         }
 
         [Test]
@@ -211,13 +211,13 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
 
             Assert.IsFalse(response.HasErrors);
             Assert.IsNotNull(response.Data);
-            Assert.AreEqual(6, response.Data.Count);
-            Assert.AreEqual("AUser", response.Data[0].Name);
-            Assert.AreEqual("BUser", response.Data[1].Name);
-            Assert.AreEqual("CUser", response.Data[2].Name);
-            Assert.AreEqual("DUser", response.Data[3].Name);
-            Assert.AreEqual("EUser", response.Data[4].Name);
-            Assert.AreEqual("FUser", response.Data[5].Name);
+            Assert.AreEqual(6, response.Data.Items.Count);
+            Assert.AreEqual("AUser", response.Data.Items[0].Name);
+            Assert.AreEqual("BUser", response.Data.Items[1].Name);
+            Assert.AreEqual("CUser", response.Data.Items[2].Name);
+            Assert.AreEqual("DUser", response.Data.Items[3].Name);
+            Assert.AreEqual("EUser", response.Data.Items[4].Name);
+            Assert.AreEqual("FUser", response.Data.Items[5].Name);
         }
 
         [Test]
@@ -229,8 +229,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsTrue(response.HasErrors);
             Assert.AreEqual("Failed to find entity.", response.Errors[0].ErrorMessage);
             Assert.IsNotNull(response.Data);
-            Assert.AreEqual(1, response.Data.Count);
-            Assert.AreEqual("DefaultUser", response.Data[0].Name);
+            Assert.AreEqual(1, response.Data.Items.Count);
+            Assert.AreEqual("DefaultUser", response.Data.Items[0].Name);
         }
 
         [Test]
@@ -241,8 +241,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
 
             Assert.IsFalse(response.HasErrors);
             Assert.IsNotNull(response.Data);
-            Assert.AreEqual(1, response.Data.Count);
-            Assert.AreEqual("DefaultUser", response.Data[0].Name);
+            Assert.AreEqual(1, response.Data.Items.Count);
+            Assert.AreEqual("DefaultUser", response.Data.Items[0].Name);
         }
 
         [Test]
@@ -254,7 +254,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsTrue(response.HasErrors);
             Assert.AreEqual("Failed to find entity.", response.Errors[0].ErrorMessage);
             Assert.IsNotNull(response.Data);
-            Assert.AreEqual(0, response.Data.Count);
+            Assert.AreEqual(0, response.Data.Items.Count);
         }
 
         [Test]
@@ -265,7 +265,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
 
             Assert.IsFalse(response.HasErrors);
             Assert.IsNotNull(response.Data);
-            Assert.AreEqual(0, response.Data.Count);
+            Assert.AreEqual(0, response.Data.Items.Count);
         }
 
         [Test]
@@ -279,7 +279,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
 
             Assert.IsFalse(response.HasErrors);
             Assert.IsNotNull(response.Data);
-            Assert.AreEqual(2, response.Data.Count);
+            Assert.AreEqual(2, response.Data.Items.Count);
         }
 
         [Test]
@@ -293,7 +293,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
 
             Assert.IsFalse(response.HasErrors);
             Assert.IsNotNull(response.Data);
-            Assert.AreEqual(2, response.Data.Count);
+            Assert.AreEqual(2, response.Data.Items.Count);
         }
     }
 

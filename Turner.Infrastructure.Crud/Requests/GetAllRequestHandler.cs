@@ -31,10 +31,30 @@ namespace Turner.Infrastructure.Crud.Requests
         {
             return _contextAccess.GetEntities<TEntity>(context);
         }
+        
+        internal static async Task<List<TOut>> ProjectResultItems<TEntity, TOut>(
+            RequestOptions options, IQueryable<TEntity> entities)
+        {
+            if (options.UseProjection)
+            {
+                return await entities
+                    .ProjectTo<TOut>()
+                    .ToListAsync()
+                    .Configure();
+            }
+            else
+            {
+                var resultEntities = await entities
+                    .ToListAsync()
+                    .Configure();
+
+                return Mapper.Map<List<TOut>>(resultEntities);
+            }
+        }
     }
 
     internal class GetAllRequestHandler<TRequest, TEntity, TOut>
-        : CrudRequestHandler<TRequest, TEntity>, IRequestHandler<TRequest, List<TOut>>
+        : CrudRequestHandler<TRequest, TEntity>, IRequestHandler<TRequest, GetAllResult<TOut>>
         where TEntity : class
         where TRequest : IGetAllRequest<TEntity, TOut>
     {
@@ -50,9 +70,9 @@ namespace Turner.Infrastructure.Crud.Requests
             Options = RequestConfig.GetOptionsFor<TEntity>();
         }
 
-        public async Task<Response<List<TOut>>> HandleAsync(TRequest request)
+        public async Task<Response<GetAllResult<TOut>>> HandleAsync(TRequest request)
         {
-            List<TOut> result;
+            List<TOut> items;
 
             var entities = Algorithm
                 .GetEntities<TEntity>(Context)
@@ -61,34 +81,25 @@ namespace Turner.Infrastructure.Crud.Requests
             var sorter = RequestConfig.GetSorterFor<TEntity>(SorterType.GetAll);
             entities = sorter?.Sort(request, entities) ?? entities;
 
-            if (Options.UseProjection)
-            {
-                result = await entities
-                    .ProjectTo<TOut>()
-                    .ToListAsync()
-                    .Configure();
-            }
-            else
-            {
-                var resultEntities = await entities   
-                    .ToListAsync()
-                    .Configure();
+            items = await StandardGetAllAlgorithm
+                .ProjectResultItems<TEntity, TOut>(Options, entities);
 
-                result = Mapper.Map<List<TOut>>(resultEntities);
-            }
-
-            if (result.Count == 0)
+            if (items.Count == 0)
             {
                 var defaultValue = RequestConfig.GetDefault<TEntity>();
                 if (defaultValue != null)
-                    result.Add(Mapper.Map<TOut>(defaultValue));
+                    items.Add(Mapper.Map<TOut>(defaultValue));
 
                 if (RequestConfig.ErrorConfig.FailedToFindInGetAllIsError)
                 {
-                    var error = new FailedToFindError(request, typeof(TEntity), result);
-                    return ErrorDispatcher.Dispatch<List<TOut>>(error);
+                    var errorResult = new GetAllResult<TOut>(items);
+                    var error = new FailedToFindError(request, typeof(TEntity), errorResult);
+
+                    return ErrorDispatcher.Dispatch<GetAllResult<TOut>>(error);
                 }
             }
+
+            var result = new GetAllResult<TOut>(items);
 
             return result.AsResponse();
         }
