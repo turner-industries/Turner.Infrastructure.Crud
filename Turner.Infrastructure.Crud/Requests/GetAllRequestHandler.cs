@@ -78,7 +78,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 .GetEntities<TEntity>(Context)
                 .AsQueryable();
 
-            var sorter = RequestConfig.GetSorterFor<TEntity>(SorterType.GetAll);
+            var sorter = RequestConfig.GetSorterFor<TEntity>();
             entities = sorter?.Sort(request, entities) ?? entities;
 
             items = await StandardGetAllAlgorithm

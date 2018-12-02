@@ -16,7 +16,7 @@ namespace Turner.Infrastructure.Crud.Configuration
         ISelector GetSelectorFor<TEntity>()
             where TEntity : class;
 
-        ISorter GetSorterFor<TEntity>(SorterType type)
+        ISorter GetSorterFor<TEntity>()
             where TEntity : class;
 
         TEntity GetDefaultFor<TEntity>()
@@ -38,7 +38,6 @@ namespace Turner.Infrastructure.Crud.Configuration
     public class CrudRequestConfig<TRequest>
         : ICrudRequestConfig
     {
-        private readonly SorterConfig _sorters = new SorterConfig();
         private readonly ActionConfig _actions = new ActionConfig();
         private readonly RequestOptions _options = new RequestOptions();
         private readonly Dictionary<Type, CrudOptionsConfig> _entityOptionOverrides
@@ -46,6 +45,9 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         private readonly Dictionary<Type, RequestOptions> _optionsCache
             = new Dictionary<Type, RequestOptions>();
+
+        private readonly Dictionary<Type, ISorter> _entitySorters
+            = new Dictionary<Type, ISorter>();
 
         private readonly Dictionary<Type, ISelector> _entitySelectors
             = new Dictionary<Type, ISelector>();
@@ -70,12 +72,6 @@ namespace Turner.Infrastructure.Crud.Configuration
             _entityOptionOverrides[typeof(TEntity)] = options;
         }
         
-        internal void SetEntitySorterFor<TEntity>(SorterType type, ISorter sorter)
-            where TEntity : class
-        {
-            _sorters.Set(type, typeof(TEntity), sorter);
-        }
-
         internal void AddPreActions(ActionType type, ActionList actions)
         {
             _actions[type].AddPreActions(actions);
@@ -96,6 +92,12 @@ namespace Turner.Infrastructure.Crud.Configuration
             where TEntity : class
         {
             _actions[type].SetPostActionsFor(typeof(TEntity), actions);
+        }
+
+        internal void SetEntitySorter<TEntity>(ISorter sorter)
+            where TEntity : class
+        {
+            _entitySorters[typeof(TEntity)] = sorter;
         }
 
         internal void SetEntitySelector<TEntity>(ISelector selector)
@@ -141,12 +143,6 @@ namespace Turner.Infrastructure.Crud.Configuration
             return options;
         }
         
-        public ISorter GetSorterFor<TEntity>(SorterType type)
-            where TEntity : class
-        {
-            return _sorters[type].GetSorterFor(typeof(TEntity));
-        }
-
         public Task RunPreActionsFor<TEntity>(ActionType type, object request)
             where TEntity : class
         {
@@ -175,6 +171,18 @@ namespace Turner.Infrastructure.Crud.Configuration
             }
 
             return _actions[type].RunPostActionsFor(typeof(TEntity), request, entity);
+        }
+
+        public ISorter GetSorterFor<TEntity>()
+            where TEntity : class
+        {
+            foreach (var type in typeof(TEntity).BuildTypeHierarchyUp())
+            {
+                if (_entitySorters.TryGetValue(type, out var sorter))
+                    return sorter;
+            }
+
+            return null;
         }
 
         public ISelector GetSelectorFor<TEntity>()
