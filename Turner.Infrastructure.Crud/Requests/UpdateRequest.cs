@@ -66,14 +66,15 @@ namespace Turner.Infrastructure.Crud.Requests
         : IUpdateRequest<TEntity, TOut>
         where TEntity : class
     {
+        public TKey Key { get; }
+
+        public TIn Data { get; }
+
         public UpdateRequest(TKey key, TIn data)
         {
             Key = key;
             Data = data;
         }
-
-        public TKey Key { get; }
-        public TIn Data { get; }
     }
 
     public class UpdateRequestProfile<TEntity, TKey, TIn, TOut>
@@ -101,7 +102,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public UpdateByIdRequestProfile()
         {
             ForEntity<TEntity>()
-                .SelectForUpdateWith(builder => builder.Build(request => request.Key, "Id"));
+                .SelectWith(builder => builder.Build(request => request.Key, "Id"));
         }
     }
 
@@ -119,7 +120,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public UpdateByGuidRequestProfile()
         {
             ForEntity<TEntity>()
-                .SelectForUpdateWith(builder => builder.Build(request => request.Key, "Guid"));
+                .SelectWith(builder => builder.Build(request => request.Key, "Guid"));
         }
     }
 }

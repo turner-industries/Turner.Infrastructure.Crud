@@ -37,7 +37,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
             var totalItemCount = await entities.CountAsync();
             
-            var sorter = RequestConfig.GetSorterFor<TEntity>(SorterType.GetAll);
+            var sorter = RequestConfig.GetSorterFor<TEntity>();
             entities = sorter?.Sort(request, entities) ?? entities;
 
             var pageSize = request.PageSize < 1 ? totalItemCount : request.PageSize;
@@ -54,7 +54,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
             if (items.Count == 0)
             {
-                var defaultValue = RequestConfig.GetDefault<TEntity>();
+                var defaultValue = RequestConfig.GetDefaultFor<TEntity>();
                 if (defaultValue != null)
                     items.Add(Mapper.Map<TOut>(defaultValue));
 

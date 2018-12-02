@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration.Builders.Sort;
 using Turner.Infrastructure.Crud.Errors;
@@ -17,12 +16,6 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         : ICrudRequestEntityConfigBuilder
         where TEntity : class
     {
-        private readonly Dictionary<SelectorType, ISelector> _selectors
-            = new Dictionary<SelectorType, ISelector>();
-
-        private readonly Dictionary<SorterType, ISorter> _sorters
-            = new Dictionary<SorterType, ISorter>();
-
         private readonly Dictionary<ActionType, List<Func<TRequest, Task>>> _preActions
             = new Dictionary<ActionType, List<Func<TRequest, Task>>>();
 
@@ -31,6 +24,8 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
 
         private CrudOptionsConfig _optionsConfig;
         private TEntity _defaultValue;
+        private ISorter _sortEntityFromRequest;
+        private ISelector _selectEntityFromRequest;
         private Func<TRequest, Task<TEntity>> _createEntityFromRequest;
         private Func<TRequest, TEntity, Task> _updateEntityFromRequest;
         private Func<ICrudErrorHandler> _errorHandlerFactory;
@@ -120,78 +115,30 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
 
             return this;
         }
-
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForGetWith(
-            Func<SelectorBuilder<TRequest, TEntity>, Func<TRequest, Expression<Func<TEntity, bool>>>> build)
+        
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectWith(
+            Func<SelectorBuilder<TRequest, TEntity>, ISelector> build)
         {
             var builder = new SelectorBuilder<TRequest, TEntity>();
-            _selectors[SelectorType.Get] = Selector.From(build(builder));
-
+            _selectEntityFromRequest = build(builder);
+            
             return this;
         }
         
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForUpdateWith(
-            Func<SelectorBuilder<TRequest, TEntity>, Func<TRequest, Expression<Func<TEntity, bool>>>> build)
-        {
-            var builder = new SelectorBuilder<TRequest, TEntity>();
-            _selectors[SelectorType.Update] = Selector.From(build(builder));
-
-            return this;
-        }
-        
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForDeleteWith(
-            Func<SelectorBuilder<TRequest, TEntity>, Func<TRequest, Expression<Func<TEntity, bool>>>> build)
-        {
-            var builder = new SelectorBuilder<TRequest, TEntity>();
-            _selectors[SelectorType.Delete] = Selector.From(build(builder));
-
-            return this;
-        }
-        
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectForAnyWith(
-            Func<SelectorBuilder<TRequest, TEntity>, Func<TRequest, Expression<Func<TEntity, bool>>>> build)
-        {
-            var builder = new SelectorBuilder<TRequest, TEntity>();
-            var sel = Selector.From(build(builder));
-
-            foreach (var type in (SelectorType[]) Enum.GetValues(typeof(SelectorType)))
-                _selectors[type] = sel;
-
-            return this;
-        }
-
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SortGetAllWith(
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SortWith(
             Action<SortBuilder<TRequest, TEntity>> build)
         {
             var builder = new SortBuilder<TRequest, TEntity>();
             build(builder);
 
-            _sorters[SorterType.GetAll] = builder.Build();
-
+            _sortEntityFromRequest = builder.Build();
+            
             return this;
         }
 
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SortGetAllWith(
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SortWith(
             Func<TRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
-            => SortGetAllWith(builder => builder.Custom(sortFunc));
-
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SortAnyWith(
-            Action<SortBuilder<TRequest, TEntity>> build)
-        {
-            var builder = new SortBuilder<TRequest, TEntity>();
-            build(builder);
-
-            var sorter = builder.Build();
-
-            foreach (var type in (SorterType[]) Enum.GetValues(typeof(SorterType)))
-                _sorters[type] = sorter;
-
-            return this;
-        }
-
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> SortAnyWith(
-            Func<TRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
-            => SortAnyWith(builder => builder.Custom(sortFunc));
+            => SortWith(builder => builder.Custom(sortFunc));
 
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> CreateWith(
             Func<TRequest, Task<TEntity>> creator)
@@ -237,19 +184,19 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             if (_errorHandlerFactory != null)
                 config.ErrorConfig.SetErrorHandlerFor(typeof(TEntity), _errorHandlerFactory);
 
-            config.SetDefault(_defaultValue);
+            config.SetEntityDefault(_defaultValue);
 
-            foreach (var (type, selector) in _selectors)
-                config.SetEntitySelectorFor<TEntity>(type, selector);
-
-            foreach (var (type, sorter) in _sorters)
-                config.SetEntitySorterFor<TEntity>(type, sorter);
+            if (_selectEntityFromRequest != null)
+                config.SetEntitySelector<TEntity>(_selectEntityFromRequest);
 
             if (_createEntityFromRequest != null)
                 config.SetEntityCreator(request => _createEntityFromRequest((TRequest)request));
 
             if (_updateEntityFromRequest != null)
                 config.SetEntityUpdator<TEntity>((request, entity) => _updateEntityFromRequest((TRequest)request, entity));
+
+            if (_sortEntityFromRequest != null)
+                config.SetEntitySorter<TEntity>(_sortEntityFromRequest);
 
             foreach (var type in (ActionType[]) Enum.GetValues(typeof(ActionType)))
             {

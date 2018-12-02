@@ -15,8 +15,11 @@ namespace Turner.Infrastructure.Crud.Configuration
             = new Dictionary<Type, Func<ICrudErrorHandler>>();
 
         public bool FailedToFindInGetIsError { get; set; } = true;
+
         public bool FailedToFindInGetAllIsError { get; set; }
+
         public bool FailedToFindInUpdateIsError { get; set; } = true;
+
         public bool FailedToFindInDeleteIsError { get; set; }
 
         public ICrudErrorHandler GetErrorHandlerFor<TEntity>()

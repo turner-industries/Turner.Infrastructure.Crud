@@ -312,7 +312,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     {
         public GetAllSimpleSortedUsersProfile()
         {
-            ForEntity<User>().SortAnyWith(builder => builder.SortBy(x => x.Name).Descending());
+            ForEntity<User>().SortWith(builder => builder.SortBy(x => x.Name).Descending());
         }
     }
 
@@ -326,7 +326,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public GetAllCustomSortedUsersProfile()
         {
             ForEntity<User>()
-                .SortAnyWith((req, users) => users.OrderByDescending(user => user.Name));
+                .SortWith((req, users) => users.OrderByDescending(user => user.Name));
         }
     }
     
@@ -341,7 +341,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public GetAllBasicSortedUsersProfile()
         {
             ForEntity<User>()
-                .SortAnyWith(builder => builder
+                .SortWith(builder => builder
                     .SortBy(user => user.IsDeleted).Ascending()
                         .ThenBy("Name").Descending()
                         .When(r => r.GroupDeleted)
@@ -361,7 +361,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public GetAllSwitchSortedUsersProfile()
         {
             ForEntity<User>()
-                .SortGetAllWith(builder => builder
+                .SortWith(builder => builder
                     .AsSwitchSort<string>("Case")
                     .ForCase(UsersSortColumn.Name).SortBy("Name").Descending()
                     .ForDefault().SortBy(user => user.IsDeleted).ThenBy("Name").Descending());
@@ -382,7 +382,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public GetAllTableSortedUsersProfile()
         {
             ForEntity<User>()
-                .SortAnyWith(builder => builder
+                .SortWith(builder => builder
                     .AsTableSort<string>()
                     .WithControl(r => r.PrimaryColumn, SortDirection.Ascending)
                     .WithControl("SecondaryColumn", "SecondaryDirection")

@@ -68,15 +68,15 @@ namespace Turner.Infrastructure.Crud.Requests
         : ISaveRequest<TEntity, TOut>
         where TEntity : class
     {
+        public TKey Key { get; }
+
+        public TIn Data { get; }
+
         public SaveRequest(TKey key, TIn data)
         {
             Key = key;
             Data = data;
         }
-
-        public TKey Key { get; }
-
-        public TIn Data { get; }
     }
 
     public class SaveRequestProfile<TEntity, TKey, TIn, TOut>
@@ -105,7 +105,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public SaveByIdRequestProfile()
         {
             ForEntity<TEntity>()
-                .SelectForUpdateWith(builder => builder.Build("Key", "Id"));
+                .SelectWith(builder => builder.Build("Key", "Id"));
         }
     }
 
@@ -123,7 +123,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public SaveByGuidRequestProfile()
         {
             ForEntity<TEntity>()
-                .SelectForUpdateWith(builder => builder.Build(request => request.Key, "Guid"));
+                .SelectWith(builder => builder.Build(request => request.Key, "Guid"));
         }
     }
 }

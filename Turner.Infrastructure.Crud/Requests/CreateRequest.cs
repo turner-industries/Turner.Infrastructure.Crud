@@ -25,6 +25,7 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
     {
         public CreateRequest(TIn data) { Data = data; }
+
         public TIn Data { get; }
     }
 
@@ -44,6 +45,7 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
     {
         public CreateRequest(TIn data) { Data = data; }
+
         public TIn Data { get; }
     }
 

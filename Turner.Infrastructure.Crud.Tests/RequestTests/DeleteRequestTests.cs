@@ -3,7 +3,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
-using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Tests.Fakes;
 using Turner.Infrastructure.Mediator.Decorators;
@@ -125,7 +124,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public DeleteUserByIdProfile()
         {
             ForEntity<User>()
-                .SelectForDeleteWith(builder => builder.Build("Id"))
+                .SelectWith(builder => builder.Build("Id"))
                 .AfterDeleting(entity => entity.PostMessage += "/Delete");
 
             ConfigureErrors(config => config.FailedToFindInDeleteIsError = false);
@@ -137,7 +136,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public DeleteUserByNameProfile()
         {
             ForEntity<User>()
-                .SelectForAnyWith(builder => 
+                .SelectWith(builder => 
                     builder.Build(request => entity =>
                         string.Equals(entity.Name, request.Name, StringComparison.InvariantCultureIgnoreCase)));
 
