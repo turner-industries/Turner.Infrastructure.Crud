@@ -138,7 +138,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     {
         public GetAllUsersPagedProfile()
         {
-            ForEntity<User>().SortGetAllWith(builder => builder.SortBy(x => x.Name).Descending());
+            ForEntity<User>().SortWith(builder => builder.SortBy(x => x.Name).Descending());
         }
     }
 }
