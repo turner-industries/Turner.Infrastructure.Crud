@@ -1,6 +1,4 @@
-﻿using System;
-using Turner.Infrastructure.Crud.Configuration;
-using Turner.Infrastructure.Crud.Configuration.Builders;
+﻿using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Requests;
 
 namespace Turner.Infrastructure.Crud.Tests.Fakes
@@ -80,7 +78,7 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         public DefaultGetRequestProfile()
         {
             ForEntity<IEntity>()
-                .SelectForGetWith(builder => builder.Build("Key", "Id"));
+                .SelectWith(builder => builder.Build(r => r.Key, e => e.Id));
         }
     }
 
@@ -91,7 +89,7 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         public DefaultUpdateRequestProfile()
         {
             ForEntity<IEntity>()
-                .SelectForUpdateWith(builder => builder.Build(r => r.Key, e => e.Id));
+                .SelectWith(builder => builder.Build(r => r.Key, e => e.Id));
         }
     }
 
@@ -102,7 +100,7 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         public DefaultSaveRequestProfile()
         {
             ForEntity<IEntity>()
-                .SelectForUpdateWith(builder => builder.Build(r => r.Key, e => e.Id));
+                .SelectWith(builder => builder.Build(r => r.Key, e => e.Id));
         }
     }
 }

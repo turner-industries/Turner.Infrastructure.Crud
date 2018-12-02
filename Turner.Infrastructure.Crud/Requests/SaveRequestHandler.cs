@@ -73,7 +73,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity> GetEntity(TRequest request)
         {
-            var selector = RequestConfig.GetSelectorFor<TEntity>(SelectorType.Update);
+            var selector = RequestConfig.GetSelectorFor<TEntity>();
             var entity = await Algorithm.GetEntities<TEntity>(Context)
                 .SelectSingleAsync(request, selector)
                 .Configure();

@@ -4,7 +4,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
-using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Tests.Fakes;
 using Turner.Infrastructure.Mediator.Decorators;
@@ -187,7 +186,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public UpdateUserWithoutResponseRequestProfile()
         {
             ForEntity<User>()
-                .SelectForUpdateWith(builder => builder.Build(request => request.Data.Id, entity => entity.Id));
+                .SelectWith(builder => builder.Build(request => request.Data.Id, entity => entity.Id));
         }
     }
 
@@ -197,7 +196,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public UpdateUserWithResponseRequestProfile()
         {
             ForEntity<User>()
-                .SelectForUpdateWith(builder => builder.Build(request => request.Data.Id, entity => entity.Id));
+                .SelectWith(builder => builder.Build(request => request.Data.Id, entity => entity.Id));
         }
     }
 
@@ -206,7 +205,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public UpdateUserByIdProfile()
         {
             ForEntity<User>()
-                .SelectForUpdateWith(builder => builder.Build(request => entity => entity.Id == request.Id))
+                .SelectWith(builder => builder.Build(request => entity => entity.Id == request.Id))
                 .BeforeUpdating(request => request.PreMessage += "/Update")
                 .AfterUpdating(entity => entity.PostMessage += "/Update");
 
@@ -219,7 +218,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public UpdateUserByNameProfile()
         {
             ForEntity<User>()
-                .SelectForAnyWith(builder => builder.Build(
+                .SelectWith(builder => builder.Build(
                     e => e.Name, 
                     r => r.Name,
                     (e, r) => string.Equals(e, r, StringComparison.InvariantCultureIgnoreCase)))

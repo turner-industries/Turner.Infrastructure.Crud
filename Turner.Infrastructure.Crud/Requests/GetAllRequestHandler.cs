@@ -86,7 +86,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
             if (items.Count == 0)
             {
-                var defaultValue = RequestConfig.GetDefault<TEntity>();
+                var defaultValue = RequestConfig.GetDefaultFor<TEntity>();
                 if (defaultValue != null)
                     items.Add(Mapper.Map<TOut>(defaultValue));
 

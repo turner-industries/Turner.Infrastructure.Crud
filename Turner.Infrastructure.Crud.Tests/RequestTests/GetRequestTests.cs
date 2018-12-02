@@ -2,7 +2,6 @@
 using System;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
-using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Tests.Fakes;
 using Turner.Infrastructure.Mediator.Decorators;
@@ -135,7 +134,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public GetUserByIdProfile()
         {
             ForEntity<User>()
-                .SelectForAnyWith(builder => builder.Build("Id"))
+                .SelectWith(builder => builder.Build("Id"))
                 .UseDefault(new User { Name = "DefaultUser" });
         }
     }
@@ -146,7 +145,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         {
             ForEntity<User>()
                 .UseDefault(new User { Name = "DefaultUser" })
-                .SelectForGetWith(builder =>
+                .SelectWith(builder =>
                     builder.Build(request => entity =>
                         string.Equals(entity.Name, request.Name, StringComparison.InvariantCultureIgnoreCase)));
 

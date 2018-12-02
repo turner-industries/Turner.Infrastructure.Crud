@@ -14,7 +14,7 @@ namespace Turner.Infrastructure.Crud
             where TEntity : class;
 
         Func<object, Expression<Func<TEntity, bool>>> Get<TEntity>()
-                where TEntity : class;
+            where TEntity : class;
     }
 
     public class Selector : ISelector

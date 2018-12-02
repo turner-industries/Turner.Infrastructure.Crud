@@ -55,7 +55,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
             try
             {
-                var selector = RequestConfig.GetSelectorFor<TEntity>(SelectorType.Get);
+                var selector = RequestConfig.GetSelectorFor<TEntity>();
 
                 if (Options.UseProjection)
                 {
@@ -66,7 +66,7 @@ namespace Turner.Infrastructure.Crud.Requests
                     if (result == null)
                     {
                         failedToFind = true;
-                        result = Mapper.Map<TOut>(RequestConfig.GetDefault<TEntity>());
+                        result = Mapper.Map<TOut>(RequestConfig.GetDefaultFor<TEntity>());
                     }
                 }
                 else
@@ -78,7 +78,7 @@ namespace Turner.Infrastructure.Crud.Requests
                     if (entity == null)
                     {
                         failedToFind = true;
-                        entity = RequestConfig.GetDefault<TEntity>();
+                        entity = RequestConfig.GetDefaultFor<TEntity>();
                     }
 
                     result = Mapper.Map<TOut>(entity);

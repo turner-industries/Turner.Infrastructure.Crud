@@ -6,17 +6,16 @@ namespace Turner.Infrastructure.Crud
     public class SelectorBuilder<TRequest, TEntity>
         where TEntity : class
     {
-        public Func<TRequest, Expression<Func<TEntity, bool>>> Build(
-            Func<TRequest, Expression<Func<TEntity, bool>>> selector)
+        public Selector Build(Func<TRequest, Expression<Func<TEntity, bool>>> selector)
         {
-            return selector;
+            return Selector.From(selector);
         }
 
-        public Func<TRequest, Expression<Func<TEntity, bool>>> Build<TRequestKey, TEntityKey>(
-                Expression<Func<TRequest, TRequestKey>> requestKeyExpr,
-                Expression<Func<TEntity, TEntityKey>> entityKeyExpr)
+        public Selector Build<TRequestKey, TEntityKey>(
+            Expression<Func<TRequest, TRequestKey>> requestKeyExpr,
+            Expression<Func<TEntity, TEntityKey>> entityKeyExpr)
         {
-            return request =>
+            return Selector.From<TRequest, TEntity>(request =>
             {
                 var eParamExpr = Expression.Parameter(typeof(TEntity));
                 var eKeyExpr = Expression.Invoke(entityKeyExpr, eParamExpr);
@@ -25,15 +24,15 @@ namespace Turner.Infrastructure.Crud
                 var compareExpr = Expression.Equal(eKeyExpr, rKeyExpr);
 
                 return Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr);
-            };
+            });
         }
 
-        public Func<TRequest, Expression<Func<TEntity, bool>>> Build<TRequestKey, TEntityKey>(
-                Expression<Func<TRequest, TRequestKey>> requestKeyExpr,
-                Expression<Func<TEntity, TEntityKey>> entityKeyExpr,
-                Expression<Func<TRequestKey, TEntityKey, bool>> compareExpr)
+        public Selector Build<TRequestKey, TEntityKey>(
+            Expression<Func<TRequest, TRequestKey>> requestKeyExpr,
+            Expression<Func<TEntity, TEntityKey>> entityKeyExpr,
+            Expression<Func<TRequestKey, TEntityKey, bool>> compareExpr)
         {
-            return request =>
+            return Selector.From<TRequest, TEntity>(request =>
             {
                 var eParamExpr = Expression.Parameter(typeof(TEntity));
                 var eKeyExpr = Expression.Invoke(entityKeyExpr, eParamExpr);
@@ -42,14 +41,14 @@ namespace Turner.Infrastructure.Crud
                 var doCompareExpr = Expression.Invoke(compareExpr, eKeyExpr, rKeyExpr);
 
                 return Expression.Lambda<Func<TEntity, bool>>(doCompareExpr, eParamExpr);
-            };
+            });
         }
 
-        public Func<TRequest, Expression<Func<TEntity, bool>>> Build<TRequestKey>(
-                Expression<Func<TRequest, TRequestKey>> requestKeyExpr,
-                string entityKeyProperty)
+        public Selector Build<TRequestKey>(
+            Expression<Func<TRequest, TRequestKey>> requestKeyExpr,
+            string entityKeyProperty)
         {
-            return request =>
+            return Selector.From<TRequest, TEntity>(request =>
             {
                 var eParamExpr = Expression.Parameter(typeof(TEntity));
                 var eKeyExpr = Expression.PropertyOrField(eParamExpr, entityKeyProperty);
@@ -58,14 +57,13 @@ namespace Turner.Infrastructure.Crud
                 var compareExpr = Expression.Equal(eKeyExpr, rKeyExpr);
 
                 return Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr);
-            };
+            });
         }
         
-        public Func<TRequest, Expression<Func<TEntity, bool>>> Build<TEntityKey>(
-                string requestKeyProperty,
-                Expression<Func<TRequest, TEntityKey>> entityKeyExpr)
+        public Selector Build<TEntityKey>(string requestKeyProperty,
+            Expression<Func<TRequest, TEntityKey>> entityKeyExpr)
         {
-            return request =>
+            return Selector.From<TRequest, TEntity>(request =>
             {
                 var eParamExpr = Expression.Parameter(typeof(TEntity));
                 var eKeyExpr = Expression.Invoke(entityKeyExpr, eParamExpr);
@@ -74,13 +72,12 @@ namespace Turner.Infrastructure.Crud
                 var compareExpr = Expression.Equal(eKeyExpr, rKeyExpr);
 
                 return Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr);
-            };
+            });
         }
         
-        public Func<TRequest, Expression<Func<TEntity, bool>>> Build(
-            string requestKeyProperty, string entityKeyProperty)
+        public Selector Build(string requestKeyProperty, string entityKeyProperty)
         {
-            return request =>
+            return Selector.From<TRequest, TEntity>(request =>
             {
                 var eParamExpr = Expression.Parameter(typeof(TEntity));
                 var eKeyExpr = Expression.PropertyOrField(eParamExpr, entityKeyProperty);
@@ -89,14 +86,13 @@ namespace Turner.Infrastructure.Crud
                 var compareExpr = Expression.Equal(eKeyExpr, rKeyExpr);
 
                 return Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr);
-            };
+            });
         }
 
-        public Func<TRequest, Expression<Func<TEntity, bool>>> Build<TKey>(
-            string requestKeyProperty, string entityKeyProperty,
+        public Selector Build<TKey>(string requestKeyProperty, string entityKeyProperty,
             Expression<Func<TKey, TKey, bool>> compareExpr)
         {
-            return request =>
+            return Selector.From<TRequest, TEntity>(request =>
             {
                 var eParamExpr = Expression.Parameter(typeof(TEntity));
                 var eKeyExpr = Expression.PropertyOrField(eParamExpr, entityKeyProperty);
@@ -105,13 +101,12 @@ namespace Turner.Infrastructure.Crud
                 var doCompareExpr = Expression.Invoke(compareExpr, eKeyExpr, rKeyExpr);
 
                 return Expression.Lambda<Func<TEntity, bool>>(doCompareExpr, eParamExpr);
-            };
+            });
         }
 
-        public Func<TRequest, Expression<Func<TEntity, bool>>> Build(
-            string keyProperty)
+        public Selector Build(string keyProperty)
         {
-            return request =>
+            return Selector.From<TRequest, TEntity>(request =>
             {
                 var eParamExpr = Expression.Parameter(typeof(TEntity));
                 var eKeyExpr = Expression.PropertyOrField(eParamExpr, keyProperty);
@@ -120,13 +115,12 @@ namespace Turner.Infrastructure.Crud
                 var compareExpr = Expression.Equal(eKeyExpr, rKeyExpr);
 
                 return Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr);
-            };
+            });
         }
 
-        public Func<TRequest, Expression<Func<TEntity, bool>>> Build<TKey>(
-            string keyProperty, Expression<Func<TKey, TKey, bool>> compareExpr)
+        public Selector Build<TKey>(string keyProperty, Expression<Func<TKey, TKey, bool>> compareExpr)
         {
-            return request =>
+            return Selector.From<TRequest, TEntity>(request =>
             {
                 var eParamExpr = Expression.Parameter(typeof(TEntity));
                 var eKeyExpr = Expression.PropertyOrField(eParamExpr, keyProperty);
@@ -135,7 +129,7 @@ namespace Turner.Infrastructure.Crud
                 var doCompareExpr = Expression.Invoke(compareExpr, eKeyExpr, rKeyExpr);
 
                 return Expression.Lambda<Func<TEntity, bool>>(doCompareExpr, eParamExpr);
-            };
+            });
         }
     }
 }
