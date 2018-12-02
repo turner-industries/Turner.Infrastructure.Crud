@@ -1,5 +1,6 @@
 ﻿using SimpleInjector;
-using System.Collections.Generic;
+using System;
+using System.Linq;
 using System.Reflection;
 using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Errors;
@@ -12,14 +13,11 @@ namespace Turner.Infrastructure.Crud.Configuration
     {
         public static void ConfigureCrud(this Container container, Assembly[] assemblies)
         {
-            var allAssemblies = new List<Assembly>(1 + assemblies.Length)
-            {
-                typeof(SimpleInjectorCrudConfiguration).Assembly
-            };
-
-            allAssemblies.AddRange(assemblies);
-
-            var configAssemblies = allAssemblies.ToArray();
+            var allAssemblies = new Assembly[1 + assemblies.Length];
+            allAssemblies[0] = typeof(SimpleInjectorCrudConfiguration).Assembly;
+            Array.Copy(assemblies, 0, allAssemblies, 1, assemblies.Length);
+            
+            var configAssemblies = allAssemblies.Distinct().ToArray();
 
             container.RegisterSingleton(() => new CrudConfigManager(configAssemblies));
 
