@@ -35,13 +35,16 @@ namespace Turner.Infrastructure.Crud.Requests
                 .GetEntities<TEntity>(Context)
                 .AsQueryable();
 
+            foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
+                entities = filter.Filter(request, entities);
+
             var totalItemCount = await entities.CountAsync();
             
             var sorter = RequestConfig.GetSorterFor<TEntity>();
             entities = sorter?.Sort(request, entities) ?? entities;
 
             var pageSize = request.PageSize < 1 ? totalItemCount : request.PageSize;
-            var totalPageCount = (totalItemCount + pageSize - 1) / pageSize;
+            var totalPageCount = totalItemCount == 0 ? 1 : (totalItemCount + pageSize - 1) / pageSize;
             var pageNumber = Math.Max(1, Math.Min(request.PageNumber, totalPageCount));
             var startIndex = (pageNumber - 1) * pageSize;
 

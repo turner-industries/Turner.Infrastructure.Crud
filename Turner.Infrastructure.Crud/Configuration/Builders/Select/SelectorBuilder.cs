@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-namespace Turner.Infrastructure.Crud
+namespace Turner.Infrastructure.Crud.Configuration.Builders.Select
 {
     public class SelectorBuilder<TRequest, TEntity>
         where TEntity : class

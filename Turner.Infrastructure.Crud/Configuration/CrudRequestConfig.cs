@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Exceptions;
 
@@ -21,6 +22,8 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         TEntity GetDefaultFor<TEntity>()
             where TEntity : class;
+
+        IEnumerable<IFilter> GetFiltersFor<TEntity>();
 
         Task RunPreActionsFor<TEntity>(ActionType type, object request)
             where TEntity : class;
@@ -60,6 +63,9 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         private readonly Dictionary<Type, object> _defaultValues
             = new Dictionary<Type, object>();
+
+        private readonly Dictionary<Type, List<IFilter>> _entityFilters
+            = new Dictionary<Type, List<IFilter>>();
         
         public ErrorConfig ErrorConfig { get; private set; } = new ErrorConfig();
 
@@ -107,18 +113,6 @@ namespace Turner.Infrastructure.Crud.Configuration
             return _actions[type].RunPostActionsFor(typeof(TEntity), request, entity);
         }
 
-        public ISorter GetSorterFor<TEntity>()
-            where TEntity : class
-        {
-            foreach (var type in typeof(TEntity).BuildTypeHierarchyUp())
-            {
-                if (_entitySorters.TryGetValue(type, out var sorter))
-                    return sorter;
-            }
-
-            return null;
-        }
-
         public ISelector GetSelectorFor<TEntity>()
             where TEntity : class
         {
@@ -133,6 +127,30 @@ namespace Turner.Infrastructure.Crud.Configuration
                 $"for request '{typeof(TRequest)}'.");
         }
         
+        public ISorter GetSorterFor<TEntity>()
+            where TEntity : class
+        {
+            foreach (var type in typeof(TEntity).BuildTypeHierarchyUp())
+            {
+                if (_entitySorters.TryGetValue(type, out var sorter))
+                    return sorter;
+            }
+
+            return null;
+        }
+
+        public IEnumerable<IFilter> GetFiltersFor<TEntity>()
+        {
+            foreach (var type in typeof(TEntity).BuildTypeHierarchyDown())
+            {
+                if (_entityFilters.TryGetValue(type, out var filters))
+                {
+                    foreach (var filter in filters)
+                        yield return filter;
+                }
+            }
+        }
+
         public async Task<TEntity> CreateEntity<TEntity>(object request)
             where TEntity : class
         {
@@ -215,16 +233,21 @@ namespace Turner.Infrastructure.Crud.Configuration
             _actions[type].SetPostActionsFor(typeof(TEntity), actions);
         }
 
+        internal void SetEntitySelector<TEntity>(ISelector selector)
+            where TEntity : class
+        {
+            _entitySelectors[typeof(TEntity)] = selector;
+        }
+
         internal void SetEntitySorter<TEntity>(ISorter sorter)
             where TEntity : class
         {
             _entitySorters[typeof(TEntity)] = sorter;
         }
 
-        internal void SetEntitySelector<TEntity>(ISelector selector)
-            where TEntity : class
+        internal void SetEntityFilters<TEntity>(List<IFilter> filters)
         {
-            _entitySelectors[typeof(TEntity)] = selector;
+            _entityFilters[typeof(TEntity)] = filters;
         }
 
         internal void SetEntityCreator<TEntity>(

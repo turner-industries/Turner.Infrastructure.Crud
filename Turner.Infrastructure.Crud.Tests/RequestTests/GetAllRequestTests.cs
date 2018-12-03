@@ -221,6 +221,132 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         }
 
         [Test]
+        public async Task Handle_GetAllCustomFilteredUsersRequest_ReturnsAllEntitiesFiltered()
+        {
+            await Context.AddRangeAsync(
+                new User { Name = "BUser", IsDeleted = true },
+                new User { Name = "AUser", IsDeleted = false },
+                new User { Name = "CUser", IsDeleted = false },
+                new User { Name = "DUser", IsDeleted = false }
+            );
+
+            await Context.SaveChangesAsync();
+
+            var request = new GetAllCustomFilteredUsers();
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(2, response.Data.Items.Count);
+            Assert.AreEqual("DUser", response.Data.Items[0].Name);
+            Assert.AreEqual("CUser", response.Data.Items[1].Name);
+        }
+
+        [Test]
+        public async Task Handle_GetAllBasicUnconditionalFilteredUsersRequest_ReturnsAllEntitiesFiltered()
+        {
+            await Context.AddRangeAsync(
+                new User { Name = "BUser", IsDeleted = true },
+                new User { Name = "AUser", IsDeleted = false },
+                new User { Name = "CUser", IsDeleted = true },
+                new User { Name = "DUser", IsDeleted = false }
+            );
+
+            await Context.SaveChangesAsync();
+
+            var request = new GetAllBasicUnconditionalFilteredUsers();
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(2, response.Data.Items.Count);
+            Assert.AreEqual("AUser", response.Data.Items[0].Name);
+            Assert.AreEqual("DUser", response.Data.Items[1].Name);
+        }
+
+        [Test]
+        public async Task Handle_GetAllBasicConditionalFilteredUsersRequestWithFilterOff_ReturnsAllEntitiesUnfiltered()
+        {
+            await Context.AddRangeAsync(
+                new User { Name = "BUser", IsDeleted = false },
+                new User { Name = "AUser", IsDeleted = true },
+                new User { Name = "CUser", IsDeleted = true },
+                new User { Name = "DUser", IsDeleted = false }
+            );
+
+            await Context.SaveChangesAsync();
+
+            var request = new GetAllBasicConditionalFilteredUsers
+            {
+                DeletedFilter = null
+            };
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(4, response.Data.Items.Count);
+            Assert.AreEqual("BUser", response.Data.Items[0].Name);
+            Assert.AreEqual("AUser", response.Data.Items[1].Name);
+            Assert.AreEqual("CUser", response.Data.Items[2].Name);
+            Assert.AreEqual("DUser", response.Data.Items[3].Name);
+        }
+
+        [Test]
+        public async Task Handle_GetAllBasicConditionalFilteredUsersRequestWithFilterOnFalse_ReturnsAllEntitiesFiltered()
+        {
+            await Context.AddRangeAsync(
+                new User { Name = "BUser", IsDeleted = false },
+                new User { Name = "AUser", IsDeleted = false },
+                new User { Name = "CUser", IsDeleted = true },
+                new User { Name = "DUser", IsDeleted = false }
+            );
+
+            await Context.SaveChangesAsync();
+
+            var request = new GetAllBasicConditionalFilteredUsers
+            {
+                DeletedFilter = false
+            };
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(3, response.Data.Items.Count);
+            Assert.AreEqual("BUser", response.Data.Items[0].Name);
+            Assert.AreEqual("AUser", response.Data.Items[1].Name);
+            Assert.AreEqual("DUser", response.Data.Items[2].Name);
+        }
+
+        [Test]
+        public async Task Handle_GetAllBasicConditionalFilteredUsersRequestWithFilterOnTrue_ReturnsAllEntitiesFiltered()
+        {
+            await Context.AddRangeAsync(
+                new User { Name = "BUser", IsDeleted = false },
+                new User { Name = "AUser", IsDeleted = false },
+                new User { Name = "CUser", IsDeleted = true },
+                new User { Name = "DUser", IsDeleted = false }
+            );
+
+            await Context.SaveChangesAsync();
+
+            var request = new GetAllBasicConditionalFilteredUsers
+            {
+                DeletedFilter = true
+            };
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(1, response.Data.Items.Count);
+            Assert.AreEqual("CUser", response.Data.Items[0].Name);
+        }
+
+        [Test]
         public async Task Handle_GetUsersWithDefaultWithError_ReturnsDefaultAndError()
         {
             var request = new GetUsersWithDefaultWithErrorRequest();
@@ -388,6 +514,56 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
                     .WithControl("SecondaryColumn", "SecondaryDirection")
                     .WithColumn(UsersSortColumn.Name, "Name")
                     .WithColumn(UsersSortColumn.IsDeleted, user => user.IsDeleted));
+        }
+    }
+
+    [DoNotValidate]
+    public class GetAllCustomFilteredUsers
+        : IGetAllRequest<User, UserGetDto>
+    { }
+
+    public class GetAllCustomFilteredUsersProfile : CrudRequestProfile<GetAllCustomFilteredUsers>
+    {
+        public GetAllCustomFilteredUsersProfile()
+        {
+            ForEntity<IEntity>()
+                .WithFilter(builder => builder.Custom((request, users) => users.Where(x => !x.IsDeleted)));
+
+            ForEntity<User>()
+                .SortWith((q, users) => users.OrderByDescending(user => user.Name))
+                .WithFilter(builder => builder.Custom((request, users) => users.Where(x => x.Name != "AUser")));
+        }
+    }
+
+    [DoNotValidate]
+    public class GetAllBasicUnconditionalFilteredUsers
+        : IGetAllRequest<User, UserGetDto>
+    { }
+
+    public class GetAllBasicUnconditionalFilteredUsersProfile : CrudRequestProfile<GetAllBasicUnconditionalFilteredUsers>
+    {
+        public GetAllBasicUnconditionalFilteredUsersProfile()
+        {
+            ForEntity<IEntity>()
+                .WithFilter(builder => builder.FilterOn(x => !x.IsDeleted));
+        }
+    }
+
+    [DoNotValidate]
+    public class GetAllBasicConditionalFilteredUsers
+        : IGetAllRequest<User, UserGetDto>
+    {
+        public bool? DeletedFilter { get; set; }
+    }
+
+    public class GetAllBasicConditionalFilteredUsersProfile : CrudRequestProfile<GetAllBasicConditionalFilteredUsers>
+    {
+        public GetAllBasicConditionalFilteredUsersProfile()
+        {
+            ForEntity<IEntity>()
+                .WithFilter(builder => builder
+                    .FilterOn(request => entity => entity.IsDeleted == request.DeletedFilter.Value)
+                    .When(r => r.DeletedFilter.HasValue));
         }
     }
 

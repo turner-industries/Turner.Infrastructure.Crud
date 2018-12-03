@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Turner.Infrastructure.Crud.Configuration.Builders.Filter;
+using Turner.Infrastructure.Crud.Configuration.Builders.Select;
 using Turner.Infrastructure.Crud.Configuration.Builders.Sort;
 using Turner.Infrastructure.Crud.Errors;
 
@@ -21,6 +23,8 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
 
         private readonly Dictionary<ActionType, List<Func<TEntity, Task>>> _postActions
             = new Dictionary<ActionType, List<Func<TEntity, Task>>>();
+
+        private readonly List<IFilter> _requestFilters = new List<IFilter>();
 
         private CrudOptionsConfig _optionsConfig;
         private TEntity _defaultValue;
@@ -116,6 +120,15 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
         
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> WithFilter(
+            Action<FilterBuilder<TRequest, TEntity>> build)
+        {
+            var builder = new FilterBuilder<TRequest, TEntity>();
+            build(builder);
+
+            return AddRequestFilter(builder.Build());
+        }
+
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> SelectWith(
             Func<SelectorBuilder<TRequest, TEntity>, ISelector> build)
         {
@@ -198,6 +211,9 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             if (_sortEntityFromRequest != null)
                 config.SetEntitySorter<TEntity>(_sortEntityFromRequest);
 
+            if (_requestFilters.Count > 0)
+                config.SetEntityFilters<TEntity>(_requestFilters);
+
             foreach (var type in (ActionType[]) Enum.GetValues(typeof(ActionType)))
             {
                 Func<object, Task> ConvertAction<TArg>(Func<TArg, Task> action)
@@ -217,6 +233,14 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
                         new ActionList(postActions.Select(ConvertAction<TEntity>)));
                 }
             }
+        }
+
+        private CrudRequestEntityConfigBuilder<TRequest, TEntity> AddRequestFilter(IFilter filter)
+        {
+            if (filter != null)
+                _requestFilters.Add(filter);
+
+            return this;
         }
 
         private CrudRequestEntityConfigBuilder<TRequest, TEntity> AddPreAction(ActionType type, Func<TRequest, Task> action)
