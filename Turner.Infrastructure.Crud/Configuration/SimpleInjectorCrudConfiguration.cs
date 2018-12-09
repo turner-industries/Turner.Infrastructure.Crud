@@ -54,6 +54,9 @@ namespace Turner.Infrastructure.Crud.Configuration
             container.Register(typeof(PagedGetAllRequestHandler<,,>), configAssemblies);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(PagedGetAllRequestHandler<,,>), IfNotHandled);
 
+            container.Register(typeof(PagedGetRequestHandler<,,>), configAssemblies);
+            container.RegisterConditional(typeof(IRequestHandler<,>), typeof(PagedGetRequestHandler<,,>), IfNotHandled);
+
             container.Register(typeof(PagedFindRequestHandler<,,>), configAssemblies);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(PagedFindRequestHandler<,,>), IfNotHandled);
 
