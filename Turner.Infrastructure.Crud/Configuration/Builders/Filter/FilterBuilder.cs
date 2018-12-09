@@ -14,19 +14,8 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
         where TEntity : class
     {
         private FilterBuilderBase<TRequest, TEntity> _builder;
-        
-        public BasicFilterBuilder<TRequest, TEntity> FilterOn(
-            Func<TRequest, Expression<Func<TEntity, int, bool>>> filterFunc)
-        {
-            var builder = new BasicFilterBuilder<TRequest, TEntity>(
-                (request, queryable) => queryable.Where(filterFunc(request)));
 
-            _builder = builder;
-
-            return builder;
-        }
-
-        public BasicFilterBuilder<TRequest, TEntity> FilterOn(
+        public BasicFilterBuilder<TRequest, TEntity> On(
             Func<TRequest, Expression<Func<TEntity, bool>>> filterFunc)
         {
             var builder = new BasicFilterBuilder<TRequest, TEntity>(
@@ -37,19 +26,24 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
             return builder;
         }
 
-        public BasicFilterBuilder<TRequest, TEntity> FilterOn(
-            Expression<Func<TEntity, int, bool>> filterExpr)
+        public BasicFilterBuilder<TRequest, TEntity> On(
+            Expression<Func<TRequest, TEntity, bool>> filterExpr)
         {
-            var builder = new BasicFilterBuilder<TRequest, TEntity>((request, queryable) => queryable.Where(filterExpr));
-            _builder = builder;
+            return On(request =>
+            {
+                var requestParam = Expression.Constant(request, typeof(TRequest));
+                var body = filterExpr.Body.ReplaceParameter(filterExpr.Parameters[0], requestParam);
 
-            return builder;
+                return Expression.Lambda<Func<TEntity, bool>>(body, filterExpr.Parameters[1]);
+            });
         }
 
-        public BasicFilterBuilder<TRequest, TEntity> FilterOn(
+        public BasicFilterBuilder<TRequest, TEntity> On(
             Expression<Func<TEntity, bool>> filterExpr)
         {
-            var builder = new BasicFilterBuilder<TRequest, TEntity>((request, queryable) => queryable.Where(filterExpr));
+            var builder = new BasicFilterBuilder<TRequest, TEntity>(
+                (request, queryable) => queryable.Where(filterExpr));
+
             _builder = builder;
 
             return builder;

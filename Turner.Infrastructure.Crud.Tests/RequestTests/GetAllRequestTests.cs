@@ -527,11 +527,11 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public GetAllCustomFilteredUsersProfile()
         {
             ForEntity<IEntity>()
-                .WithFilter(builder => builder.Custom((request, users) => users.Where(x => !x.IsDeleted)));
+                .FilterWith(builder => builder.Custom((request, users) => users.Where(x => !x.IsDeleted)));
 
             ForEntity<User>()
                 .SortWith((q, users) => users.OrderByDescending(user => user.Name))
-                .WithFilter(builder => builder.Custom((request, users) => users.Where(x => x.Name != "AUser")));
+                .FilterWith(builder => builder.Custom((request, users) => users.Where(x => x.Name != "AUser")));
         }
     }
 
@@ -545,7 +545,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public GetAllBasicUnconditionalFilteredUsersProfile()
         {
             ForEntity<IEntity>()
-                .WithFilter(builder => builder.FilterOn(x => !x.IsDeleted));
+                .FilterWith(builder => builder.On(x => !x.IsDeleted));
         }
     }
 
@@ -561,8 +561,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public GetAllBasicConditionalFilteredUsersProfile()
         {
             ForEntity<IEntity>()
-                .WithFilter(builder => builder
-                    .FilterOn(request => entity => entity.IsDeleted == request.DeletedFilter.Value)
+                .FilterWith(builder => builder
+                    .On((request, entity) => entity.IsDeleted == request.DeletedFilter.Value)
                     .When(r => r.DeletedFilter.HasValue));
         }
     }

@@ -226,8 +226,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             ConfigureErrors(config => config.FailedToFindInGetAllIsError = false);
 
             ForEntity<User>()
-                .WithFilter(builder => builder
-                    .FilterOn(request => entity => entity.IsDeleted == request.DeletedFilter.Value)
+                .FilterWith(builder => builder
+                    .On(request => entity => entity.IsDeleted == request.DeletedFilter.Value)
                     .When(r => r.DeletedFilter.HasValue))
                 .SortWith(builder => builder.SortBy("Name"));
         }

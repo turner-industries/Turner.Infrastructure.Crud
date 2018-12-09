@@ -120,7 +120,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
         
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> WithFilter(
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> FilterWith(
             Action<FilterBuilder<TRequest, TEntity>> build)
         {
             var builder = new FilterBuilder<TRequest, TEntity>();
