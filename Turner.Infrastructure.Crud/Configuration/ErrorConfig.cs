@@ -18,6 +18,8 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         public bool FailedToFindInGetAllIsError { get; set; }
 
+        public bool FailedToFindInFindIsError { get; set; } = true;
+
         public bool FailedToFindInUpdateIsError { get; set; } = true;
 
         public bool FailedToFindInDeleteIsError { get; set; }

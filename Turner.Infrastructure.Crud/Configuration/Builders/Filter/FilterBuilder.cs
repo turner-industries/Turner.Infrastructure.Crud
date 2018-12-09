@@ -15,7 +15,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
     {
         private FilterBuilderBase<TRequest, TEntity> _builder;
 
-        public BasicFilterBuilder<TRequest, TEntity> On(
+        public BasicFilterBuilder<TRequest, TEntity> FilterOn(
             Func<TRequest, Expression<Func<TEntity, bool>>> filterFunc)
         {
             var builder = new BasicFilterBuilder<TRequest, TEntity>(
@@ -26,10 +26,10 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
             return builder;
         }
 
-        public BasicFilterBuilder<TRequest, TEntity> On(
+        public BasicFilterBuilder<TRequest, TEntity> FilterOn(
             Expression<Func<TRequest, TEntity, bool>> filterExpr)
         {
-            return On(request =>
+            return FilterOn(request =>
             {
                 var requestParam = Expression.Constant(request, typeof(TRequest));
                 var body = filterExpr.Body.ReplaceParameter(filterExpr.Parameters[0], requestParam);
@@ -38,7 +38,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
             });
         }
 
-        public BasicFilterBuilder<TRequest, TEntity> On(
+        public BasicFilterBuilder<TRequest, TEntity> FilterOn(
             Expression<Func<TEntity, bool>> filterExpr)
         {
             var builder = new BasicFilterBuilder<TRequest, TEntity>(

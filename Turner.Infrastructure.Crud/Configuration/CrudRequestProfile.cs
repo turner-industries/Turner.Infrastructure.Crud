@@ -173,6 +173,9 @@ namespace Turner.Infrastructure.Crud.Configuration
             if (errorConfig.FailedToFindInGetAllIsError.HasValue)
                 config.ErrorConfig.FailedToFindInGetAllIsError = errorConfig.FailedToFindInGetAllIsError.Value;
 
+            if (errorConfig.FailedToFindInFindIsError.HasValue)
+                config.ErrorConfig.FailedToFindInFindIsError = errorConfig.FailedToFindInFindIsError.Value;
+
             if (errorConfig.FailedToFindInUpdateIsError.HasValue)
                 config.ErrorConfig.FailedToFindInUpdateIsError = errorConfig.FailedToFindInUpdateIsError.Value;
 

@@ -5,11 +5,8 @@ using Turner.Infrastructure.Mediator.Decorators;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-    public interface IPagedGetAllRequest : IGetAllRequest
+    public interface IPagedGetAllRequest : IPagedRequest, IGetAllRequest
     {
-        int PageNumber { get; set; }
-
-        int PageSize { get; set; }
     }
 
     public interface IPagedGetAllRequest<TEntity, TOut> : IPagedGetAllRequest, IRequest<PagedGetAllResult<TOut>>

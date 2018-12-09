@@ -9,6 +9,8 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         public bool? FailedToFindInGetAllIsError { get; set; }
 
+        public bool? FailedToFindInFindIsError { get; set; }
+
         public bool? FailedToFindInUpdateIsError { get; set; }
 
         public bool? FailedToFindInDeleteIsError { get; set; }

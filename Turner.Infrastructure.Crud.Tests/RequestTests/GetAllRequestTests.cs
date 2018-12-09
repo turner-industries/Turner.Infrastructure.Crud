@@ -545,7 +545,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public GetAllBasicUnconditionalFilteredUsersProfile()
         {
             ForEntity<IEntity>()
-                .FilterWith(builder => builder.On(x => !x.IsDeleted));
+                .FilterWith(builder => builder.FilterOn(x => !x.IsDeleted));
         }
     }
 
@@ -562,7 +562,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         {
             ForEntity<IEntity>()
                 .FilterWith(builder => builder
-                    .On((request, entity) => entity.IsDeleted == request.DeletedFilter.Value)
+                    .FilterOn((request, entity) => entity.IsDeleted == request.DeletedFilter.Value)
                     .When(r => r.DeletedFilter.HasValue));
         }
     }
