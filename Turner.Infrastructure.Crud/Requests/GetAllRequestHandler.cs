@@ -78,6 +78,9 @@ namespace Turner.Infrastructure.Crud.Requests
                 .GetEntities<TEntity>(Context)
                 .AsQueryable();
 
+            foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
+                entities = filter.Filter(request, entities);
+
             var sorter = RequestConfig.GetSorterFor<TEntity>();
             entities = sorter?.Sort(request, entities) ?? entities;
 

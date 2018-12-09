@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
@@ -56,10 +57,16 @@ namespace Turner.Infrastructure.Crud.Requests
             try
             {
                 var selector = RequestConfig.GetSelectorFor<TEntity>();
+                var entities = Algorithm
+                    .GetEntities<TEntity>(Context)
+                    .AsQueryable();
+
+                foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
+                    entities = filter.Filter(request, entities);
 
                 if (Options.UseProjection)
                 {
-                    result = await Algorithm.GetEntities<TEntity>(Context)
+                    result = await entities
                         .ProjectSingleAsync<TRequest, TEntity, TOut>(request, selector)
                         .Configure();
 
@@ -71,7 +78,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 }
                 else
                 {
-                    var entity = await Algorithm.GetEntities<TEntity>(Context)
+                    var entity = await entities
                         .SelectSingleAsync(request, selector)
                         .Configure();
 
