@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Exceptions;
 
@@ -34,6 +33,9 @@ namespace Turner.Infrastructure.Crud.Configuration
         Task<TEntity> CreateEntity<TEntity>(object request)
             where TEntity : class;
 
+        Task<TEntity[]> CreateEntities<TEntity>(object request)
+            where TEntity : class;
+
         Task UpdateEntity<TEntity>(object request, TEntity entity)
             where TEntity : class;
     }
@@ -57,6 +59,9 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         private readonly Dictionary<Type, Func<object, Task<object>>> _entityCreators
             = new Dictionary<Type, Func<object, Task<object>>>();
+
+        private readonly Dictionary<Type, Func<object, Task<object[]>>> _entitiesCreators
+            = new Dictionary<Type, Func<object, Task<object[]>>>();
 
         private readonly Dictionary<Type, Func<object, object, Task>> _entityUpdators
             = new Dictionary<Type, Func<object, object, Task>>();
@@ -170,6 +175,25 @@ namespace Turner.Infrastructure.Crud.Configuration
             return Mapper.Map<TEntity>(request);
         }
 
+        public async Task<TEntity[]> CreateEntities<TEntity>(object request)
+            where TEntity : class
+        {
+            if (!(request is TRequest))
+            {
+                var message =
+                    $"Unable to create entities of type '{typeof(TEntity)}' " +
+                    $"from a request of type '{request.GetType()}'. " +
+                    $"Configuration expected a request of type '{typeof(TRequest)}'.";
+
+                throw new BadCrudConfigurationException(message);
+            }
+
+            if (_entitiesCreators.TryGetValue(typeof(TEntity), out var creator))
+                return (TEntity[]) await creator(request).Configure();
+
+            return Mapper.Map<TEntity[]>(request);
+        }
+
         public Task UpdateEntity<TEntity>(object request, TEntity entity)
             where TEntity : class
         {
@@ -255,6 +279,13 @@ namespace Turner.Infrastructure.Crud.Configuration
             where TEntity : class
         {
             _entityCreators[typeof(TEntity)] = async request => await creator(request).Configure();
+        }
+
+        internal void SetEntitiesCreator<TEntity>(
+            Func<object, Task<TEntity[]>> creator)
+            where TEntity : class
+        {
+            _entitiesCreators[typeof(TEntity)] = async request => await creator(request).Configure();
         }
 
         internal void SetEntityUpdator<TEntity>(
