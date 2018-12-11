@@ -31,15 +31,8 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             container.Register(typeof(ICrudErrorHandler), typeof(CrudErrorHandler), Lifestyle.Singleton);
             
-            container.Register(typeof(IContextAccess), typeof(StandardContextAccess), Lifestyle.Singleton);
-            container.Register(typeof(IDbSetAccess), typeof(StandardDbSetAccess), Lifestyle.Singleton);
-            container.Register(typeof(ICreateAlgorithm), typeof(StandardCreateAlgorithm), Lifestyle.Singleton);
-            container.Register(typeof(IGetAlgorithm), typeof(StandardGetAlgorithm), Lifestyle.Singleton);
-            container.Register(typeof(IGetAllAlgorithm), typeof(StandardGetAllAlgorithm), Lifestyle.Singleton);
-            container.Register(typeof(IUpdateAlgorithm), typeof(StandardUpdateAlgorithm), Lifestyle.Singleton);
-            container.Register(typeof(IDeleteAlgorithm), typeof(StandardDeleteAlgorithm), Lifestyle.Singleton);
-            container.Register(typeof(ISaveAlgorithm), typeof(StandardSaveAlgorithm), Lifestyle.Singleton);
-
+            container.Register(typeof(IEntityContext), typeof(EFContext));
+            
             container.Register(typeof(CreateRequestHandler<,>), configAssemblies);
             container.Register(typeof(CreateRequestHandler<,,>), configAssemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(CreateRequestHandler<,>), IfNotHandled);

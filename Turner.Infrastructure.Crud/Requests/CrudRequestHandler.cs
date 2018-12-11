@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Errors;
 
@@ -12,10 +12,10 @@ namespace Turner.Infrastructure.Crud.Requests
     internal abstract class CrudRequestHandler<TRequest, TEntity> : ICrudRequestHandler
         where TEntity : class
     {
-        protected readonly DbContext Context;
+        protected readonly IEntityContext Context;
         protected readonly ICrudRequestConfig RequestConfig;
         
-        protected CrudRequestHandler(DbContext context, CrudConfigManager profileManager)
+        protected CrudRequestHandler(IEntityContext context, CrudConfigManager profileManager)
         {
             Context = context;
             RequestConfig = profileManager.GetRequestConfigFor<TRequest>();

@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
+using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Exceptions;
@@ -9,22 +9,18 @@ using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-    #pragma warning disable 0618
+#pragma warning disable 0618
 
     internal class PagedFindRequestHandler<TRequest, TEntity, TOut>
         : CrudRequestHandler<TRequest, TEntity>, IRequestHandler<TRequest, PagedFindResult<TOut>>
         where TEntity : class
         where TRequest : IPagedFindRequest<TEntity, TOut>
     {
-        protected readonly IGetAllAlgorithm Algorithm;
         protected readonly RequestOptions Options;
 
-        public PagedFindRequestHandler(DbContext context,
-            CrudConfigManager profileManager,
-            IGetAllAlgorithm algorithm)
+        public PagedFindRequestHandler(IEntityContext context, CrudConfigManager profileManager)
             : base(context, profileManager)
         {
-            Algorithm = algorithm;
             Options = RequestConfig.GetOptionsFor<TEntity>();
         }
 
@@ -36,8 +32,8 @@ namespace Turner.Infrastructure.Crud.Requests
             try
             {
                 var selector = RequestConfig.GetSelectorFor<TEntity>();
-                var entities = Algorithm
-                    .GetEntities<TEntity>(Context)
+                var entities = Context
+                    .EntitySet<TEntity>()
                     .AsQueryable();
 
                 foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
@@ -46,11 +42,11 @@ namespace Turner.Infrastructure.Crud.Requests
                 var sorter = RequestConfig.GetSorterFor<TEntity>();
                 entities = sorter?.Sort(request, entities) ?? entities;
 
-                var totalItemCount = await entities.CountAsync();
+                var totalItemCount = await Context.CountAsync(entities).Configure();
                 var pageSize = request.PageSize < 1 ? totalItemCount : request.PageSize;
                 var totalPageCount = totalItemCount == 0 ? 1 : (totalItemCount + pageSize - 1) / pageSize;
                 
-                var item = (await entities.ToArrayAsync())
+                var item = (await Context.ToArrayAsync(entities).Configure())
                     .Select((e, i) => new { Item = e, Index = i })
                     .SingleOrDefault(x => selector.Get<TEntity>()(request).Compile()(x.Item));
                 

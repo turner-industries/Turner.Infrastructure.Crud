@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
+using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Exceptions;
@@ -8,77 +8,24 @@ using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-    public interface ISaveAlgorithm
-    {
-        DbSet<TEntity> GetEntities<TEntity>(DbContext context)
-            where TEntity : class;
-        
-        Task<TEntity> CreateEntityAsync<TEntity>(DbContext context, TEntity entity)
-            where TEntity : class;
-
-        Task SaveCreateChangesAsync(DbContext context);
-
-        Task SaveUpdateChangesAsync(DbContext context);
-    }
-
-    public class StandardSaveAlgorithm : ISaveAlgorithm
-    {
-        private readonly ICreateAlgorithm _createAlgorithm;
-        private readonly IUpdateAlgorithm _updateAlgorithm;
-
-        public StandardSaveAlgorithm(ICreateAlgorithm createAlgorithm, IUpdateAlgorithm updateAlgorithm)
-        {
-            _createAlgorithm = createAlgorithm;
-            _updateAlgorithm = updateAlgorithm;
-        }
-
-        public DbSet<TEntity> GetEntities<TEntity>(DbContext context)
-            where TEntity : class
-        {
-            return _updateAlgorithm.GetEntities<TEntity>(context);
-        }
-
-        public Task<TEntity> CreateEntityAsync<TEntity>(DbContext context, TEntity entity)
-            where TEntity : class
-        {
-            return _createAlgorithm.CreateEntityAsync(context, entity);
-        }
-
-        public Task SaveUpdateChangesAsync(DbContext context)
-        {
-            return _updateAlgorithm.SaveChangesAsync(context);
-        }
-
-        public Task SaveCreateChangesAsync(DbContext context)
-        {
-            return _createAlgorithm.SaveChangesAsync(context);
-        }
-    }
-
     internal abstract class SaveRequestHandlerBase<TRequest, TEntity>
         : CrudRequestHandler<TRequest, TEntity>
         where TEntity : class
     {
-        protected readonly ISaveAlgorithm Algorithm;
         protected readonly RequestOptions Options;
 
-        protected SaveRequestHandlerBase(DbContext context,
-            CrudConfigManager profileManager,
-            ISaveAlgorithm algorithm)
+        protected SaveRequestHandlerBase(IEntityContext context, CrudConfigManager profileManager)
             : base(context, profileManager)
         {
-            Algorithm = algorithm;
             Options = RequestConfig.GetOptionsFor<TEntity>();
         }
 
-        protected async Task<TEntity> GetEntity(TRequest request)
+        protected Task<TEntity> GetEntity(TRequest request)
         {
-            var selector = RequestConfig.GetSelectorFor<TEntity>();
-            var entity = await Algorithm.GetEntities<TEntity>(Context)
-                .SelectSingleAsync(request, selector)
-                .Configure();
+            var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
+            var set = Context.EntitySet<TEntity>();
             
-            return entity;
+            return Context.SingleOrDefaultAsync(set, selector(request));
         }
 
         protected async Task<TEntity> SaveEntity(TRequest request, TEntity entity)
@@ -89,13 +36,13 @@ namespace Turner.Infrastructure.Crud.Requests
             {
                 entity = await CreateEntity(request).Configure();
                 await RequestConfig.RunPostActionsFor(ActionType.Save, request, entity).Configure();
-                await Algorithm.SaveCreateChangesAsync(Context).Configure();
+                await Context.ApplyChangesAsync().Configure();
             }
             else
             {
-                await UpdateEntity(request, entity).Configure();
+                entity = await UpdateEntity(request, entity).Configure();
                 await RequestConfig.RunPostActionsFor(ActionType.Save, request, entity).Configure();
-                await Algorithm.SaveUpdateChangesAsync(Context).Configure();
+                await Context.ApplyChangesAsync().Configure();
             }
 
             return entity;
@@ -111,15 +58,15 @@ namespace Turner.Infrastructure.Crud.Requests
             }
 
             var entity = await RequestConfig.CreateEntity<TEntity>(request).Configure();
-            var newEntity = await Algorithm.CreateEntityAsync(Context, entity).Configure();
+            entity = await Context.EntitySet<TEntity>().CreateAsync(entity).Configure();
 
             if (!Options.SuppressCreateActionsInSave)
-                await RequestConfig.RunPostActionsFor(ActionType.Create, request, newEntity).Configure();
+                await RequestConfig.RunPostActionsFor(ActionType.Create, request, entity).Configure();
             
             return entity;
         }
 
-        private async Task UpdateEntity(TRequest request, TEntity entity)
+        private async Task<TEntity> UpdateEntity(TRequest request, TEntity entity)
         {
             if (!Options.SuppressUpdateActionsInSave)
             {
@@ -129,9 +76,12 @@ namespace Turner.Infrastructure.Crud.Requests
             }
 
             await RequestConfig.UpdateEntity(request, entity).Configure();
+            entity = await Context.EntitySet<TEntity>().UpdateAsync(entity).Configure();
 
             if (!Options.SuppressUpdateActionsInSave)
                 await RequestConfig.RunPostActionsFor(ActionType.Update, request, entity).Configure();
+
+            return entity;
         }
     }
 
@@ -141,10 +91,8 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
         where TRequest : ISaveRequest<TEntity>
     {
-        public SaveRequestHandler(DbContext context,
-            CrudConfigManager profileManager,
-            ISaveAlgorithm algorithm)
-            : base(context, profileManager, algorithm)
+        public SaveRequestHandler(IEntityContext context, CrudConfigManager profileManager)
+            : base(context, profileManager)
         {
         }
 
@@ -174,10 +122,8 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
         where TRequest : ISaveRequest<TEntity, TOut>
     {
-        public SaveRequestHandler(DbContext context,
-            CrudConfigManager profileManager,
-            ISaveAlgorithm algorithm)
-            : base(context, profileManager, algorithm)
+        public SaveRequestHandler(IEntityContext context, CrudConfigManager profileManager)
+            : base(context, profileManager)
         {
         }
 

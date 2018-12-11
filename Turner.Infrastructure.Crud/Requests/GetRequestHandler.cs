@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
+using AutoMapper.QueryableExtensions;
 using System.Linq;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Algorithms;
@@ -10,42 +10,16 @@ using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-    public interface IGetAlgorithm
-    {
-        DbSet<TEntity> GetEntities<TEntity>(DbContext context)
-            where TEntity : class;
-    }
-
-    public class StandardGetAlgorithm : IGetAlgorithm
-    {
-        private readonly IContextAccess _contextAccess;
-
-        public StandardGetAlgorithm(IContextAccess contextAccess)
-        {
-            _contextAccess = contextAccess;
-        }
-
-        public DbSet<TEntity> GetEntities<TEntity>(DbContext context)
-            where TEntity : class
-        {
-            return _contextAccess.GetEntities<TEntity>(context);
-        }
-    }
-
     internal class GetRequestHandler<TRequest, TEntity, TOut>
         : CrudRequestHandler<TRequest, TEntity>, IRequestHandler<TRequest, TOut>
         where TEntity : class
         where TRequest : IGetRequest<TEntity, TOut>
     {
-        protected readonly IGetAlgorithm Algorithm;
         protected readonly RequestOptions Options;
 
-        public GetRequestHandler(DbContext context, 
-            CrudConfigManager profileManager,
-            IGetAlgorithm algorithm)
+        public GetRequestHandler(IEntityContext context, CrudConfigManager profileManager)
             : base(context, profileManager)
         {
-            Algorithm = algorithm;
             Options = RequestConfig.GetOptionsFor<TEntity>();
         }
 
@@ -56,20 +30,18 @@ namespace Turner.Infrastructure.Crud.Requests
 
             try
             {
-                var selector = RequestConfig.GetSelectorFor<TEntity>();
-                var entities = Algorithm
-                    .GetEntities<TEntity>(Context)
-                    .AsQueryable();
+                var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
+                var entities = Context.EntitySet<TEntity>().AsQueryable();
 
                 foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
                     entities = filter.Filter(request, entities);
 
                 if (Options.UseProjection)
                 {
-                    result = await entities
-                        .ProjectSingleAsync<TRequest, TEntity, TOut>(request, selector)
+                    result = await Context
+                        .SingleOrDefaultAsync(entities.Where(selector(request)).ProjectTo<TOut>())
                         .Configure();
-
+                    
                     if (result == null)
                     {
                         failedToFind = true;
@@ -78,8 +50,8 @@ namespace Turner.Infrastructure.Crud.Requests
                 }
                 else
                 {
-                    var entity = await entities
-                        .SelectSingleAsync(request, selector)
+                    var entity = await Context
+                        .SingleOrDefaultAsync(entities, selector(request))
                         .Configure();
 
                     if (entity == null)

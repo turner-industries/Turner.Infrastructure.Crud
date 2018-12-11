@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Mediator;
@@ -15,15 +15,11 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
         where TRequest : IPagedGetAllRequest<TEntity, TOut>
     {
-        protected readonly IGetAllAlgorithm Algorithm;
         protected readonly RequestOptions Options;
 
-        public PagedGetAllRequestHandler(DbContext context,
-            CrudConfigManager profileManager,
-            IGetAllAlgorithm algorithm)
+        public PagedGetAllRequestHandler(IEntityContext context, CrudConfigManager profileManager)
             : base(context, profileManager)
         {
-            Algorithm = algorithm;
             Options = RequestConfig.GetOptionsFor<TEntity>();
         }
 
@@ -31,14 +27,14 @@ namespace Turner.Infrastructure.Crud.Requests
         {
             List<TOut> items;
 
-            var entities = Algorithm
-                .GetEntities<TEntity>(Context)
+            var entities = Context
+                .EntitySet<TEntity>()
                 .AsQueryable();
 
             foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
                 entities = filter.Filter(request, entities);
 
-            var totalItemCount = await entities.CountAsync();
+            var totalItemCount = await Context.CountAsync(entities).Configure();
             
             var sorter = RequestConfig.GetSorterFor<TEntity>();
             entities = sorter?.Sort(request, entities) ?? entities;
@@ -52,8 +48,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 .Skip(startIndex)
                 .Take(pageSize);
 
-            items = await StandardGetAllAlgorithm
-                .ProjectResultItems<TEntity, TOut>(Options, entities);
+            items = await entities.ProjectResults<TEntity, TOut>(Context, Options).Configure();
 
             if (items.Count == 0)
             {

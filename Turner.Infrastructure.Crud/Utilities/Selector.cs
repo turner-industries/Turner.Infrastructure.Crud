@@ -1,9 +1,5 @@
-﻿using AutoMapper.QueryableExtensions;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
+﻿using System;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Exceptions;
 
 namespace Turner.Infrastructure.Crud
@@ -77,26 +73,6 @@ namespace Turner.Infrastructure.Crud
             var invocation = Expression.Invoke(selectExpr, tParam);
 
             return Expression.Lambda<Func<TEntity, bool>>(invocation, entityParam);
-        }
-    }
-    
-    public static class SelectorExtensions
-    {
-        public static Task<TEntity> SelectSingleAsync<TRequest, TEntity>(
-            this IQueryable<TEntity> entities, TRequest request, ISelector selector)
-            where TEntity : class
-        {
-            return entities.SingleOrDefaultAsync(selector.Get<TEntity>()(request));
-        }
-
-        public static Task<TDto> ProjectSingleAsync<TRequest, TEntity, TDto>(
-            this IQueryable<TEntity> entities, TRequest request, ISelector selector)
-            where TEntity : class
-        {
-            return entities
-                .Where(selector.Get<TEntity>()(request))
-                .ProjectTo<TDto>()
-                .SingleOrDefaultAsync();
         }
     }
 }
