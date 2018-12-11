@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
@@ -9,79 +8,30 @@ using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-    public interface IDeleteAlgorithm
-    {
-        DbSet<TEntity> GetEntities<TEntity>(DbContext context)
-            where TEntity : class;
-
-        Task<TEntity> DeleteEntityAsync<TEntity>(DbContext context, TEntity entity)
-            where TEntity : class;
-
-        Task SaveChangesAsync(DbContext context);
-    }
-
-    public class StandardDeleteAlgorithm : IDeleteAlgorithm
-    {
-        private readonly IContextAccess _contextAccess;
-        private readonly IDbSetAccess _setAccess;
-
-        public StandardDeleteAlgorithm(IContextAccess contextAccess, 
-            IDbSetAccess setAccess)
-        {
-            _contextAccess = contextAccess;
-            _setAccess = setAccess;
-        }
-
-        public DbSet<TEntity> GetEntities<TEntity>(DbContext context)
-            where TEntity : class
-        {
-            return _contextAccess.GetEntities<TEntity>(context);
-        }
-
-        public Task<TEntity> DeleteEntityAsync<TEntity>(DbContext context, TEntity entity)
-            where TEntity : class
-        {
-            var set = _contextAccess.GetEntities<TEntity>(context);
-            return _setAccess.DeleteAsync(entity, set);
-        }
-
-        public Task SaveChangesAsync(DbContext context)
-        {
-            return _contextAccess.ApplyChangesAsync(context);
-        }
-    }
-
     internal abstract class DeleteRequestHandlerBase<TRequest, TEntity>
         : CrudRequestHandler<TRequest, TEntity>
         where TEntity : class
     {
-        protected readonly IDeleteAlgorithm Algorithm;
-
-        protected DeleteRequestHandlerBase(DbContext context, 
-            CrudConfigManager profileManager,
-            IDeleteAlgorithm algorithm)
+        protected DeleteRequestHandlerBase(IEntityContext context, CrudConfigManager profileManager)
             : base(context, profileManager)
         {
-            Algorithm = algorithm;
         }
 
-        protected async Task<TEntity> GetEntity(TRequest request)
+        protected Task<TEntity> GetEntity(TRequest request)
         {
-            var selector = RequestConfig.GetSelectorFor<TEntity>();
-            var entity = await Algorithm.GetEntities<TEntity>(Context)
-                .SelectSingleAsync(request, selector)
-                .Configure();
+            var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
+            var set = Context.EntitySet<TEntity>();
 
-            return entity;
+            return Context.SingleOrDefaultAsync(set, selector(request));
         }
 
         protected async Task DeleteEntity(TRequest request, TEntity entity)
         {
             await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Delete, request).Configure();
-            await Algorithm.DeleteEntityAsync(Context, entity).Configure();
+            await Context.EntitySet<TEntity>().DeleteAsync(entity).Configure();
             await RequestConfig.RunPostActionsFor(ActionType.Delete, request, entity).Configure();
 
-            await Algorithm.SaveChangesAsync(Context).Configure();
+            await Context.ApplyChangesAsync().Configure();
         }
     }
 
@@ -91,10 +41,8 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
         where TRequest : IDeleteRequest<TEntity>
     {
-        public DeleteRequestHandler(DbContext context, 
-            CrudConfigManager profileManager,
-            IDeleteAlgorithm algorithm)
-            : base(context, profileManager, algorithm)
+        public DeleteRequestHandler(IEntityContext context, CrudConfigManager profileManager)
+            : base(context, profileManager)
         {
         }
 
@@ -128,10 +76,8 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
         where TRequest : IDeleteRequest<TEntity, TOut>
     {
-        public DeleteRequestHandler(DbContext context, 
-            CrudConfigManager profileManager,
-            IDeleteAlgorithm algorithm)
-            : base(context, profileManager, algorithm)
+        public DeleteRequestHandler(IEntityContext context, CrudConfigManager profileManager)
+            : base(context, profileManager)
         {
         }
 

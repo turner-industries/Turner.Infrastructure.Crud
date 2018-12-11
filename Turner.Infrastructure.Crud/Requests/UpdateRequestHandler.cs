@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
@@ -9,66 +8,33 @@ using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-    public interface IUpdateAlgorithm
-    {
-        DbSet<TEntity> GetEntities<TEntity>(DbContext context)
-            where TEntity : class;
-
-        Task SaveChangesAsync(DbContext context);
-    }
-
-    public class StandardUpdateAlgorithm : IUpdateAlgorithm
-    {
-        private readonly IContextAccess _contextAccess;
-
-        public StandardUpdateAlgorithm(IContextAccess contextAccess)
-        {
-            _contextAccess = contextAccess;
-        }
-
-        public DbSet<TEntity> GetEntities<TEntity>(DbContext context)
-            where TEntity : class
-        {
-            return _contextAccess.GetEntities<TEntity>(context);
-        }
-
-        public Task SaveChangesAsync(DbContext context)
-        {
-            return _contextAccess.ApplyChangesAsync(context);
-        }
-    }
-
     internal abstract class UpdateRequestHandlerBase<TRequest, TEntity>
         : CrudRequestHandler<TRequest, TEntity>
         where TEntity : class
     {
-        protected readonly IUpdateAlgorithm Algorithm;
-
-        protected UpdateRequestHandlerBase(DbContext context, 
-            CrudConfigManager profileManager,
-            IUpdateAlgorithm algorithm)
+        protected UpdateRequestHandlerBase(IEntityContext context, CrudConfigManager profileManager)
             : base(context, profileManager)
         {
-            Algorithm = algorithm;
         }
 
-        protected async Task<TEntity> GetEntity(TRequest request)
+        protected Task<TEntity> GetEntity(TRequest request)
         {
-            var selector = RequestConfig.GetSelectorFor<TEntity>();
-            var entity = await Algorithm.GetEntities<TEntity>(Context)
-                .SelectSingleAsync(request, selector)
-                .Configure();
+            var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
+            var set = Context.EntitySet<TEntity>();
             
-            return entity;
+            return Context.SingleOrDefaultAsync(set, selector(request));
         }
 
-        protected async Task UpdateEntity(TRequest request, TEntity entity)
+        protected async Task<TEntity> UpdateEntity(TRequest request, TEntity entity)
         {
             await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Update, request).Configure();
             await RequestConfig.UpdateEntity(request, entity).Configure();
+            entity = await Context.EntitySet<TEntity>().UpdateAsync(entity).Configure();
             await RequestConfig.RunPostActionsFor(ActionType.Update, request, entity).Configure();
 
-            await Algorithm.SaveChangesAsync(Context).Configure();
+            await Context.ApplyChangesAsync().Configure();
+
+            return entity;
         }
     }
 
@@ -78,10 +44,8 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
         where TRequest : IUpdateRequest<TEntity>
     {
-        public UpdateRequestHandler(DbContext context, 
-            CrudConfigManager profileManager,
-            IUpdateAlgorithm algorithm)
-            : base(context, profileManager, algorithm)
+        public UpdateRequestHandler(IEntityContext context, CrudConfigManager profileManager)
+            : base(context, profileManager)
         {
         }
 
@@ -115,10 +79,8 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
         where TRequest : IUpdateRequest<TEntity, TOut>
     {
-        public UpdateRequestHandler(DbContext context, 
-            CrudConfigManager profileManager,
-            IUpdateAlgorithm algorithm)
-            : base(context, profileManager, algorithm)
+        public UpdateRequestHandler(IEntityContext context, CrudConfigManager profileManager)
+            : base(context, profileManager)
         {
         }
 
@@ -145,7 +107,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
             if (entity != null)
             {
-                await UpdateEntity(request, entity).Configure();
+                entity = await UpdateEntity(request, entity).Configure();
                 result = Mapper.Map<TOut>(entity);
             }
 

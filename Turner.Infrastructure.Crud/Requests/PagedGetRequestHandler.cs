@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Exceptions;
@@ -17,15 +17,11 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
         where TRequest : IPagedGetRequest<TEntity, TOut>
     {
-        protected readonly IGetAllAlgorithm Algorithm;
         protected readonly RequestOptions Options;
 
-        public PagedGetRequestHandler(DbContext context,
-            CrudConfigManager profileManager,
-            IGetAllAlgorithm algorithm)
+        public PagedGetRequestHandler(IEntityContext context, CrudConfigManager profileManager)
             : base(context, profileManager)
         {
-            Algorithm = algorithm;
             Options = RequestConfig.GetOptionsFor<TEntity>();
         }
 
@@ -37,8 +33,8 @@ namespace Turner.Infrastructure.Crud.Requests
             try
             {
                 var selector = RequestConfig.GetSelectorFor<TEntity>();
-                var entities = Algorithm
-                    .GetEntities<TEntity>(Context)
+                var entities = Context
+                    .EntitySet<TEntity>()
                     .AsQueryable();
 
                 foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
@@ -47,11 +43,11 @@ namespace Turner.Infrastructure.Crud.Requests
                 var sorter = RequestConfig.GetSorterFor<TEntity>();
                 entities = sorter?.Sort(request, entities) ?? entities;
 
-                var totalItemCount = await entities.CountAsync();
+                var totalItemCount = await Context.CountAsync(entities).Configure();
                 var pageSize = request.PageSize < 1 ? totalItemCount : request.PageSize;
                 var totalPageCount = totalItemCount == 0 ? 1 : (totalItemCount + pageSize - 1) / pageSize;
 
-                var allItems = await entities.ToArrayAsync();
+                var allItems = await Context.ToArrayAsync(entities).Configure();
                 var item = allItems
                     .Select((e, i) => new { Item = e, Index = i })
                     .SingleOrDefault(x => selector.Get<TEntity>()(request).Compile()(x.Item));
