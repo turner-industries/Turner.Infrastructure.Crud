@@ -32,12 +32,12 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     [DoNotValidate]
-    public class CreateAllRequest<TEntity, TIn> : ICreateRequest<TEntity>
+    public class CreateAllRequest<TEntity, TIn> : ICreateAllRequest<TEntity>
         where TEntity : class
     {
-        public CreateAllRequest(IEnumerable<TIn> items) { Items = items; }
+        public CreateAllRequest(List<TIn> items) { Items = items; }
 
-        public IEnumerable<TIn> Items { get; }
+        public List<TIn> Items { get; }
     }
 
     public class CreateAllRequestProfile<TEntity, TIn>
@@ -55,9 +55,9 @@ namespace Turner.Infrastructure.Crud.Requests
     public class CreateAllRequest<TEntity, TIn, TOut> : ICreateAllRequest<TEntity, TOut>
         where TEntity : class
     {
-        public CreateAllRequest(IEnumerable<TIn> items) { Items = items; }
+        public CreateAllRequest(List<TIn> items) { Items = items; }
 
-        public IEnumerable<TIn> Items { get; }
+        public List<TIn> Items { get; }
     }
 
     public class CreateAllRequestProfile<TEntity, TIn, TOut>

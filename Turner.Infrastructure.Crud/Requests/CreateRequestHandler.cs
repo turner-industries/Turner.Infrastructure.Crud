@@ -20,9 +20,9 @@ namespace Turner.Infrastructure.Crud.Requests
             await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Create, request).Configure();
 
             var entity = await RequestConfig.CreateEntity<TEntity>(request).Configure();
-            var newEntity = await Context.EntitySet<TEntity>().CreateAsync(entity).Configure();
+            entity = await Context.EntitySet<TEntity>().CreateAsync(entity).Configure();
 
-            await RequestConfig.RunPostActionsFor(ActionType.Create, request, newEntity).Configure();
+            await RequestConfig.RunPostActionsFor(ActionType.Create, request, entity).Configure();
             await Context.ApplyChangesAsync().Configure();
 
             return entity;
