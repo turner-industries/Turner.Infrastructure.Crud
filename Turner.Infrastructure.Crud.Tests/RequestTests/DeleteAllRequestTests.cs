@@ -54,6 +54,30 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsFalse(Context.Set<User>().First(x => x.Name == "TestUser2").IsDeleted);
             Assert.IsFalse(Context.Set<User>().First(x => x.Name == "TestUser4").IsDeleted);
         }
+
+        [Test]
+        public async Task Handle_DeleteAllByIdRequest_DeletesAllFilteredUsers()
+        {
+            var request = new DeleteAllByIdRequest<User, UserGetDto>
+            (
+                new List<int>
+                {
+                    _users[0].Id,
+                    _users[2].Id
+                }
+            );
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.IsNotNull(response.Data.Items);
+            Assert.AreEqual(2, response.Data.Items.Count);
+            Assert.IsTrue(response.Data.Items[0].IsDeleted);
+            Assert.IsTrue(response.Data.Items[1].IsDeleted);
+            Assert.IsFalse(Context.Set<User>().First(x => x.Name == "TestUser2").IsDeleted);
+            Assert.IsFalse(Context.Set<User>().First(x => x.Name == "TestUser4").IsDeleted);
+        }
     }
 
     [DoNotValidate]
@@ -62,14 +86,13 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     {
         public List<int> Ids { get; set; }
     }
-
-    // TODO: Test DeleteAllByIdRequest/DeleteAllByGuidRequest
+    
     public class DeleteAllUsersByIdProfile : CrudRequestProfile<DeleteAllUsersByIdRequest>
     {
         public DeleteAllUsersByIdProfile()
         {
             ForEntity<User>()
-                .FilterWith(builder => builder.FilterOn((request, entity) => request.Ids.Contains(entity.Id)))
+                .FilterWith(builder => builder.FilterOnCollection(r => r.Ids, "Id"))
                 .AfterDeleting(entity => entity.PostMessage += "/Delete");
 
             ConfigureErrors(config => config.FailedToFindInDeleteIsError = false);

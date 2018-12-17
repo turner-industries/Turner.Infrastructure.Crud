@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -43,6 +44,62 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
         {
             var builder = new BasicFilterBuilder<TRequest, TEntity>(
                 (request, queryable) => queryable.Where(filterExpr));
+
+            _builder = builder;
+
+            return builder;
+        }
+
+        public BasicFilterBuilder<TRequest, TEntity> FilterOnCollection<TEntityKey>(
+            Expression<Func<TRequest, IEnumerable<TEntityKey>>> requestEnumerableExpr,
+            Expression<Func<TEntity, TEntityKey>> entityKeyExpr)
+        {
+            var builder = new BasicFilterBuilder<TRequest, TEntity>(
+                (request, queryable) =>
+                {
+                    var eParamExpr = Expression.Parameter(typeof(TEntity));
+                    var eKeyExpr = Expression.Invoke(entityKeyExpr, eParamExpr);
+                    var rParamExpr = Expression.Constant(request);
+                    var rEnumerableExpr = Expression.Invoke(requestEnumerableExpr, rParamExpr);
+
+                    var containsInfo = typeof(Enumerable)
+                        .GetMethods()
+                        .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
+                        .MakeGenericMethod(typeof(TEntityKey));
+                    
+                    var rContainsExpr = Expression.Call(containsInfo, rEnumerableExpr, eKeyExpr);
+                    var whereClause = Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr);
+
+                    return queryable.Where(whereClause);
+                });
+
+            _builder = builder;
+
+            return builder;
+        }
+
+        public BasicFilterBuilder<TRequest, TEntity> FilterOnCollection<TEntityKey>(
+            Expression<Func<TRequest, IEnumerable<TEntityKey>>> requestEnumerableExpr,
+            string entityKeyProperty)
+        {
+            var builder = new BasicFilterBuilder<TRequest, TEntity>(
+                (request, queryable) =>
+                {
+                    var eParamExpr = Expression.Parameter(typeof(TEntity));
+                    var eKeyExpr = Expression.PropertyOrField(eParamExpr, entityKeyProperty);
+                    var rParamExpr = Expression.Constant(request);
+                    var rEnumerableExpr = Expression.Invoke(requestEnumerableExpr, rParamExpr);
+
+                    var containsInfo = typeof(Enumerable)
+                        .GetMethods()
+                        .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
+                        .MakeGenericMethod(typeof(TEntityKey));
+
+                    var rContainsExpr = Expression.Call(containsInfo, rEnumerableExpr, eKeyExpr);
+                    var whereClause = Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr);
+
+                    return queryable.Where(whereClause);
+                });
 
             _builder = builder;
 
