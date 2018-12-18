@@ -124,7 +124,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public DeleteUserByIdProfile()
         {
             ForEntity<User>()
-                .SelectWith(builder => builder.Build("Id"))
+                .SelectWith(builder => builder.Single("Id"))
                 .AfterDeleting(entity => entity.PostMessage += "/Delete");
 
             ConfigureErrors(config => config.FailedToFindInDeleteIsError = false);
@@ -137,7 +137,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         {
             ForEntity<User>()
                 .SelectWith(builder => 
-                    builder.Build(request => entity =>
+                    builder.Single(request => entity =>
                         string.Equals(entity.Name, request.Name, StringComparison.InvariantCultureIgnoreCase)));
 
             ConfigureErrors(config => config.FailedToFindInDeleteIsError = true);

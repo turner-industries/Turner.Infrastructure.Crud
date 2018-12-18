@@ -6,12 +6,23 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Select
     public class SelectorBuilder<TRequest, TEntity>
         where TEntity : class
     {
-        public ISelector Build(Func<TRequest, Expression<Func<TEntity, bool>>> selector)
+        public ISelector Single(Func<TRequest, Expression<Func<TEntity, bool>>> selector)
         {
             return Selector.From(selector);
         }
 
-        public ISelector Build<TRequestKey, TEntityKey>(
+        public ISelector Single(Expression<Func<TRequest, TEntity, bool>> selector)
+        {
+            return Selector.From<TRequest, TEntity>(request =>
+            {
+                var requestParam = Expression.Constant(request, typeof(TRequest));
+                var body = selector.Body.ReplaceParameter(selector.Parameters[0], requestParam);
+
+                return Expression.Lambda<Func<TEntity, bool>>(body, selector.Parameters[1]);
+            });
+        }
+
+        public ISelector Single<TRequestKey, TEntityKey>(
             Expression<Func<TRequest, TRequestKey>> requestKeyExpr,
             Expression<Func<TEntity, TEntityKey>> entityKeyExpr)
         {
@@ -27,7 +38,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Select
             });
         }
 
-        public ISelector Build<TRequestKey, TEntityKey>(
+        public ISelector Single<TRequestKey, TEntityKey>(
             Expression<Func<TRequest, TRequestKey>> requestKeyExpr,
             Expression<Func<TEntity, TEntityKey>> entityKeyExpr,
             Expression<Func<TRequestKey, TEntityKey, bool>> compareExpr)
@@ -44,7 +55,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Select
             });
         }
 
-        public ISelector Build<TRequestKey>(
+        public ISelector Single<TRequestKey>(
             Expression<Func<TRequest, TRequestKey>> requestKeyExpr,
             string entityKeyProperty)
         {
@@ -60,7 +71,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Select
             });
         }
         
-        public ISelector Build<TEntityKey>(string requestKeyProperty,
+        public ISelector Single<TEntityKey>(string requestKeyProperty,
             Expression<Func<TRequest, TEntityKey>> entityKeyExpr)
         {
             return Selector.From<TRequest, TEntity>(request =>
@@ -75,7 +86,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Select
             });
         }
         
-        public ISelector Build(string requestKeyProperty, string entityKeyProperty)
+        public ISelector Single(string requestKeyProperty, string entityKeyProperty)
         {
             return Selector.From<TRequest, TEntity>(request =>
             {
@@ -89,7 +100,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Select
             });
         }
 
-        public ISelector Build<TKey>(string requestKeyProperty, string entityKeyProperty,
+        public ISelector Single<TKey>(string requestKeyProperty, string entityKeyProperty,
             Expression<Func<TKey, TKey, bool>> compareExpr)
         {
             return Selector.From<TRequest, TEntity>(request =>
@@ -104,7 +115,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Select
             });
         }
 
-        public ISelector Build(string keyProperty)
+        public ISelector Single(string keyProperty)
         {
             return Selector.From<TRequest, TEntity>(request =>
             {
@@ -118,7 +129,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Select
             });
         }
 
-        public ISelector Build<TKey>(string keyProperty, Expression<Func<TKey, TKey, bool>> compareExpr)
+        public ISelector Single<TKey>(string keyProperty, Expression<Func<TKey, TKey, bool>> compareExpr)
         {
             return Selector.From<TRequest, TEntity>(request =>
             {

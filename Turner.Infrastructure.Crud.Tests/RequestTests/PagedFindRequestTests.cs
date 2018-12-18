@@ -62,7 +62,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public PagedFindUserProfile()
         {
             ForEntity<User>()
-                .SelectWith(builder => builder.Build("Name"))
+                .SelectWith(builder => builder.Single("Name"))
                 .SortWith(builder => builder.SortBy("Name").Descending())
                 .FilterWith(builder => builder.FilterOn(x => !x.IsDeleted))
                 .ConfigureOptions(config => config.UseProjection = false);

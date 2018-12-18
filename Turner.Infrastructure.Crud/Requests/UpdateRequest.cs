@@ -102,7 +102,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public UpdateByIdRequestProfile()
         {
             ForEntity<TEntity>()
-                .SelectWith(builder => builder.Build(request => request.Key, "Id"));
+                .SelectWith(builder => builder.Single(request => request.Key, "Id"));
         }
     }
 
@@ -120,7 +120,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public UpdateByGuidRequestProfile()
         {
             ForEntity<TEntity>()
-                .SelectWith(builder => builder.Build(request => request.Key, "Guid"));
+                .SelectWith(builder => builder.Single(request => request.Key, "Guid"));
         }
     }
 }
