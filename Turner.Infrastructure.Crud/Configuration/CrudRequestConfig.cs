@@ -36,7 +36,10 @@ namespace Turner.Infrastructure.Crud.Configuration
         Task<TEntity[]> CreateEntities<TEntity>(object request)
             where TEntity : class;
 
-        Task UpdateEntity<TEntity>(object request, TEntity entity)
+        Task<TEntity> UpdateEntity<TEntity>(object request, TEntity entity)
+            where TEntity : class;
+
+        Task<TEntity[]> UpdateEntities<TEntity>(object request, TEntity[] entities)
             where TEntity : class;
     }
 
@@ -63,8 +66,11 @@ namespace Turner.Infrastructure.Crud.Configuration
         private readonly Dictionary<Type, Func<object, Task<object[]>>> _entitiesCreators
             = new Dictionary<Type, Func<object, Task<object[]>>>();
 
-        private readonly Dictionary<Type, Func<object, object, Task>> _entityUpdators
-            = new Dictionary<Type, Func<object, object, Task>>();
+        private readonly Dictionary<Type, Func<object, object, Task<object>>> _entityUpdators
+            = new Dictionary<Type, Func<object, object, Task<object>>>();
+
+        private readonly Dictionary<Type, Func<object, object[], Task<object[]>>> _entitiesUpdators
+            = new Dictionary<Type, Func<object, object[], Task<object[]>>>();
 
         private readonly Dictionary<Type, object> _defaultValues
             = new Dictionary<Type, object>();
@@ -194,7 +200,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             return Mapper.Map<TEntity[]>(request);
         }
 
-        public Task UpdateEntity<TEntity>(object request, TEntity entity)
+        public async Task<TEntity> UpdateEntity<TEntity>(object request, TEntity entity)
             where TEntity : class
         {
             if (!(request is TRequest))
@@ -208,11 +214,32 @@ namespace Turner.Infrastructure.Crud.Configuration
             }
 
             if (_entityUpdators.TryGetValue(typeof(TEntity), out var updator))
-                return updator(request, entity);
+                return (TEntity) await updator(request, entity).Configure();
         
             Mapper.Map(request, entity);
 
-            return Task.CompletedTask;
+            return entity;
+        }
+
+        public async Task<TEntity[]> UpdateEntities<TEntity>(object request, TEntity[] entities)
+            where TEntity : class
+        {
+            if (!(request is TRequest))
+            {
+                var message =
+                    $"Unable to update entities of type '{typeof(TEntity)}' " +
+                    $"from a request of type '{request.GetType()}'. " +
+                    $"Configuration expected a request of type '{typeof(TRequest)}'.";
+
+                throw new BadCrudConfigurationException(message);
+            }
+
+            if (_entitiesUpdators.TryGetValue(typeof(TEntity), out var updator))
+                return (TEntity[]) await updator(request, entities).Configure();
+
+            throw new BadCrudConfigurationException(
+                $"No updator defined for entities '{typeof(TEntity)}' " +
+                $"for request '{typeof(TRequest)}'.");
         }
 
         public TEntity GetDefaultFor<TEntity>()
@@ -289,10 +316,17 @@ namespace Turner.Infrastructure.Crud.Configuration
         }
 
         internal void SetEntityUpdator<TEntity>(
-            Func<object, TEntity, Task> updator)
+            Func<object, TEntity, Task<TEntity>> updator)
             where TEntity : class
         {
-            _entityUpdators[typeof(TEntity)] = (request, entity) => updator(request, (TEntity)entity);
+            _entityUpdators[typeof(TEntity)] = async (request, entity) => await updator(request, (TEntity) entity);
+        }
+
+        internal void SetEntitiesUpdator<TEntity>(
+            Func<object, TEntity[], Task<TEntity[]>> updator)
+            where TEntity : class
+        {
+            _entitiesUpdators[typeof(TEntity)] = async (request, entities) => await updator(request, (TEntity[]) entities).Configure();
         }
 
         internal void SetEntityDefault<TEntity>(
