@@ -37,6 +37,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             {
                 Items = new List<UserGetDto>
                 {
+                    // TODO: Should missing items throw error?
                     new UserGetDto { Id = _users[0].Id, Name = string.Concat(_users[0].Name, "_New") },
                     new UserGetDto { Id = _users[1].Id, Name = string.Concat(_users[1].Name, "_New") },
                     new UserGetDto { Id = 9999, Name = "Invalid Id" },
@@ -82,7 +83,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsFalse(Context.Set<User>().First(x => x.Name == "TestUser4").IsDeleted);
         }
     }
-
+    
     [DoNotValidate]
     public class UpdateAllUsersByIdRequest
         : IUpdateAllRequest<User, UserGetDto>
@@ -94,19 +95,9 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     {
         public UpdateAllUsersByIdProfile()
         {
-            // TODO: Should not have to select on x.Id when filtering (combine into single config)
             ForEntity<User>()
-                .FilterWith(builder => builder.FilterOnCollection(r => r.Items.Select(x => x.Id), "Id"))
-                .UpdateAllWith((request, users) =>
-                {
-                    // TODO: A builder that creates the join (and maybe the filter too)
-                    return request.Items
-                        .Join(users, x => x.Id, x => x.Id,
-                            (item, user) => new { In = item, Out = user })
-                        .ForEach(x => Mapper.Map(x.In, x.Out))
-                        .Select(x => x.Out)
-                        .ToArray();
-                });
+                .FilterWith(builder => builder.FilterOnCollection(r => r.Items, "Id", "Id"))
+                .UpdateAllWith(r => r.Items, "Id", "Id", Mapper.Map);
 
             ConfigureErrors(config => config.FailedToFindInDeleteIsError = false);
         }

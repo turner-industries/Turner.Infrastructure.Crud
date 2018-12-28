@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration.Builders.Filter;
 using Turner.Infrastructure.Crud.Configuration.Builders.Select;
@@ -219,6 +221,61 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             Func<TRequest, TEntity[], TEntity[]> updator)
         {
             _updateEntitiesFromRequest = (request, entities) => Task.FromResult(updator(request, entities));
+
+            return this;
+        }
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> UpdateAllWith<TIn>(
+            Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr,
+            string requestItemKeyProperty,
+            string entityKeyProperty,
+            Action<TIn, TEntity> updator)
+        {
+            FilterWith(builder =>
+                builder.FilterOnCollection(requestEnumerableExpr, requestItemKeyProperty, entityKeyProperty));
+
+            var rParamExpr = Expression.Parameter(typeof(TRequest));
+            var reExpr = Expression.Invoke(requestEnumerableExpr, rParamExpr);
+
+            var eeParamExpr = Expression.Parameter(typeof(TEntity[]));
+            var eParamExpr = Expression.Parameter(typeof(TEntity));
+            var eKeyExpr = Expression.PropertyOrField(eParamExpr, entityKeyProperty);
+
+            var enumerableMethods = typeof(Enumerable).GetMethods();
+
+            // TODO: Move this to a builder?  Support the key comparer version of Join?
+            // TODO: Debugging features (active filters, etc)
+
+            var tupleType = typeof(Tuple<>).MakeGenericType(typeof(TIn), typeof(TEntity));
+            var tupleCtor = tupleType.GetConstructor(new[] { typeof(TIn), typeof(TEntity) });
+
+            var joinInfo = enumerableMethods
+                .Single(x => x.Name == "Join" && x.GetParameters().Length == 5)
+                .MakeGenericMethod(typeof(TEntity[]), typeof(IEnumerable<TIn>), eKeyExpr.Type, tupleType);
+                
+            var selectInfo = enumerableMethods
+                .Single(x => x.Name == "Select" &&
+                                x.GetParameters().Length == 2 &&
+                                x.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
+                .MakeGenericMethod(typeof(TIn), eKeyExpr.Type);
+                
+            var iParamExpr = Expression.Parameter(typeof(TIn));
+            var iKeyExpr = Expression.PropertyOrField(iParamExpr, requestItemKeyProperty);
+            var iExpr = Expression.Lambda(iKeyExpr, iParamExpr);
+
+            var conEntity = Expression.Parameter(typeof(TEntity));
+            var conIn = Expression.Parameter(typeof(TIn));
+            var constructTuple = Expression.New(tupleCtor, conIn, conEntity);
+            var outExpr = Expression.Lambda(constructTuple, conEntity, conIn);
+
+            var joinExpr = Expression.Call(joinInfo, eeParamExpr, reExpr, eKeyExpr, iExpr, outExpr);
+            var applyExpr = Expression.Call(null /* ForEach(x => Mapper.Map(x.Item1, x.Item2)) */);
+            var selectExpr = Expression.Call(null /* Select(x => x.Item2) */);
+            var toArrayExpr = Expression.Call(null /* ToArray() */);
+
+            var lambdaExpr = Expression.Lambda(toArrayExpr, eeParamExpr, rParamExpr);
+
+            _updateEntitiesFromRequest = lambdaExpr.Compile();
 
             return this;
         }
