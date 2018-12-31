@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,7 +25,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
                 new User { Name = "TestUser4" }
             };
 
-            Context.AddRange(_users);
+            Context.AddRange(_users.Cast<object>());
             Context.SaveChanges();
         }
 
@@ -37,11 +36,10 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             {
                 Items = new List<UserGetDto>
                 {
-                    // TODO: Should missing items throw error?
                     new UserGetDto { Id = _users[0].Id, Name = string.Concat(_users[0].Name, "_New") },
                     new UserGetDto { Id = _users[1].Id, Name = string.Concat(_users[1].Name, "_New") },
                     new UserGetDto { Id = 9999, Name = "Invalid Id" },
-                    new UserGetDto { Id = _users[3].Id, Name = _users[3].Name },
+                    new UserGetDto { Id = _users[3].Id, Name = _users[3].Name }
                 }
             };
 
@@ -58,30 +56,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.AreEqual(_users[3].Id, response.Data.Items[2].Id);
             Assert.AreEqual("TestUser4", response.Data.Items[2].Name);
         }
-
-        [Test]
-        public async Task Handle_DeleteAllByIdRequest_DeletesAllFilteredUsers()
-        {
-            var request = new DeleteAllByIdRequest<User, UserGetDto>
-            (
-                new List<int>
-                {
-                    _users[0].Id,
-                    _users[2].Id
-                }
-            );
-
-            var response = await Mediator.HandleAsync(request);
-
-            Assert.IsFalse(response.HasErrors);
-            Assert.IsNotNull(response.Data);
-            Assert.IsNotNull(response.Data.Items);
-            Assert.AreEqual(2, response.Data.Items.Count);
-            Assert.IsTrue(response.Data.Items[0].IsDeleted);
-            Assert.IsTrue(response.Data.Items[1].IsDeleted);
-            Assert.IsFalse(Context.Set<User>().First(x => x.Name == "TestUser2").IsDeleted);
-            Assert.IsFalse(Context.Set<User>().First(x => x.Name == "TestUser4").IsDeleted);
-        }
     }
     
     [DoNotValidate]
@@ -95,20 +69,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     {
         public UpdateAllUsersByIdProfile()
         {
-            ForEntity<User>()
-                .UpdateAllWith(x => x.Items, "Id", "Id", Mapper.Map);
-
-            //ForEntity<User>()
-            //    .FilterWith(b => b.FilterOnCollection(r => r.Items, x => x.Id, e => e.Id))
-            //    .UpdateAllWith((request, users) =>
-            //    {
-            //        return request.Items
-            //            .Join(users, x => x.Id, y => y.Id, (item, user) => new Tuple<UserGetDto, User>(item, user))
-            //            .Select(t => Mapper.Map(t.Item1, t.Item2))
-            //            .ToArray();
-            //    });
-
-            ConfigureErrors(config => config.FailedToFindInDeleteIsError = false);
+            ForEntity<User>().UpdateAllWith(request => request.Items, item => item.Id, user => user.Id);
         }
     }
 }

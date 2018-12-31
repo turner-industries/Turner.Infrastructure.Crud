@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
 namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
 {
+    [SuppressMessage("ReSharper", "UnusedTypeParameter")]
     public abstract class SortBuilderBase<TRequest, TEntity>
         where TEntity : class
     {
@@ -55,8 +57,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             where TValue : class
         {
             var requestParam = Expression.Parameter(typeof(TRequest));
-            var requestProp = Expression.PropertyOrField(requestParam, requestProperty)
-                ?? throw new ArgumentException(nameof(requestProperty));
+            var requestProp = Expression.PropertyOrField(requestParam, requestProperty);
 
             var readPropExpr = Expression.Lambda<Func<TRequest, TValue>>(requestProp, requestParam);
 
