@@ -38,10 +38,13 @@ namespace Turner.Infrastructure.Crud.Requests
 
         private async Task<TEntity[]> GetEntities(TRequest request)
         {
+            var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
             var entities = Context.EntitySet<TEntity>().AsQueryable();
-
-            foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
-                entities = filter.Filter(request, entities);
+            
+            entities = entities.Where(selector(request));
+            entities = RequestConfig
+                .GetFiltersFor<TEntity>()
+                .Aggregate(entities, (current, filter) => filter.Filter(request, current));
 
             return await Context.ToArrayAsync(entities).Configure();
         }

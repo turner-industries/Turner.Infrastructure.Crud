@@ -28,8 +28,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             Func<TIn, TEntity, TEntity> updator)
             where TEntity : class
         {
-            config.FilterWith(builder =>
-                builder.FilterOnCollection(requestEnumerableExpr, requestItemKeyExpr, entityKeyExpr));
+            config.SelectWith(builder => builder.Collection(requestEnumerableExpr, requestItemKeyExpr, entityKeyExpr));
 
             var rParamExpr = Expression.Parameter(typeof(TRequest));
             
@@ -97,8 +96,8 @@ namespace Turner.Infrastructure.Crud.Configuration
             Func<TIn, TEntity, TEntity> updator)
             where TEntity : class
         {
-            config.FilterWith(builder =>
-                builder.FilterOnCollection(requestEnumerableExpr, requestItemKeyProperty, entityKeyProperty));
+            config.SelectWith(builder =>
+                builder.Collection(requestEnumerableExpr, requestItemKeyProperty, entityKeyProperty));
             
             var rParamExpr = Expression.Parameter(typeof(TRequest));
             var eParamExpr = Expression.Parameter(typeof(TEntity));
