@@ -96,8 +96,17 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public UpdateAllUsersByIdProfile()
         {
             ForEntity<User>()
-                .FilterWith(builder => builder.FilterOnCollection(r => r.Items, "Id", "Id"))
-                .UpdateAllWith(r => r.Items, "Id", "Id", Mapper.Map);
+                .UpdateAllWith(x => x.Items, "Id", "Id", Mapper.Map);
+
+            //ForEntity<User>()
+            //    .FilterWith(b => b.FilterOnCollection(r => r.Items, x => x.Id, e => e.Id))
+            //    .UpdateAllWith((request, users) =>
+            //    {
+            //        return request.Items
+            //            .Join(users, x => x.Id, y => y.Id, (item, user) => new Tuple<UserGetDto, User>(item, user))
+            //            .Select(t => Mapper.Map(t.Item1, t.Item2))
+            //            .ToArray();
+            //    });
 
             ConfigureErrors(config => config.FailedToFindInDeleteIsError = false);
         }

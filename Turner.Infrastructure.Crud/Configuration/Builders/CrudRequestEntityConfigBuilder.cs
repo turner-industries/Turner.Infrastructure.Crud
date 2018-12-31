@@ -229,53 +229,71 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr,
             string requestItemKeyProperty,
             string entityKeyProperty,
-            Action<TIn, TEntity> updator)
+            Func<TIn, TEntity, TEntity> updator)
         {
             FilterWith(builder =>
                 builder.FilterOnCollection(requestEnumerableExpr, requestItemKeyProperty, entityKeyProperty));
 
-            var rParamExpr = Expression.Parameter(typeof(TRequest));
-            var reExpr = Expression.Invoke(requestEnumerableExpr, rParamExpr);
+            // TODO: Move this to a builder
+            // TODO: Default to Mapper.Map for updator
+            // TODO: Support Expression key properties
+            // TODO: Support the key comparer version of Join?
+            // TODO: Debugging features (active filters, etc)
 
-            var eeParamExpr = Expression.Parameter(typeof(TEntity[]));
+            var rParamExpr = Expression.Parameter(typeof(TRequest));
+            
             var eParamExpr = Expression.Parameter(typeof(TEntity));
             var eKeyExpr = Expression.PropertyOrField(eParamExpr, entityKeyProperty);
 
             var enumerableMethods = typeof(Enumerable).GetMethods();
 
-            // TODO: Move this to a builder?  Support the key comparer version of Join?
-            // TODO: Debugging features (active filters, etc)
-
-            var tupleType = typeof(Tuple<>).MakeGenericType(typeof(TIn), typeof(TEntity));
+            var tupleType = typeof(Tuple<,>).MakeGenericType(typeof(TIn), typeof(TEntity));
             var tupleCtor = tupleType.GetConstructor(new[] { typeof(TIn), typeof(TEntity) });
-
+            
+            var selectTupleParam = Expression.Parameter(tupleType);
+            var item1Param = Expression.PropertyOrField(selectTupleParam, "Item1");
+            var item2Param = Expression.PropertyOrField(selectTupleParam, "Item2");
+            var updateExpr = Expression.Call(updator.Method, item1Param, item2Param);
+            var selectLambdaExpr = Expression.Lambda(updateExpr, selectTupleParam);
+            
+            var esParamExpr = Expression.Parameter(typeof(TEntity[]));
+            
             var joinInfo = enumerableMethods
                 .Single(x => x.Name == "Join" && x.GetParameters().Length == 5)
-                .MakeGenericMethod(typeof(TEntity[]), typeof(IEnumerable<TIn>), eKeyExpr.Type, tupleType);
-                
+                .MakeGenericMethod(typeof(TEntity), typeof(TIn), eKeyExpr.Type, tupleType);
+            var joinEntityParam = Expression.Parameter(typeof(TEntity));
+            var joinEntityKeyExpr = Expression.Lambda(
+                Expression.PropertyOrField(joinEntityParam, entityKeyProperty),
+                joinEntityParam);
+            var joinInParam = Expression.Parameter(typeof(TIn));
+            var joinInKeyExpr = Expression.Lambda(
+                Expression.PropertyOrField(joinInParam, requestItemKeyProperty),
+                joinInParam);
+            var joinOutEntityParam = Expression.Parameter(typeof(TEntity));
+            var joinOutInParam = Expression.Parameter(typeof(TIn));
+            var joinOutExpr = Expression.Lambda(
+                Expression.New(tupleCtor, joinOutInParam, joinOutEntityParam), 
+                joinOutEntityParam, 
+                joinOutInParam);
+            var joinInEnumParam = Expression.Invoke(requestEnumerableExpr, rParamExpr);
+            var joinExpr = Expression.Call(joinInfo, esParamExpr, joinInEnumParam, joinEntityKeyExpr, joinInKeyExpr, joinOutExpr);
+
             var selectInfo = enumerableMethods
                 .Single(x => x.Name == "Select" &&
                                 x.GetParameters().Length == 2 &&
                                 x.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
-                .MakeGenericMethod(typeof(TIn), eKeyExpr.Type);
-                
-            var iParamExpr = Expression.Parameter(typeof(TIn));
-            var iKeyExpr = Expression.PropertyOrField(iParamExpr, requestItemKeyProperty);
-            var iExpr = Expression.Lambda(iKeyExpr, iParamExpr);
+                .MakeGenericMethod(tupleType, typeof(TEntity));
+            var selectExpr = Expression.Call(selectInfo,  joinExpr, selectLambdaExpr);
 
-            var conEntity = Expression.Parameter(typeof(TEntity));
-            var conIn = Expression.Parameter(typeof(TIn));
-            var constructTuple = Expression.New(tupleCtor, conIn, conEntity);
-            var outExpr = Expression.Lambda(constructTuple, conEntity, conIn);
+            var toArrayInfo = enumerableMethods
+                .Single(x => x.Name == "ToArray" && x.GetParameters().Length == 1)
+                .MakeGenericMethod(typeof(TEntity));
+            var toArrayExpr = Expression.Call(toArrayInfo, selectExpr);
 
-            var joinExpr = Expression.Call(joinInfo, eeParamExpr, reExpr, eKeyExpr, iExpr, outExpr);
-            var applyExpr = Expression.Call(null /* ForEach(x => Mapper.Map(x.Item1, x.Item2)) */);
-            var selectExpr = Expression.Call(null /* Select(x => x.Item2) */);
-            var toArrayExpr = Expression.Call(null /* ToArray() */);
+            var lambdaExpr = Expression.Lambda(toArrayExpr, rParamExpr, esParamExpr);
+            var lambda = (Func<TRequest, TEntity[], TEntity[]>) lambdaExpr.Compile();
 
-            var lambdaExpr = Expression.Lambda(toArrayExpr, eeParamExpr, rParamExpr);
-
-            _updateEntitiesFromRequest = lambdaExpr.Compile();
+            _updateEntitiesFromRequest = (request, entities) => Task.FromResult(lambda(request, entities));
 
             return this;
         }
