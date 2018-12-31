@@ -47,7 +47,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public CreateAllRequestProfile()
         {
             ForEntity<TEntity>()
-                .CreateWith(request => Mapper.Map<TEntity[]>(request.Items));
+                .CreateAllWith(request => Mapper.Map<TEntity[]>(request.Items));
         }
     }
 
@@ -67,7 +67,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public CreateAllRequestProfile()
         {
             ForEntity<TEntity>()
-                .CreateWith(request => Mapper.Map<TEntity[]>(request.Items));
+                .CreateAllWith(request => Mapper.Map<TEntity[]>(request.Items));
         }
     }
 }

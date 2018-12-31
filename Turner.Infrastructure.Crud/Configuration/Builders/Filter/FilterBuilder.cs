@@ -50,9 +50,9 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
             return builder;
         }
 
-        public BasicFilterBuilder<TRequest, TEntity> FilterOnCollection<TEntityKey>(
-            Expression<Func<TRequest, IEnumerable<TEntityKey>>> requestEnumerableExpr,
-            Expression<Func<TEntity, TEntityKey>> entityKeyExpr)
+        public BasicFilterBuilder<TRequest, TEntity> FilterOnCollection<TKey>(
+            Expression<Func<TRequest, IEnumerable<TKey>>> requestEnumerableExpr,
+            Expression<Func<TEntity, TKey>> entityKeyExpr)
         {
             var builder = new BasicFilterBuilder<TRequest, TEntity>(
                 (request, queryable) =>
@@ -65,7 +65,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
                     var containsInfo = typeof(Enumerable)
                         .GetMethods()
                         .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
-                        .MakeGenericMethod(typeof(TEntityKey));
+                        .MakeGenericMethod(typeof(TKey));
                     
                     var rContainsExpr = Expression.Call(containsInfo, rEnumerableExpr, eKeyExpr);
                     var whereClause = Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr);
@@ -78,8 +78,8 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
             return builder;
         }
 
-        public BasicFilterBuilder<TRequest, TEntity> FilterOnCollection<TEntityKey>(
-            Expression<Func<TRequest, IEnumerable<TEntityKey>>> requestEnumerableExpr,
+        public BasicFilterBuilder<TRequest, TEntity> FilterOnCollection<TKey>(
+            Expression<Func<TRequest, IEnumerable<TKey>>> requestEnumerableExpr,
             string entityKeyProperty)
         {
             var builder = new BasicFilterBuilder<TRequest, TEntity>(
@@ -93,9 +93,89 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
                     var containsInfo = typeof(Enumerable)
                         .GetMethods()
                         .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
-                        .MakeGenericMethod(typeof(TEntityKey));
+                        .MakeGenericMethod(typeof(TKey));
 
                     var rContainsExpr = Expression.Call(containsInfo, rEnumerableExpr, eKeyExpr);
+                    var whereClause = Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr);
+
+                    return queryable.Where(whereClause);
+                });
+
+            _builder = builder;
+
+            return builder;
+        }
+
+        public BasicFilterBuilder<TRequest, TEntity> FilterOnCollection<TIn, TKey>(
+            Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr,
+            Expression<Func<TIn, TKey>> requestItemKeyExpr,
+            Expression<Func<TEntity, TKey>> entityKeyExpr)
+        {
+            var builder = new BasicFilterBuilder<TRequest, TEntity>(
+                (request, queryable) =>
+                {
+                    var eParamExpr = Expression.Parameter(typeof(TEntity));
+                    var eKeyExpr = Expression.Invoke(entityKeyExpr, eParamExpr);
+                    var rParamExpr = Expression.Constant(request);
+                    var reExpr = Expression.Invoke(requestEnumerableExpr, rParamExpr);
+
+                    var enumerableMethods = typeof(Enumerable).GetMethods();
+
+                    var selectInfo = enumerableMethods
+                        .Single(x => x.Name == "Select" && 
+                                     x.GetParameters().Length == 2 &&
+                                     x.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
+                        .MakeGenericMethod(typeof(TIn), typeof(TKey));
+
+                    var containsInfo = enumerableMethods
+                        .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
+                        .MakeGenericMethod(typeof(TKey));
+
+                    var reReduceExpr = Expression.Call(selectInfo, reExpr, requestItemKeyExpr);
+                    var rContainsExpr = Expression.Call(containsInfo, reReduceExpr, eKeyExpr);
+
+                    var whereClause = Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr);
+
+                    return queryable.Where(whereClause);
+                });
+
+            _builder = builder;
+
+            return builder;
+        }
+
+        public BasicFilterBuilder<TRequest, TEntity> FilterOnCollection<TIn>(
+            Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr,
+            string requestItemKeyProperty,
+            string entityKeyProperty)
+        {
+            var builder = new BasicFilterBuilder<TRequest, TEntity>(
+                (request, queryable) =>
+                {
+                    var eParamExpr = Expression.Parameter(typeof(TEntity));
+                    var eKeyExpr = Expression.PropertyOrField(eParamExpr, entityKeyProperty);
+                    var rParamExpr = Expression.Constant(request);
+                    var reExpr = Expression.Invoke(requestEnumerableExpr, rParamExpr);
+
+                    var enumerableMethods = typeof(Enumerable).GetMethods();
+
+                    var selectInfo = enumerableMethods
+                        .Single(x => x.Name == "Select" &&
+                                     x.GetParameters().Length == 2 &&
+                                     x.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
+                        .MakeGenericMethod(typeof(TIn), eKeyExpr.Type);
+                    
+                    var containsInfo = enumerableMethods
+                        .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
+                        .MakeGenericMethod(eKeyExpr.Type);
+
+                    var iParamExpr = Expression.Parameter(typeof(TIn));
+                    var iKeyExpr = Expression.PropertyOrField(iParamExpr, requestItemKeyProperty);
+                    var iExpr = Expression.Lambda(iKeyExpr, iParamExpr);
+
+                    var reReduceExpr = Expression.Call(selectInfo, reExpr, iExpr);
+                    var rContainsExpr = Expression.Call(containsInfo, reReduceExpr, eKeyExpr);
+
                     var whereClause = Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr);
 
                     return queryable.Where(whereClause);

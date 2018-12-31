@@ -140,7 +140,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
                         request.Users[i].PreMessage += $"/User[{i}]";
                 })
                 .AfterCreating(user => user.PostMessage += $"/User[{user.Name}]")
-                .CreateWith(request => Mapper.Map<User[]>(request.Users));
+                .CreateAllWith(request => Mapper.Map<User[]>(request.Users));
         }
     }
 }
