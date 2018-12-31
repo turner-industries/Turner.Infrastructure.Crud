@@ -71,11 +71,9 @@ namespace Turner.Infrastructure.Crud.Configuration
             var toArrayExpr = Expression.Call(toArrayInfo, selectExpr);
 
             var lambdaExpr = Expression.Lambda(toArrayExpr, rParamExpr, esParamExpr);
-            var lambda = (Func<TRequest, TEntity[], TEntity[]>)lambdaExpr.Compile();
+            var lambda = (Func<TRequest, TEntity[], TEntity[]>) lambdaExpr.Compile();
 
-            config.UpdateAllWith(lambda);
-
-            return config;
+            return config.UpdateAllWith(lambda);
         }
 
         public static CrudRequestEntityConfigBuilder<TRequest, TEntity> UpdateAllWith<TRequest, TEntity, TIn>(
@@ -152,9 +150,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             var lambdaExpr = Expression.Lambda(toArrayExpr, rParamExpr, esParamExpr);
             var lambda = (Func<TRequest, TEntity[], TEntity[]>)lambdaExpr.Compile();
 
-            config.UpdateAllWith(lambda);
-
-            return config;
+            return config.UpdateAllWith(lambda);
         }
     }
 }
