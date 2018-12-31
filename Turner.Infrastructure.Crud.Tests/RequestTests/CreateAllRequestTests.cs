@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -140,7 +139,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
                         request.Users[i].PreMessage += $"/User[{i}]";
                 })
                 .AfterCreating(user => user.PostMessage += $"/User[{user.Name}]")
-                .CreateAllWith(request => Mapper.Map<User[]>(request.Users));
+                .CreateAllWith(request => request.Users);
         }
     }
 }
