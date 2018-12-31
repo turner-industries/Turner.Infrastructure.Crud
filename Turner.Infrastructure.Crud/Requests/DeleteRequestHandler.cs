@@ -25,13 +25,15 @@ namespace Turner.Infrastructure.Crud.Requests
             return Context.SingleOrDefaultAsync(set, selector(request));
         }
 
-        protected async Task DeleteEntity(TRequest request, TEntity entity)
+        protected async Task<TEntity> DeleteEntity(TRequest request, TEntity entity)
         {
             await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Delete, request).Configure();
-            await Context.EntitySet<TEntity>().DeleteAsync(entity).Configure();
+            entity = await Context.EntitySet<TEntity>().DeleteAsync(entity).Configure();
             await RequestConfig.RunPostActionsFor(ActionType.Delete, request, entity).Configure();
 
             await Context.ApplyChangesAsync().Configure();
+
+            return entity;
         }
     }
 
@@ -104,7 +106,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
             if (entity != null)
             {
-                await DeleteEntity(request, entity).Configure();
+                entity = await DeleteEntity(request, entity).Configure();
                 result = Mapper.Map<TOut>(entity);
             }
 

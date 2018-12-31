@@ -31,6 +31,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         private ISorter _sortEntityFromRequest;
         private ISelector _selectEntityFromRequest;
         private Func<TRequest, Task<TEntity>> _createEntityFromRequest;
+        private Func<TRequest, Task<TEntity[]>> _createEntitiesFromRequest;
         private Func<TRequest, TEntity, Task> _updateEntityFromRequest;
         private Func<ICrudErrorHandler> _errorHandlerFactory;
 
@@ -169,6 +170,22 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> CreateWith(
+            Func<TRequest, Task<TEntity[]>> creator)
+        {
+            _createEntitiesFromRequest = creator;
+
+            return this;
+        }
+
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> CreateWith(
+            Func<TRequest, TEntity[]> creator)
+        {
+            _createEntitiesFromRequest = request => Task.FromResult(creator(request));
+
+            return this;
+        }
+
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> UpdateWith(
             Func<TRequest, TEntity, Task> updator)
         {
@@ -204,6 +221,9 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
 
             if (_createEntityFromRequest != null)
                 config.SetEntityCreator(request => _createEntityFromRequest((TRequest)request));
+
+            if (_createEntitiesFromRequest != null)
+                config.SetEntitiesCreator(request => _createEntitiesFromRequest((TRequest)request));
 
             if (_updateEntityFromRequest != null)
                 config.SetEntityUpdator<TEntity>((request, entity) => _updateEntityFromRequest((TRequest)request, entity));

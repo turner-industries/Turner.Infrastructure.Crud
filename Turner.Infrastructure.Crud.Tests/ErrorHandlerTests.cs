@@ -142,7 +142,7 @@ namespace Turner.Infrastructure.Crud.Tests
         public UseDefaultErrorHandlerProfile()
         {
             ForEntity<NonEntity>()
-                .SelectWith(b => b.Build("Id"));
+                .SelectWith(b => b.Single("Id"));
         }
     }
 
@@ -162,7 +162,7 @@ namespace Turner.Infrastructure.Crud.Tests
                 config.ErrorHandlerFactory = () => new TestErrorHandler());
 
             ForEntity<NonEntity>()
-                .SelectWith(b => b.Build("Id"));
+                .SelectWith(b => b.Single("Id"));
         }
     }
 
@@ -179,7 +179,7 @@ namespace Turner.Infrastructure.Crud.Tests
         public UseCustomErrorHandlerForEntityProfile()
         {
             ForEntity<NonEntity>()
-                .SelectWith(b => b.Build("Id"))
+                .SelectWith(b => b.Single("Id"))
                 .UseErrorHandlerFactory(() => new TestErrorHandler());
         }
     }

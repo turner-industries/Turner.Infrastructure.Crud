@@ -78,7 +78,7 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         public DefaultGetRequestProfile()
         {
             ForEntity<IEntity>()
-                .SelectWith(builder => builder.Build(r => r.Key, e => e.Id));
+                .SelectWith(builder => builder.Single(r => r.Key, e => e.Id));
         }
     }
 
@@ -89,7 +89,7 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         public DefaultUpdateRequestProfile()
         {
             ForEntity<IEntity>()
-                .SelectWith(builder => builder.Build(r => r.Key, e => e.Id));
+                .SelectWith(builder => builder.Single(r => r.Key, e => e.Id));
         }
     }
 
@@ -100,7 +100,7 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         public DefaultSaveRequestProfile()
         {
             ForEntity<IEntity>()
-                .SelectWith(builder => builder.Build(r => r.Key, e => e.Id));
+                .SelectWith(builder => builder.Single(r => r.Key, e => e.Id));
         }
     }
 }

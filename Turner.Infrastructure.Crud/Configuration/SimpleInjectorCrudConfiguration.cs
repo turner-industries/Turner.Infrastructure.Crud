@@ -38,6 +38,11 @@ namespace Turner.Infrastructure.Crud.Configuration
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(CreateRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(CreateRequestHandler<,,>), IfNotHandled);
 
+            container.Register(typeof(CreateAllRequestHandler<,>), configAssemblies);
+            container.Register(typeof(CreateAllRequestHandler<,,>), configAssemblies);
+            container.RegisterConditional(typeof(IRequestHandler<>), typeof(CreateAllRequestHandler<,>), IfNotHandled);
+            container.RegisterConditional(typeof(IRequestHandler<,>), typeof(CreateAllRequestHandler<,,>), IfNotHandled);
+
             container.Register(typeof(GetRequestHandler<,,>), configAssemblies);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(GetRequestHandler<,,>), IfNotHandled);
 
@@ -62,6 +67,11 @@ namespace Turner.Infrastructure.Crud.Configuration
             container.Register(typeof(DeleteRequestHandler<,,>), configAssemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(DeleteRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(DeleteRequestHandler<,,>), IfNotHandled);
+
+            container.Register(typeof(DeleteAllRequestHandler<,>), configAssemblies);
+            container.Register(typeof(DeleteAllRequestHandler<,,>), configAssemblies);
+            container.RegisterConditional(typeof(IRequestHandler<>), typeof(DeleteAllRequestHandler<,>), IfNotHandled);
+            container.RegisterConditional(typeof(IRequestHandler<,>), typeof(DeleteAllRequestHandler<,,>), IfNotHandled);
 
             container.Register(typeof(SaveRequestHandler<,>), configAssemblies);
             container.Register(typeof(SaveRequestHandler<,,>), configAssemblies);

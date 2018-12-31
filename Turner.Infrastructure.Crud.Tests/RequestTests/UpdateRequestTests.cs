@@ -186,7 +186,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public UpdateUserWithoutResponseRequestProfile()
         {
             ForEntity<User>()
-                .SelectWith(builder => builder.Build(request => request.Data.Id, entity => entity.Id));
+                .SelectWith(builder => builder.Single(request => request.Data.Id, entity => entity.Id));
         }
     }
 
@@ -196,7 +196,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public UpdateUserWithResponseRequestProfile()
         {
             ForEntity<User>()
-                .SelectWith(builder => builder.Build(request => request.Data.Id, entity => entity.Id));
+                .SelectWith(builder => builder.Single(request => request.Data.Id, entity => entity.Id));
         }
     }
 
@@ -205,7 +205,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public UpdateUserByIdProfile()
         {
             ForEntity<User>()
-                .SelectWith(builder => builder.Build(request => entity => entity.Id == request.Id))
+                .SelectWith(builder => builder.Single(request => entity => entity.Id == request.Id))
                 .BeforeUpdating(request => request.PreMessage += "/Update")
                 .AfterUpdating(entity => entity.PostMessage += "/Update");
 
@@ -218,7 +218,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public UpdateUserByNameProfile()
         {
             ForEntity<User>()
-                .SelectWith(builder => builder.Build(
+                .SelectWith(builder => builder.Single(
                     e => e.Name, 
                     r => r.Name,
                     (e, r) => string.Equals(e, r, StringComparison.InvariantCultureIgnoreCase)))
