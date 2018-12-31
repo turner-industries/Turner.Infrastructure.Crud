@@ -63,7 +63,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public UpdateAllByIdRequestProfile()
         {
             ForEntity<TEntity>()
-                .SelectWith(builder => builder.Collection(request => request.Items, "Id", "Id"));
+                .UpdateAllWith(request => request.Items, "Id", "Id");
         }
     }
 
@@ -75,13 +75,13 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class UpdateAllByGuidRequestProfile<TEntity, TIn, TOut>
-        : CrudRequestProfile<UpdateAllByIdRequest<TEntity, TIn, TOut>>
+        : CrudRequestProfile<UpdateAllByGuidRequest<TEntity, TIn, TOut>>
         where TEntity : class
     {
         public UpdateAllByGuidRequestProfile()
         {
             ForEntity<TEntity>()
-                .SelectWith(builder => builder.Collection(request => request.Items, "Guid", "Guid"));
+                .UpdateAllWith(request => request.Items, "Guid", "Guid");
         }
     }
 }
