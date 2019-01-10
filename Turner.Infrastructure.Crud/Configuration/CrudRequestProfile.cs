@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration.Builders;
 using Turner.Infrastructure.Crud.Exceptions;
+using Turner.Infrastructure.Crud.Requests;
 
 namespace Turner.Infrastructure.Crud.Configuration
 {
@@ -17,10 +19,10 @@ namespace Turner.Infrastructure.Crud.Configuration
         internal abstract void Apply<TRequest>(CrudRequestConfig<TRequest> config, ref List<Type> inherited);
     }
     
-    public abstract class CrudRequestProfile<TRequest> 
+    public abstract class CrudRequestProfileCommon<TRequest> 
         : CrudRequestProfile
     {
-        private readonly Dictionary<Type, ICrudRequestEntityConfigBuilder> _requestEntityBuilders
+        internal readonly Dictionary<Type, ICrudRequestEntityConfigBuilder> _requestEntityBuilders
             = new Dictionary<Type, ICrudRequestEntityConfigBuilder>();
 
         private readonly List<CrudRequestProfile> _inheritProfiles 
@@ -34,16 +36,16 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         private Action<CrudOptionsConfig> _optionsConfig;
         private Action<CrudRequestErrorConfig> _errorConfig;
-
-        protected CrudRequestProfile()
+        
+        protected CrudRequestProfileCommon()
         {
-            foreach (var type in (ActionType[]) Enum.GetValues(typeof(ActionType)))
+            foreach (var type in (ActionType[])Enum.GetValues(typeof(ActionType)))
             {
                 _preActions[type] = new ActionList();
                 _postActions[type] = new ActionList();
             }
         }
-
+        
         public override Type RequestType => typeof(TRequest);
 
         internal override void Inherit(IEnumerable<CrudRequestProfile> profiles)
@@ -104,16 +106,7 @@ namespace Turner.Infrastructure.Crud.Configuration
         {
             _errorConfig = config;
         }
-
-        protected CrudRequestEntityConfigBuilder<TRequest, TEntity> ForEntity<TEntity>()
-            where TEntity : class
-        {
-            var builder = new CrudRequestEntityConfigBuilder<TRequest, TEntity>();
-            _requestEntityBuilders[typeof(TEntity)] = builder;
-
-            return builder;
-        }
-
+        
         protected void BeforeCreating(Func<TRequest, Task> action)
             => AddPreAction(ActionType.Create, action);
 
@@ -218,10 +211,50 @@ namespace Turner.Infrastructure.Crud.Configuration
                 });
         }
     }
-
-    public class DefaultCrudRequestProfile<TRequest>
-        : CrudRequestProfile<TRequest>
+    
+    public abstract class CrudRequestProfile<TRequest>
+        : CrudRequestProfileCommon<TRequest>
     {
+        public CrudRequestProfile()
+        {
+            if (typeof(IBulkRequest).IsAssignableFrom(typeof(TRequest)))
+            {
+                var message =
+                    $"Unable to build configuration for request '{typeof(TRequest)}'." +
+                    $"This request type should define a 'CrudBulkRequestProfile'.";
 
+                throw new BadCrudConfigurationException(message);
+            }
+        }
+
+        protected CrudRequestEntityConfigBuilder<TRequest, TEntity> ForEntity<TEntity>()
+            where TEntity : class
+        {
+            var builder = new CrudRequestEntityConfigBuilder<TRequest, TEntity>();
+            _requestEntityBuilders[typeof(TEntity)] = builder;
+
+            return builder;
+        }
+    }
+
+    public abstract class CrudBulkRequestProfile<TRequest, TItem>
+        : CrudRequestProfileCommon<TRequest>
+    {
+        protected CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> ForEntity<TEntity>()
+            where TEntity : class
+        {
+            var builder = new CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>();
+            _requestEntityBuilders[typeof(TEntity)] = builder;
+
+            return builder;
+        }
+    }
+
+    public class DefaultCrudRequestProfile<TRequest> : CrudRequestProfile<TRequest>
+    {
+    }
+
+    public class DefaultBulkCrudRequestProfile<TRequest> : CrudBulkRequestProfile<TRequest, TRequest>
+    {
     }
 }

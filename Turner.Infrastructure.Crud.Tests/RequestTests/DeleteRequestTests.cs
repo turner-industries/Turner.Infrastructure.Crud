@@ -119,7 +119,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public string Name { get; set; }
     }
     
-    public class DeleteUserByIdProfile : CrudRequestProfile<DeleteUserByIdRequest>
+    public class DeleteUserByIdProfile 
+        : CrudRequestProfile<DeleteUserByIdRequest>
     {
         public DeleteUserByIdProfile()
         {
@@ -131,7 +132,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         }
     }
 
-    public class DeleteUserByNameProfile : CrudRequestProfile<DeleteUserByNameRequest>
+    public class DeleteUserByNameProfile 
+        : CrudRequestProfile<DeleteUserByNameRequest>
     {
         public DeleteUserByNameProfile()
         {

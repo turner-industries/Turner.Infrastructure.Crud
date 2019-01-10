@@ -23,6 +23,16 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public TKey Key { get; }
     }
+
+    public class GetRequestProfile<TEntity, TKey, TOut>
+        : CrudRequestProfile<GetRequest<TEntity, TKey, TOut>>
+        where TEntity : class
+    {
+        public GetRequestProfile()
+        {
+            ForEntity<TEntity>().WithRequestKey(request => request.Key);
+        }
+    }
     
     [DoNotValidate]
     public class GetByIdRequest<TEntity, TOut> : GetRequest<TEntity, int, TOut>
@@ -37,8 +47,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public GetByIdRequestProfile()
         {
-            ForEntity<TEntity>()
-                .SelectWith(builder => builder.Single(request => request.Key, "Id"));
+            ForEntity<TEntity>().WithEntityKey("Id");
         }
     }
 
@@ -55,8 +64,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public GetByGuidRequestProfile()
         {
-            ForEntity<TEntity>()
-                .SelectWith(builder => builder.Single(request => request.Key, "Guid"));
+            ForEntity<TEntity>().WithEntityKey("Guid");
         }
     }
 }

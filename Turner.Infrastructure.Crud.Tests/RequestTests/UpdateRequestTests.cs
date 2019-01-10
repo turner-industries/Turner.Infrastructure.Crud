@@ -186,7 +186,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public UpdateUserWithoutResponseRequestProfile()
         {
             ForEntity<User>()
-                .SelectWith(builder => builder.Single(request => request.Data.Id, entity => entity.Id));
+                .WithKeys(r => r.Data.Id, e => e.Id);
         }
     }
 
@@ -200,7 +200,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         }
     }
 
-    public class UpdateUserByIdProfile : CrudRequestProfile<UpdateUserByIdRequest>
+    public class UpdateUserByIdProfile 
+        : CrudRequestProfile<UpdateUserByIdRequest>
     {
         public UpdateUserByIdProfile()
         {
@@ -213,16 +214,17 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         }
     }
 
-    public class UpdateUserByNameProfile : CrudRequestProfile<UpdateUserByNameRequest>
+    public class UpdateUserByNameProfile 
+        : CrudRequestProfile<UpdateUserByNameRequest>
     {
         public UpdateUserByNameProfile()
         {
             ForEntity<User>()
-                .SelectWith(builder => builder.Single(
+                .SelectWith((Configuration.Builders.Select.SelectorBuilder<UpdateUserByNameRequest, User> builder) => builder.Single(
                     e => e.Name, 
                     r => r.Name,
                     (e, r) => string.Equals(e, r, StringComparison.InvariantCultureIgnoreCase)))
-                .UpdateWith((request, entity) => 
+                .UpdateWith((request, entity) =>
                     Task.FromResult(Mapper.Map(request.Data, entity)));
 
             ConfigureErrors(config => config.FailedToFindInUpdateIsError = true);

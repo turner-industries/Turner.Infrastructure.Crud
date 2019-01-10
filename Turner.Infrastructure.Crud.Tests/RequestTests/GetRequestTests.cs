@@ -115,6 +115,20 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.AreEqual(_user.PreMessage, response.Data.PreMessage);
             Assert.AreEqual(_user.PostMessage, response.Data.PostMessage);
         }
+
+        [Test]
+        public async Task Handle_GetUserByPrimaryKeyRequest_GetsUser()
+        {
+            var request = new GetUserByKeyRequest { Id = _user.Id, Name = _user.Name };
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(_user.Id, response.Data.Id);
+            Assert.AreEqual(_user.Name, response.Data.Name);
+            Assert.AreEqual(_user.PreMessage, response.Data.PreMessage);
+            Assert.AreEqual(_user.PostMessage, response.Data.PostMessage);
+        }
     }
 
     [DoNotValidate]
@@ -129,7 +143,16 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public string Name { get; set; }
     }
 
-    public class GetUserByIdProfile : CrudRequestProfile<GetUserByIdRequest>
+    [DoNotValidate]
+    public class GetUserByKeyRequest : IGetRequest<User, UserGetDto>
+    {
+        public int Id { get; set; }
+
+        public string Name { get; set; }
+    }
+
+    public class GetUserByIdProfile 
+        : CrudRequestProfile<GetUserByIdRequest>
     {
         public GetUserByIdProfile()
         {
@@ -139,7 +162,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         }
     }
 
-    public class GetUserByNameProfile : CrudRequestProfile<GetUserByNameRequest>
+    public class GetUserByNameProfile 
+        : CrudRequestProfile<GetUserByNameRequest>
     {
         public GetUserByNameProfile()
         {
@@ -150,6 +174,15 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
                         string.Equals(entity.Name, request.Name, StringComparison.InvariantCultureIgnoreCase)));
 
             ConfigureErrors(config => config.FailedToFindInGetIsError = false);
+        }
+    }
+
+    public class GetUserByKeyProfile 
+        : CrudRequestProfile<GetUserByKeyRequest>
+    {
+        public GetUserByKeyProfile()
+        {
+            ForEntity<User>().WithKeys("Id");
         }
     }
 }

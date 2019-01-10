@@ -19,7 +19,9 @@ namespace Turner.Infrastructure.Crud.Configuration
         {
             _profileAssemblies = profileAssemblies;
             
-            BuildRequestConfigurations();
+            // TODO: Maybe it should be optional whether or not to pre-build profiles
+            // since it will cause all tests to fail if there's a profile error
+            //BuildRequestConfigurations();
         }
 
         public ICrudRequestConfig GetRequestConfigFor<TRequest>() 
@@ -51,13 +53,15 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             var profiles = new List<CrudRequestProfile>();
 
+            // TODO: Evaluate the request type to determine regular vs bulk profile
             var allProfiles = _profileAssemblies
                 .SelectMany(x => x.GetExportedTypes())
                 .Where(x => 
                     !x.IsAbstract &&
                     x.BaseType != null &&
                     x.BaseType.IsGenericType &&
-                    x.BaseType.GetGenericTypeDefinition() == typeof(CrudRequestProfile<>))
+                    (x.BaseType.GetGenericTypeDefinition() == typeof(CrudRequestProfile<>) ||
+                     x.BaseType.GetGenericTypeDefinition() == typeof(CrudBulkRequestProfile<,>)))
                 .ToArray();
             
             profiles.AddRange(allProfiles
@@ -75,13 +79,16 @@ namespace Turner.Infrastructure.Crud.Configuration
                     .Select(x => x.MakeGenericType(tRequest.GenericTypeArguments));
 
                 profiles.AddRange(tProfiles
-                    .Select(x => (CrudRequestProfile) Activator.CreateInstance(x)));
+                    .Select(x => (CrudRequestProfile)Activator.CreateInstance(x)));
             }
 
             if (!profiles.Any())
             {
-                profiles.Add((CrudRequestProfile) Activator.CreateInstance(
-                    typeof(DefaultCrudRequestProfile<>).MakeGenericType(tRequest)));
+                var tProfile = typeof(IBulkRequest).IsAssignableFrom(tRequest)
+                    ? typeof(DefaultBulkCrudRequestProfile<>).MakeGenericType(tRequest)
+                    : typeof(DefaultCrudRequestProfile<>).MakeGenericType(tRequest);
+
+                profiles.Add((CrudRequestProfile)Activator.CreateInstance(tProfile));
             }
             
             profiles.AddRange(new[] { tRequest.BaseType }

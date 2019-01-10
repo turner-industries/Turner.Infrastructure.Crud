@@ -32,15 +32,17 @@ namespace Turner.Infrastructure.Crud.Requests
         {
             await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Save, request).Configure();
 
+            var item = RequestConfig.GetRequestDataFor<TEntity>().DataSource(request);
+
             if (entity == null)
             {
-                entity = await CreateEntity(request).Configure();
+                entity = await CreateEntity(request, item).Configure();
                 await RequestConfig.RunPostActionsFor(ActionType.Save, request, entity).Configure();
                 await Context.ApplyChangesAsync().Configure();
             }
             else
             {
-                entity = await UpdateEntity(request, entity).Configure();
+                entity = await UpdateEntity(request, item, entity).Configure();
                 await RequestConfig.RunPostActionsFor(ActionType.Save, request, entity).Configure();
                 await Context.ApplyChangesAsync().Configure();
             }
@@ -48,7 +50,7 @@ namespace Turner.Infrastructure.Crud.Requests
             return entity;
         }
 
-        private async Task<TEntity> CreateEntity(TRequest request)
+        private async Task<TEntity> CreateEntity(TRequest request, object data)
         {
             if (!Options.SuppressCreateActionsInSave)
             {
@@ -57,7 +59,8 @@ namespace Turner.Infrastructure.Crud.Requests
                     .Configure();
             }
 
-            var entity = await RequestConfig.CreateEntity<TEntity>(request).Configure();
+            var creator = RequestConfig.GetCreatorFor<TEntity>();
+            var entity = await creator(data).Configure();
             entity = await Context.EntitySet<TEntity>().CreateAsync(entity).Configure();
 
             if (!Options.SuppressCreateActionsInSave)
@@ -66,7 +69,7 @@ namespace Turner.Infrastructure.Crud.Requests
             return entity;
         }
 
-        private async Task<TEntity> UpdateEntity(TRequest request, TEntity entity)
+        private async Task<TEntity> UpdateEntity(TRequest request, object data, TEntity entity)
         {
             if (!Options.SuppressUpdateActionsInSave)
             {
@@ -75,7 +78,8 @@ namespace Turner.Infrastructure.Crud.Requests
                     .Configure();
             }
 
-            await RequestConfig.UpdateEntity(request, entity).Configure();
+            var updator = RequestConfig.GetUpdatorFor<TEntity>();
+            await updator(data, entity).Configure();
             entity = await Context.EntitySet<TEntity>().UpdateAsync(entity).Configure();
 
             if (!Options.SuppressUpdateActionsInSave)

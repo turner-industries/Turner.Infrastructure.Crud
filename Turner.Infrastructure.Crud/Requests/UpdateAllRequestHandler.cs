@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.Exceptions;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -24,9 +25,22 @@ namespace Turner.Infrastructure.Crud.Requests
         {
             await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Update, request).Configure();
 
-            var entities = await GetEntities(request);
-            entities = await RequestConfig.UpdateEntities(request, entities).Configure();
-            entities = await Context.EntitySet<TEntity>().UpdateAsync(entities).Configure();
+            var data = RequestConfig.GetRequestDataFor<TEntity>();
+
+            var entities = await GetEntities(request).Configure();
+            var items = (IEnumerable<object>)data.DataSource(request);
+            var updator = RequestConfig.GetUpdatorFor<TEntity>();
+
+            var updatedEntities = new List<TEntity>(entities.Length);
+            foreach (var item in RequestConfig.Join(items, entities))
+            {
+                if (item.Item1 == null || item.Item2 == null)
+                    continue;
+
+                updatedEntities.Add(await updator(item.Item1, item.Item2).Configure());
+            }
+
+            entities = await Context.EntitySet<TEntity>().UpdateAsync(updatedEntities).Configure();
 
             foreach (var entity in entities)
                 await RequestConfig.RunPostActionsFor(ActionType.Update, request, entity).Configure();

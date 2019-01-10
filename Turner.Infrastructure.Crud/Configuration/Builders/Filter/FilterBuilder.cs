@@ -50,7 +50,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
             return builder;
         }
 
-        public BasicFilterBuilder<TRequest, TEntity> FilterOnCollection<TKey>(
+        public BasicFilterBuilder<TRequest, TEntity> FilterOn<TKey>(
             Expression<Func<TRequest, IEnumerable<TKey>>> requestEnumerableExpr,
             Expression<Func<TEntity, TKey>> entityKeyExpr)
         {
@@ -78,7 +78,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
             return builder;
         }
 
-        public BasicFilterBuilder<TRequest, TEntity> FilterOnCollection<TKey>(
+        public BasicFilterBuilder<TRequest, TEntity> FilterOn<TKey>(
             Expression<Func<TRequest, IEnumerable<TKey>>> requestEnumerableExpr,
             string entityKeyProperty)
         {
@@ -106,7 +106,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
             return builder;
         }
 
-        public BasicFilterBuilder<TRequest, TEntity> FilterOnCollection<TIn, TKey>(
+        public BasicFilterBuilder<TRequest, TEntity> FilterOn<TIn, TKey>(
             Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr,
             Expression<Func<TIn, TKey>> requestItemKeyExpr,
             Expression<Func<TEntity, TKey>> entityKeyExpr)
@@ -144,7 +144,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
             return builder;
         }
 
-        public BasicFilterBuilder<TRequest, TEntity> FilterOnCollection<TIn>(
+        public BasicFilterBuilder<TRequest, TEntity> FilterOn<TIn>(
             Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr,
             string requestItemKeyProperty,
             string entityKeyProperty)
@@ -186,7 +186,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
             return builder;
         }
 
-        public CustomFilterBuilder<TRequest, TEntity> Custom(
+        public CustomFilterBuilder<TRequest, TEntity> FilterWith(
             Func<TRequest, IQueryable<TEntity>, IQueryable<TEntity>> customFilterFunc)
         {
             var builder = new CustomFilterBuilder<TRequest, TEntity>(customFilterFunc);

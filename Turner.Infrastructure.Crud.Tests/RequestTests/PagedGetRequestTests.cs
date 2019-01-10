@@ -31,7 +31,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             
             await Context.SaveChangesAsync();
 
-            var request = new PagedGetUser
+            var request = new PagedGetUserRequest
             {
                 Name = "CUser",
                 PageSize = 2
@@ -50,17 +50,40 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.AreEqual("DUser", response.Data.Items[0].Name);
             Assert.AreEqual("CUser", response.Data.Items[1].Name);
         }
+
+        [Test]
+        public async Task Handle_DefaultPagedGetRequest_ReturnsItemPageAndPageInfo()
+        {
+            await SeedEntities();
+
+            await Context.SaveChangesAsync();
+
+            var request = new PagedGetByIdRequest<User, UserGetDto>(4, 2);
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.IsNotNull(response.Data.Items);
+            Assert.AreEqual(2, response.Data.Items.Count);
+            Assert.AreEqual(6, response.Data.TotalItemCount);
+            Assert.AreEqual(2, response.Data.PageNumber);
+            Assert.AreEqual(2, response.Data.PageSize);
+            Assert.AreEqual(3, response.Data.PageCount);
+            Assert.AreEqual("FUser", response.Data.Items[0].Name);
+            Assert.AreEqual("AUser", response.Data.Items[1].Name);
+        }
     }
 
     [DoNotValidate]
-    public class PagedGetUser : IPagedGetRequest<User, UserGetDto>
+    public class PagedGetUserRequest : IPagedGetRequest<User, UserGetDto>
     {
         public string Name { get; set; }
 
         public int PageSize { get; set; }
     }
 
-    public class PagedGetUserProfile : CrudRequestProfile<IPagedGetRequest>
+    public class PagedGetUserProfile 
+        : CrudRequestProfile<PagedGetUserRequest>
     {
         public PagedGetUserProfile()
         {

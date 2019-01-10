@@ -39,7 +39,45 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public List<TIn> Items { get; }
     }
-    
+
+    [DoNotValidate]
+    public class UpdateAllByIdRequest<TEntity, TIn> : UpdateAllRequest<TEntity, TIn>
+        where TEntity : class
+    {
+        public UpdateAllByIdRequest(List<TIn> items) : base(items) { }
+    }
+
+    public class UpdateAllByIdRequestProfile<TEntity, TIn>
+        : CrudBulkRequestProfile<UpdateAllByIdRequest<TEntity, TIn>, TIn>
+        where TEntity : class
+    {
+        public UpdateAllByIdRequestProfile()
+        {
+            ForEntity<TEntity>()
+                .UseData(request => request.Items)
+                .WithKeys("Id");
+        }
+    }
+
+    [DoNotValidate]
+    public class UpdateAllByGuidRequest<TEntity, TIn> : UpdateAllRequest<TEntity, TIn>
+        where TEntity : class
+    {
+        public UpdateAllByGuidRequest(List<TIn> items) : base(items) { }
+    }
+
+    public class UpdateAllByGuidRequestProfile<TEntity, TIn>
+        : CrudBulkRequestProfile<UpdateAllByGuidRequest<TEntity, TIn>, TIn>
+        where TEntity : class
+    {
+        public UpdateAllByGuidRequestProfile()
+        {
+            ForEntity<TEntity>()
+                .UseData(request => request.Items)
+                .WithKeys("Guid");
+        }
+    }
+
     [DoNotValidate]
     public class UpdateAllRequest<TEntity, TIn, TOut> : IUpdateAllRequest<TEntity, TOut>
         where TEntity : class
@@ -57,13 +95,14 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class UpdateAllByIdRequestProfile<TEntity, TIn, TOut>
-        : CrudRequestProfile<UpdateAllByIdRequest<TEntity, TIn, TOut>>
+        : CrudBulkRequestProfile<UpdateAllByIdRequest<TEntity, TIn, TOut>, TIn>
         where TEntity : class
     {
         public UpdateAllByIdRequestProfile()
         {
             ForEntity<TEntity>()
-                .UpdateAllWith(request => request.Items, "Id", "Id");
+                .UseData(request => request.Items)
+                .WithKeys("Id");
         }
     }
 
@@ -75,13 +114,14 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class UpdateAllByGuidRequestProfile<TEntity, TIn, TOut>
-        : CrudRequestProfile<UpdateAllByGuidRequest<TEntity, TIn, TOut>>
+        : CrudBulkRequestProfile<UpdateAllByGuidRequest<TEntity, TIn, TOut>, TIn>
         where TEntity : class
     {
         public UpdateAllByGuidRequestProfile()
         {
             ForEntity<TEntity>()
-                .UpdateAllWith(request => request.Items, "Guid", "Guid");
+                .UseData(request => request.Items)
+                .WithKeys("Guid");
         }
     }
 }

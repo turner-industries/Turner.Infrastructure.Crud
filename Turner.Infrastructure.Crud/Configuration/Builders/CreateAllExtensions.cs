@@ -10,44 +10,44 @@ namespace Turner.Infrastructure.Crud.Configuration
 {
     public static class CreateAllExtensions
     {
-        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> CreateAllWith<TRequest, TEntity, TIn>(
-                this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
-                Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr,
-                Func<TIn, TEntity> creator)
-                where TEntity : class
-        {
-            var rParam = Expression.Parameter(typeof(TRequest));
-            var itemsParam = Expression.Invoke(requestEnumerableExpr, rParam);
+        //public static CrudRequestEntityConfigBuilder<TRequest, TEntity> CreateAllWith<TRequest, TEntity, TIn>(
+        //        this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
+        //        Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr,
+        //        Func<TIn, TEntity> creator)
+        //        where TEntity : class
+        //{
+        //    var rParam = Expression.Parameter(typeof(TRequest));
+        //    var itemsParam = Expression.Invoke(requestEnumerableExpr, rParam);
 
-            var enumerableMethods = typeof(Enumerable).GetMethods();
+        //    var enumerableMethods = typeof(Enumerable).GetMethods();
 
-            var selectInfo = enumerableMethods
-                .Single(x => x.Name == "Select" &&
-                                x.GetParameters().Length == 2 &&
-                                x.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
-                .MakeGenericMethod(typeof(TIn), typeof(TEntity));
-            var selectParam = Expression.Parameter(typeof(TIn));
-            var selectLambda = Expression.Lambda<Func<TIn, TEntity>>(
-                Expression.Call(creator.Method, selectParam), selectParam);
-            var selectExpr = Expression.Call(selectInfo, itemsParam, selectLambda);
+        //    var selectInfo = enumerableMethods
+        //        .Single(x => x.Name == "Select" &&
+        //                        x.GetParameters().Length == 2 &&
+        //                        x.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
+        //        .MakeGenericMethod(typeof(TIn), typeof(TEntity));
+        //    var selectParam = Expression.Parameter(typeof(TIn));
+        //    var selectLambda = Expression.Lambda<Func<TIn, TEntity>>(
+        //        Expression.Call(creator.Method, selectParam), selectParam);
+        //    var selectExpr = Expression.Call(selectInfo, itemsParam, selectLambda);
 
-            var toArrayInfo = enumerableMethods
-                .Single(x => x.Name == "ToArray" && x.GetParameters().Length == 1)
-                .MakeGenericMethod(typeof(TEntity));
-            var toArrayExpr = Expression.Call(toArrayInfo, selectExpr);
+        //    var toArrayInfo = enumerableMethods
+        //        .Single(x => x.Name == "ToArray" && x.GetParameters().Length == 1)
+        //        .MakeGenericMethod(typeof(TEntity));
+        //    var toArrayExpr = Expression.Call(toArrayInfo, selectExpr);
 
-            var lambdaExpr = Expression.Lambda(toArrayExpr, rParam);
-            var lambda = (Func<TRequest, TEntity[]>) lambdaExpr.Compile();
+        //    var lambdaExpr = Expression.Lambda(toArrayExpr, rParam);
+        //    var lambda = (Func<TRequest, TEntity[]>) lambdaExpr.Compile();
 
-            return config.CreateAllWith(lambda);
-        }
+        //    return config.CreateWith(lambda);
+        //}
 
-        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> CreateAllWith<TRequest, TEntity, TIn>(
-                this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
-                Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr)
-                where TEntity : class
-        {
-            return CreateAllWith(config, requestEnumerableExpr, Mapper.Map<TIn, TEntity>);
-        }
+        //public static CrudRequestEntityConfigBuilder<TRequest, TEntity> CreateAllWith<TRequest, TEntity, TIn>(
+        //        this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
+        //        Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr)
+        //        where TEntity : class
+        //{
+        //    return CreateAllWith(config, requestEnumerableExpr, Mapper.Map<TIn, TEntity>);
+        //}
     }
 }

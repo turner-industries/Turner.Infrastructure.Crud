@@ -29,6 +29,16 @@ namespace Turner.Infrastructure.Crud.Requests
         public TKey Key { get; }
     }
 
+    public class DeleteRequestProfile<TEntity, TKey>
+        : CrudRequestProfile<DeleteRequest<TEntity, TKey>>
+        where TEntity : class
+    {
+        public DeleteRequestProfile()
+        {
+            ForEntity<TEntity>().WithRequestKey(request => request.Key);
+        }
+    }
+
     [DoNotValidate]
     public class DeleteRequest<TEntity, TKey, TOut> : IDeleteRequest<TEntity, TOut>
         where TEntity : class
@@ -38,8 +48,19 @@ namespace Turner.Infrastructure.Crud.Requests
         public TKey Key { get; }
     }
 
+    public class DeleteRequestProfile<TEntity, TKey, TOut>
+        : CrudRequestProfile<DeleteRequest<TEntity, TKey, TOut>>
+        where TEntity : class
+    {
+        public DeleteRequestProfile()
+        {
+            ForEntity<TEntity>().WithRequestKey(request => request.Key);
+        }
+    }
+
     [DoNotValidate]
-    public class DeleteByIdRequest<TEntity> : DeleteRequest<TEntity, int>
+    public class DeleteByIdRequest<TEntity> 
+        : DeleteRequest<TEntity, int>
         where TEntity : class
     {
         public DeleteByIdRequest(int id) : base(id) { }
@@ -51,13 +72,13 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public DeleteByIdRequestProfile()
         {
-            ForEntity<TEntity>()
-                .SelectWith(builder => builder.Single(request => request.Key, "Id"));
+            ForEntity<TEntity>().WithEntityKey("Id");
         }
     }
 
     [DoNotValidate]
-    public class DeleteByIdRequest<TEntity, TOut> : DeleteRequest<TEntity, int, TOut>
+    public class DeleteByIdRequest<TEntity, TOut> 
+        : DeleteRequest<TEntity, int, TOut>
         where TEntity : class
     {
         public DeleteByIdRequest(int id) : base(id) { }
@@ -69,13 +90,13 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public DeleteByIdRequestProfile()
         {
-            ForEntity<TEntity>()
-                .SelectWith(builder => builder.Single(request => request.Key, "Id"));
+            ForEntity<TEntity>().WithEntityKey("Id");
         }
     }
 
     [DoNotValidate]
-    public class DeleteByGuidRequest<TEntity> : DeleteRequest<TEntity, Guid>
+    public class DeleteByGuidRequest<TEntity> 
+        : DeleteRequest<TEntity, Guid>
         where TEntity : class
     {
         public DeleteByGuidRequest(Guid guid) : base(guid) { }
@@ -87,13 +108,13 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public DeleteByGuidRequestProfile()
         {
-            ForEntity<TEntity>()
-                .SelectWith(builder => builder.Single(request => request.Key, "Guid"));
+            ForEntity<TEntity>().WithEntityKey("Guid");
         }
     }
 
     [DoNotValidate]
-    public class DeleteByGuidRequest<TEntity, TOut> : DeleteRequest<TEntity, Guid, TOut>
+    public class DeleteByGuidRequest<TEntity, TOut> 
+        : DeleteRequest<TEntity, Guid, TOut>
         where TEntity : class
     {
         public DeleteByGuidRequest(Guid guid) : base(guid) { }
@@ -105,8 +126,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public DeleteByGuidRequestProfile()
         {
-            ForEntity<TEntity>()
-                .SelectWith(builder => builder.Single(request => request.Key, "Guid"));
+            ForEntity<TEntity>().WithEntityKey("Guid");
         }
     }
 }
