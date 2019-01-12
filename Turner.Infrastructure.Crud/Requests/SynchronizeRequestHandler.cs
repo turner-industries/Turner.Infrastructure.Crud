@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
@@ -9,23 +10,25 @@ using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-    internal abstract class MergeRequestHandlerBase<TRequest, TEntity>
+    internal abstract class SynchronizeRequestHandlerBase<TRequest, TEntity>
         : CrudRequestHandler<TRequest, TEntity>
         where TEntity : class
     {
         protected readonly RequestOptions Options;
 
-        protected MergeRequestHandlerBase(IEntityContext context, CrudConfigManager profileManager)
+        protected SynchronizeRequestHandlerBase(IEntityContext context, CrudConfigManager profileManager)
             : base(context, profileManager)
         {
             Options = RequestConfig.GetOptionsFor<TEntity>();
         }
 
-        protected async Task<TEntity[]> MergeEntities(TRequest request)
+        protected async Task<TEntity[]> SynchronizeEntities(TRequest request)
         {
             // TODO: Collapse actions (Replace with hooks)
-            await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Save, request).Configure();
+            await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Synchronize, request).Configure();
             
+            await DeleteEntities(request).Configure();
+
             var data = RequestConfig.GetRequestDataFor<TEntity>();
             
             var entities = await GetEntities(request).Configure();
@@ -45,22 +48,33 @@ namespace Turner.Infrastructure.Crud.Requests
 
             // TODO: Replace with hooks
             foreach (var entity in changedEntities)
-                await RequestConfig.RunPostActionsFor(ActionType.Save, request, entity).Configure();
+                await RequestConfig.RunPostActionsFor(ActionType.Synchronize, request, entity).Configure();
 
             await Context.ApplyChangesAsync().Configure();
 
             return changedEntities;
         }
 
+        private Task DeleteEntities(TRequest request)
+        {
+            var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
+            var entities = Context.EntitySet<TEntity>().AsQueryable();
+            var where = selector(request);
+            var notWhere = where.Update(
+                Expression.NotEqual(where.Body, Expression.Constant(true)), 
+                where.Parameters);
+
+            entities = entities.Where(notWhere);
+
+            return Context.EntitySet<TEntity>().DeleteAsync(entities);
+        }
+
         private async Task<TEntity[]> GetEntities(TRequest request)
         {
             var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
             var entities = Context.EntitySet<TEntity>().AsQueryable();
-
+            
             entities = entities.Where(selector(request));
-            entities = RequestConfig
-                .GetFiltersFor<TEntity>()
-                .Aggregate(entities, (current, filter) => filter.Filter(request, current));
 
             return await Context.ToArrayAsync(entities).Configure();
         }
@@ -92,40 +106,40 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    internal class MergeRequestHandler<TRequest, TEntity>
-        : MergeRequestHandlerBase<TRequest, TEntity>,
+    internal class SynchronizeRequestHandler<TRequest, TEntity>
+        : SynchronizeRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest>
         where TEntity : class
-        where TRequest : IMergeRequest<TEntity>
+        where TRequest : ISynchronizeRequest<TEntity>
     {
-        public MergeRequestHandler(IEntityContext context, CrudConfigManager profileManager)
+        public SynchronizeRequestHandler(IEntityContext context, CrudConfigManager profileManager)
             : base(context, profileManager)
         {
         }
 
         public async Task<Response> HandleAsync(TRequest request)
         {
-            await MergeEntities(request).Configure();
+            await SynchronizeEntities(request).Configure();
 
             return Response.Success();
         }
     }
 
-    internal class MergeRequestHandler<TRequest, TEntity, TOut>
-        : MergeRequestHandlerBase<TRequest, TEntity>,
-          IRequestHandler<TRequest, MergeResult<TOut>>
+    internal class SynchronizeRequestHandler<TRequest, TEntity, TOut>
+        : SynchronizeRequestHandlerBase<TRequest, TEntity>,
+          IRequestHandler<TRequest, SynchronizeResult<TOut>>
         where TEntity : class
-        where TRequest : IMergeRequest<TEntity, TOut>
+        where TRequest : ISynchronizeRequest<TEntity, TOut>
     {
-        public MergeRequestHandler(IEntityContext context, CrudConfigManager profileManager)
+        public SynchronizeRequestHandler(IEntityContext context, CrudConfigManager profileManager)
             : base(context, profileManager)
         {
         }
 
-        public async Task<Response<MergeResult<TOut>>> HandleAsync(TRequest request)
+        public async Task<Response<SynchronizeResult<TOut>>> HandleAsync(TRequest request)
         {
-            var entities = await MergeEntities(request).Configure();
-            var result = new MergeResult<TOut>(Mapper.Map<List<TOut>>(entities));
+            var entities = await SynchronizeEntities(request).Configure();
+            var result = new SynchronizeResult<TOut>(Mapper.Map<List<TOut>>(entities));
 
             return result.AsResponse();
         }

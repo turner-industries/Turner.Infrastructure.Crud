@@ -30,5 +30,7 @@ namespace Turner.Infrastructure.Crud.Algorithms
         Task<TEntity> DeleteAsync(TEntity entity, CancellationToken token = default(CancellationToken));
 
         Task<TEntity[]> DeleteAsync(IEnumerable<TEntity> entities, CancellationToken token = default(CancellationToken));
+
+        Task DeleteAsync(IQueryable<TEntity> entities, CancellationToken token = default(CancellationToken));
     }
 }
