@@ -9,7 +9,8 @@ namespace Turner.Infrastructure.Crud.Configuration
         Create,
         Update,
         Delete,
-        Save
+        Save,
+        Synchronize
     }
 
     public class ActionConfig

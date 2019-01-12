@@ -143,6 +143,11 @@ namespace Turner.Infrastructure.Crud.Tests
         public Task<TEntity[]> DeleteAsync(IEnumerable<TEntity> entities, CancellationToken token = default(CancellationToken))
             => Task.FromResult(Delete(entities));
 
+        public async Task DeleteAsync(IQueryable<TEntity> entities, CancellationToken token = default(CancellationToken))
+        {
+            await DeleteAsync(await entities.ToArrayAsync(), token);
+        }
+
         public IEnumerator<TEntity> GetEnumerator()
             => _items.GetEnumerator();
         

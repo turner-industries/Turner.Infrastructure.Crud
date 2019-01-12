@@ -111,5 +111,11 @@ namespace Turner.Infrastructure.Crud.Algorithms
 
             return result.ToArray();
         }
+
+        public virtual async Task DeleteAsync(IQueryable<TEntity> entities,
+            CancellationToken token = default(CancellationToken))
+        {
+            _set.RemoveRange(await entities.ToArrayAsync(token));
+        }
     }
 }
