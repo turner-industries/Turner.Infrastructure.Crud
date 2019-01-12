@@ -48,6 +48,17 @@ namespace Turner.Infrastructure.Crud.Requests
         public int PageSize { get; set; }
     }
 
+    public class PagedFindRequestProfile<TEntity, TKey, TOut>
+        : CrudRequestProfile<PagedFindRequest<TEntity, TKey, TOut>>
+        where TEntity : class
+    {
+        public PagedFindRequestProfile()
+        {
+            ForEntity<TEntity>()
+                .WithRequestKey(request => request.Key);
+        }
+    }
+
     [Obsolete("Linq does not currently support positional queries. PagedFindRequest may cause a large result set to be created.")]
     [DoNotValidate]
     public class PagedFindByIdRequest<TEntity, TOut> : PagedFindRequest<TEntity, int, TOut>
@@ -65,8 +76,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public PagedFindByIdRequestProfile()
         {
-            ForEntity<TEntity>()
-                .SelectWith(builder => builder.Single(request => request.Key, "Id"));
+            ForEntity<TEntity>().WithEntityKey("Id");
         }
     }
 
@@ -87,8 +97,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public PagedFindByGuidRequestProfile()
         {
-            ForEntity<TEntity>()
-                .SelectWith(builder => builder.Single(request => request.Key, "Guid"));
+            ForEntity<TEntity>().WithEntityKey("Guid");
         }
     }
 

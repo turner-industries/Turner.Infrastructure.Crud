@@ -87,12 +87,13 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public List<int> Ids { get; set; }
     }
     
-    public class DeleteAllUsersByIdProfile : CrudRequestProfile<DeleteAllUsersByIdRequest>
+    public class DeleteAllUsersByIdProfile 
+        : CrudRequestProfile<DeleteAllUsersByIdRequest>
     {
         public DeleteAllUsersByIdProfile()
         {
             ForEntity<User>()
-                .FilterWith(builder => builder.FilterOnCollection(r => r.Ids, "Id"))
+                .FilterWith(builder => builder.FilterOn(r => r.Ids, "Id"))
                 .AfterDeleting(entity => entity.PostMessage += "/Delete");
 
             ConfigureErrors(config => config.FailedToFindInDeleteIsError = false);

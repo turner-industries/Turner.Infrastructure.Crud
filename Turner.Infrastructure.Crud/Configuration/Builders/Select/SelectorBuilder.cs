@@ -156,8 +156,9 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Select
                 var rParamExpr = Expression.Constant(request);
                 var rEnumerableExpr = Expression.Invoke(requestEnumerableExpr, rParamExpr);
 
-                var containsInfo = typeof(Enumerable)
-                    .GetMethods()
+                var enumerableMethods = typeof(Enumerable).GetMethods();
+
+                var containsInfo = enumerableMethods
                     .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
                     .MakeGenericMethod(typeof(TKey));
 
@@ -178,8 +179,9 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Select
                 var rParamExpr = Expression.Constant(request);
                 var rEnumerableExpr = Expression.Invoke(requestEnumerableExpr, rParamExpr);
 
-                var containsInfo = typeof(Enumerable)
-                    .GetMethods()
+                var enumerableMethods = typeof(Enumerable).GetMethods();
+
+                var containsInfo = enumerableMethods
                     .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
                     .MakeGenericMethod(typeof(TKey));
 
@@ -203,6 +205,16 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Select
 
                 var enumerableMethods = typeof(Enumerable).GetMethods();
 
+                var whereInfo = enumerableMethods
+                    .Single(x => x.Name == "Where" &&
+                                    x.GetParameters().Length == 2 &&
+                                    x.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
+                    .MakeGenericMethod(typeof(TIn));
+
+                var rWhereParam = Expression.Parameter(typeof(TIn));
+                var compareExpr = Expression.NotEqual(rWhereParam, Expression.Constant(default(TIn), typeof(TIn)));
+                var whereLambda = Expression.Lambda(compareExpr, rWhereParam);
+
                 var selectInfo = enumerableMethods
                     .Single(x => x.Name == "Select" &&
                                     x.GetParameters().Length == 2 &&
@@ -213,8 +225,9 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Select
                     .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
                     .MakeGenericMethod(typeof(TKey));
 
-                var reReduceExpr = Expression.Call(selectInfo, reExpr, requestItemKeyExpr);
-                var rContainsExpr = Expression.Call(containsInfo, reReduceExpr, eKeyExpr);
+                var rWhereExpr = Expression.Call(whereInfo, reExpr, whereLambda);
+                var rReduceExpr = Expression.Call(selectInfo, rWhereExpr, requestItemKeyExpr);
+                var rContainsExpr = Expression.Call(containsInfo, rReduceExpr, eKeyExpr);
 
                 return Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr);
             });
@@ -234,6 +247,16 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Select
 
                 var enumerableMethods = typeof(Enumerable).GetMethods();
 
+                var whereInfo = enumerableMethods
+                    .Single(x => x.Name == "Where" &&
+                                    x.GetParameters().Length == 2 &&
+                                    x.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
+                    .MakeGenericMethod(typeof(TIn));
+
+                var rWhereParam = Expression.Parameter(typeof(TIn));
+                var compareExpr = Expression.NotEqual(rWhereParam, Expression.Constant(default(TIn), typeof(TIn)));
+                var whereLambda = Expression.Lambda(compareExpr, rWhereParam);
+
                 var selectInfo = enumerableMethods
                     .Single(x => x.Name == "Select" &&
                                     x.GetParameters().Length == 2 &&
@@ -248,8 +271,65 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Select
                 var iKeyExpr = Expression.PropertyOrField(iParamExpr, requestItemKeyProperty);
                 var iExpr = Expression.Lambda(iKeyExpr, iParamExpr);
 
-                var reReduceExpr = Expression.Call(selectInfo, reExpr, iExpr);
-                var rContainsExpr = Expression.Call(containsInfo, reReduceExpr, eKeyExpr);
+                var rWhereExpr = Expression.Call(whereInfo, reExpr, whereLambda);
+                var rReduceExpr = Expression.Call(selectInfo, rWhereExpr, iExpr);
+                var rContainsExpr = Expression.Call(containsInfo, rReduceExpr, eKeyExpr);
+
+                return Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr);
+            });
+        }
+
+        internal ISelector Single(IKey requestKey, IKey entityKey)
+        {
+            return Selector.From<TRequest, TEntity>(request =>
+            {
+                var eParamExpr = Expression.Parameter(typeof(TEntity));
+                var eKeyExpr = Expression.Invoke(entityKey.KeyExpression, eParamExpr);
+                var rParamExpr = Expression.Constant(request);
+                var rKeyExpr = Expression.Invoke(requestKey.KeyExpression, rParamExpr);
+                var compareExpr = Expression.Equal(eKeyExpr, rKeyExpr);
+
+                return Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr);
+            });
+        }
+
+        internal ISelector Collection<TIn>(
+            Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr,
+            IKey entityKey,
+            IKey itemKey)
+        {
+            return Selector.From<TRequest, TEntity>(request =>
+            {
+                var eParamExpr = Expression.Parameter(typeof(TEntity));
+                var eKeyExpr = Expression.Invoke(entityKey.KeyExpression, eParamExpr);
+                var rParamExpr = Expression.Constant(request);
+                var reExpr = Expression.Invoke(requestEnumerableExpr, rParamExpr);
+
+                var enumerableMethods = typeof(Enumerable).GetMethods();
+
+                var whereInfo = enumerableMethods
+                    .Single(x => x.Name == "Where" &&
+                                    x.GetParameters().Length == 2 &&
+                                    x.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
+                    .MakeGenericMethod(typeof(TIn));
+
+                var rWhereParam = Expression.Parameter(typeof(TIn));
+                var compareExpr = Expression.NotEqual(rWhereParam, Expression.Constant(default(TIn), typeof(TIn)));
+                var whereLambda = Expression.Lambda(compareExpr, rWhereParam);
+
+                var selectInfo = enumerableMethods
+                    .Single(x => x.Name == "Select" &&
+                                    x.GetParameters().Length == 2 &&
+                                    x.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
+                    .MakeGenericMethod(typeof(TIn), itemKey.KeyType);
+
+                var containsInfo = enumerableMethods
+                    .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
+                    .MakeGenericMethod(itemKey.KeyType);
+
+                var rWhereExpr = Expression.Call(whereInfo, reExpr, whereLambda);
+                var rReduceExpr = Expression.Call(selectInfo, rWhereExpr, itemKey.KeyExpression);
+                var rContainsExpr = Expression.Call(containsInfo, rReduceExpr, eKeyExpr);
 
                 return Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr);
             });

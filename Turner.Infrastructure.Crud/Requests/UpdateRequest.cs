@@ -37,7 +37,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public UpdateRequestProfile()
         {
             ForEntity<TEntity>()
-                .UpdateWith((request, entity) => Mapper.Map(request.Data, entity));
+                .UpdateWith((UpdateRequest<TEntity, TIn> request, TEntity entity) => Mapper.Map(request.Data, entity));
         }
     }
 
@@ -57,7 +57,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public UpdateRequestProfile()
         {
             ForEntity<TEntity>()
-                .UpdateWith((request, entity) => Mapper.Map(request.Data, entity));
+                .UpdateWith((UpdateRequest<TEntity, TIn, TOut> request, TEntity entity) => Mapper.Map(request.Data, entity));
         }
     }
 
@@ -84,7 +84,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public UpdateRequestProfile()
         {
             ForEntity<TEntity>()
-                .UpdateWith((request, entity) => Mapper.Map(request.Data, entity));
+                .UpdateWith((UpdateRequest<TEntity, TKey, TIn, TOut> request, TEntity entity) => Mapper.Map(request.Data, entity));
         }
     }
     

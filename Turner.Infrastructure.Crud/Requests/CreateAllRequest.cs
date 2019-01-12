@@ -41,13 +41,14 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class CreateAllRequestProfile<TEntity, TIn>
-        : CrudRequestProfile<CreateAllRequest<TEntity, TIn>>
+        : CrudBulkRequestProfile<CreateAllRequest<TEntity, TIn>, TIn>
         where TEntity : class
     {
-        public CreateAllRequestProfile()
+        public CreateAllRequestProfile() 
+            : base(request => request.Items)
         {
             ForEntity<TEntity>()
-                .CreateAllWith(request => Mapper.Map<TEntity[]>(request.Items));
+                .CreateWith(item => Mapper.Map<TEntity>(item));
         }
     }
 
@@ -61,13 +62,14 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class CreateAllRequestProfile<TEntity, TIn, TOut>
-        : CrudRequestProfile<CreateAllRequest<TEntity, TIn, TOut>>
+        : CrudBulkRequestProfile<CreateAllRequest<TEntity, TIn, TOut>, TIn>
         where TEntity : class
     {
         public CreateAllRequestProfile()
+            : base(request => request.Items)
         {
             ForEntity<TEntity>()
-                .CreateAllWith(request => Mapper.Map<TEntity[]>(request.Items));
+                .CreateWith(item => Mapper.Map<TEntity>(item));
         }
     }
 }

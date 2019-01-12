@@ -165,10 +165,12 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     public class SaveUserWithoutResponseRequest : ISaveRequest<User>
     {
         public int Id { get; set; }
+
         public UserDto User { get; set; }
     }
     
-    public class SaveRequestProfile : CrudRequestProfile<ISaveRequest>
+    public class SaveRequestProfile 
+        : CrudRequestProfile<ISaveRequest>
     {
         public SaveRequestProfile()
         {
@@ -178,12 +180,13 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         }
     }
 
-    public class SaveUserWithoutResponseProfile : CrudRequestProfile<SaveUserWithoutResponseRequest>
+    public class SaveUserWithoutResponseProfile 
+        : CrudRequestProfile<SaveUserWithoutResponseRequest>
     {
         public SaveUserWithoutResponseProfile()
         {
             ForEntity<User>()
-                .SelectWith(builder => builder.Single(r => r.Id, e => e.Id))
+                .SelectWith((Configuration.Builders.Select.SelectorBuilder<SaveUserWithoutResponseRequest, User> builder) => builder.Single(r => r.Id, e => e.Id))
                 .CreateWith(request => Mapper.Map<User>(request.User))
                 .UpdateWith((request, entity) => Mapper.Map(request.User, entity))
                 .AfterSaving(entity => entity.PostMessage += "/Save")
@@ -191,7 +194,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         }
     }
 
-    public class SaveUserWithResponseProfile : CrudRequestProfile<SaveUserWithResponseRequest>
+    public class SaveUserWithResponseProfile 
+        : CrudRequestProfile<SaveUserWithResponseRequest>
     {
         public SaveUserWithResponseProfile()
         {

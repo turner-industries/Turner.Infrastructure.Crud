@@ -200,7 +200,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public int PageSize { get; set; }
     }
 
-    public class GetAllUsersPagedProfile : CrudRequestProfile<IPagedGetAllRequest>
+    public class GetAllUsersPagedProfile 
+        : CrudRequestProfile<IPagedGetAllRequest>
     {
         public GetAllUsersPagedProfile()
         {
@@ -219,7 +220,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public bool? DeletedFilter { get; set; }
     }
 
-    public class GetAllFilteredUsersPagedProfile : CrudRequestProfile<GetAllFilteredUsersPaged>
+    public class GetAllFilteredUsersPagedProfile 
+        : CrudRequestProfile<GetAllFilteredUsersPaged>
     {
         public GetAllFilteredUsersPagedProfile()
         {

@@ -27,8 +27,11 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity> UpdateEntity(TRequest request, TEntity entity)
         {
+            var updator = RequestConfig.GetUpdatorFor<TEntity>();
+            var data = RequestConfig.GetRequestDataFor<TEntity>().DataSource(request);
+
             await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Update, request).Configure();
-            await RequestConfig.UpdateEntity(request, entity).Configure();
+            entity = await updator(data, entity).Configure();
             entity = await Context.EntitySet<TEntity>().UpdateAsync(entity).Configure();
             await RequestConfig.RunPostActionsFor(ActionType.Update, request, entity).Configure();
 

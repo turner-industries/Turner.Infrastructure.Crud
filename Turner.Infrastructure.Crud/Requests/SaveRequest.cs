@@ -37,8 +37,8 @@ namespace Turner.Infrastructure.Crud.Requests
         public SaveRequestProfile()
         {
             ForEntity<TEntity>()
-                .CreateWith(request => Mapper.Map<TEntity>(request.Data))
-                .UpdateWith((request, entity) => Mapper.Map(request.Data, entity));
+                .CreateWith((SaveRequest<TEntity, TIn> request) => Mapper.Map<TEntity>(request.Data))
+                .UpdateWith((SaveRequest<TEntity, TIn> request, TEntity entity) => Mapper.Map(request.Data, entity));
         }
     }
 
@@ -58,8 +58,8 @@ namespace Turner.Infrastructure.Crud.Requests
         public SaveRequestProfile()
         {
             ForEntity<TEntity>()
-                .CreateWith(request => Mapper.Map<TEntity>(request.Data))
-                .UpdateWith((request, entity) => Mapper.Map(request.Data, entity));
+                .CreateWith((SaveRequest<TEntity, TIn, TOut> request) => Mapper.Map<TEntity>(request.Data))
+                .UpdateWith((SaveRequest<TEntity, TIn, TOut> request, TEntity entity) => Mapper.Map(request.Data, entity));
         }
     }
 
@@ -86,6 +86,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public SaveRequestProfile()
         {
             ForEntity<TEntity>()
+                .WithRequestKey(request => request.Key)
                 .CreateWith(request => Mapper.Map<TEntity>(request.Data))
                 .UpdateWith((request, entity) => Mapper.Map(request.Data, entity));
         }
@@ -104,8 +105,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public SaveByIdRequestProfile()
         {
-            ForEntity<TEntity>()
-                .SelectWith(builder => builder.Single("Key", "Id"));
+            ForEntity<TEntity>().WithEntityKey("Id");
         }
     }
 
@@ -122,8 +122,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public SaveByGuidRequestProfile()
         {
-            ForEntity<TEntity>()
-                .SelectWith(builder => builder.Single(request => request.Key, "Guid"));
+            ForEntity<TEntity>().WithEntityKey("Guid");
         }
     }
 }

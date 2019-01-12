@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Exceptions;
 
@@ -13,10 +14,18 @@ namespace Turner.Infrastructure.Crud.Configuration
         RequestOptions GetOptionsFor<TEntity>()
             where TEntity : class;
 
+        IKey GetRequestKey();
+
+        IKey GetKeyFor<TEntity>()
+            where TEntity : class;
+
         ISelector GetSelectorFor<TEntity>()
             where TEntity : class;
 
         ISorter GetSorterFor<TEntity>()
+            where TEntity : class;
+
+        IRequestData GetRequestDataFor<TEntity>()
             where TEntity : class;
 
         TEntity GetDefaultFor<TEntity>()
@@ -24,35 +33,44 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         IEnumerable<IFilter> GetFiltersFor<TEntity>();
 
-        Task RunPreActionsFor<TEntity>(ActionType type, object request)
+        Task RunPreActionsFor<TEntity>(ActionType type, object item)
             where TEntity : class;
 
-        Task RunPostActionsFor<TEntity>(ActionType type, object request, TEntity entity)
+        Task RunPostActionsFor<TEntity>(ActionType type, object item, TEntity entity)
             where TEntity : class;
 
-        Task<TEntity> CreateEntity<TEntity>(object request)
+        Func<object, Task<TEntity>> GetCreatorFor<TEntity>()
             where TEntity : class;
 
-        Task<TEntity[]> CreateEntities<TEntity>(object request)
+        Func<object, TEntity, Task<TEntity>> GetUpdatorFor<TEntity>()
             where TEntity : class;
 
-        Task<TEntity> UpdateEntity<TEntity>(object request, TEntity entity)
-            where TEntity : class;
-
-        Task<TEntity[]> UpdateEntities<TEntity>(object request, TEntity[] entities)
+        IEnumerable<Tuple<object, TEntity>> Join<TEntity>(IEnumerable<object> items, IEnumerable<TEntity> entities)
             where TEntity : class;
     }
 
     public class CrudRequestConfig<TRequest>
         : ICrudRequestConfig
     {
+        private IKey _requestKey;
+
         private readonly ActionConfig _actions = new ActionConfig();
         private readonly RequestOptions _options = new RequestOptions();
+
         private readonly Dictionary<Type, CrudOptionsConfig> _entityOptionOverrides
             = new Dictionary<Type, CrudOptionsConfig>();
 
         private readonly Dictionary<Type, RequestOptions> _optionsCache
             = new Dictionary<Type, RequestOptions>();
+
+        private readonly Dictionary<Type, Func<IEnumerable<object>, IEnumerable<object>, IEnumerable<Tuple<object, object>>>> _entityJoiners
+            = new Dictionary<Type, Func<IEnumerable<object>, IEnumerable<object>, IEnumerable<Tuple<object, object>>>>();
+
+        private readonly Dictionary<Type, IRequestData> _entityRequestData
+            = new Dictionary<Type, IRequestData>();
+
+        private readonly Dictionary<Type, IKey> _entityKeys
+            = new Dictionary<Type, IKey>();
 
         private readonly Dictionary<Type, ISorter> _entitySorters
             = new Dictionary<Type, ISorter>();
@@ -62,10 +80,7 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         private readonly Dictionary<Type, Func<object, Task<object>>> _entityCreators
             = new Dictionary<Type, Func<object, Task<object>>>();
-
-        private readonly Dictionary<Type, Func<object, Task<object[]>>> _entitiesCreators
-            = new Dictionary<Type, Func<object, Task<object[]>>>();
-
+        
         private readonly Dictionary<Type, Func<object, object, Task<object>>> _entityUpdators
             = new Dictionary<Type, Func<object, object, Task<object>>>();
 
@@ -124,6 +139,34 @@ namespace Turner.Infrastructure.Crud.Configuration
             return _actions[type].RunPostActionsFor(typeof(TEntity), request, entity);
         }
 
+        public IRequestData GetRequestDataFor<TEntity>()
+            where TEntity : class
+        {
+            foreach (var type in typeof(TEntity).BuildTypeHierarchyUp())
+            {
+                if (_entityRequestData.TryGetValue(type, out var dataSource))
+                    return dataSource;
+            }
+
+            throw new BadCrudConfigurationException(
+                $"No data defined for entity '{typeof(TEntity)}' " +
+                $"for request '{typeof(TRequest)}'.");
+        }
+
+        public IKey GetRequestKey() => _requestKey;
+
+        public IKey GetKeyFor<TEntity>()
+            where TEntity : class
+        {
+            foreach (var type in typeof(TEntity).BuildTypeHierarchyUp())
+            {
+                if (_entityKeys.TryGetValue(type, out var key))
+                    return key;
+            }
+
+            return null;
+        }
+
         public ISelector GetSelectorFor<TEntity>()
             where TEntity : class
         {
@@ -162,84 +205,39 @@ namespace Turner.Infrastructure.Crud.Configuration
             }
         }
 
-        public async Task<TEntity> CreateEntity<TEntity>(object request)
+        public Func<object, Task<TEntity>> GetCreatorFor<TEntity>()
             where TEntity : class
         {
-            if (!(request is TRequest))
-            {
-                var message = 
-                    $"Unable to create an entity of type '{typeof(TEntity)}' " +
-                    $"from a request of type '{request.GetType()}'. " +
-                    $"Configuration expected a request of type '{typeof(TRequest)}'."; 
-
-                throw new BadCrudConfigurationException(message);
-            }
-
             if (_entityCreators.TryGetValue(typeof(TEntity), out var creator))
-                return (TEntity) await creator(request).Configure();
+                return async item => (TEntity) await creator(item).Configure();
             
-            return Mapper.Map<TEntity>(request);
+            return item => Task.FromResult(Mapper.Map<TEntity>(item));
         }
 
-        public async Task<TEntity[]> CreateEntities<TEntity>(object request)
+        public Func<object, TEntity, Task<TEntity>> GetUpdatorFor<TEntity>()
             where TEntity : class
         {
-            if (!(request is TRequest))
-            {
-                var message =
-                    $"Unable to create entities of type '{typeof(TEntity)}' " +
-                    $"from a request of type '{request.GetType()}'. " +
-                    $"Configuration expected a request of type '{typeof(TRequest)}'.";
-
-                throw new BadCrudConfigurationException(message);
-            }
-
-            if (_entitiesCreators.TryGetValue(typeof(TEntity), out var creator))
-                return (TEntity[]) await creator(request).Configure();
-
-            return Mapper.Map<TEntity[]>(request);
-        }
-
-        public async Task<TEntity> UpdateEntity<TEntity>(object request, TEntity entity)
-            where TEntity : class
-        {
-            if (!(request is TRequest))
-            {
-                var message =
-                    $"Unable to update an entity of type '{typeof(TEntity)}' " +
-                    $"from a request of type '{request.GetType()}'. " +
-                    $"Configuration expected a request of type '{typeof(TRequest)}'.";
-
-                throw new BadCrudConfigurationException(message);
-            }
-
             if (_entityUpdators.TryGetValue(typeof(TEntity), out var updator))
-                return (TEntity) await updator(request, entity).Configure();
-        
-            Mapper.Map(request, entity);
+                return async (item, entity) => (TEntity) await updator(item, entity).Configure();
 
-            return entity;
+            return (item, entity) => Task.FromResult(Mapper.Map(item, entity));
         }
-
-        public async Task<TEntity[]> UpdateEntities<TEntity>(object request, TEntity[] entities)
+        
+        public IEnumerable<Tuple<object, TEntity>> Join<TEntity>(
+            IEnumerable<object> items, 
+            IEnumerable<TEntity> entities)
             where TEntity : class
         {
-            if (!(request is TRequest))
+            if (!_entityJoiners.TryGetValue(typeof(TEntity), out var joiner))
             {
                 var message =
-                    $"Unable to update entities of type '{typeof(TEntity)}' " +
-                    $"from a request of type '{request.GetType()}'. " +
-                    $"Configuration expected a request of type '{typeof(TRequest)}'.";
+                    $"Unable to join entities of type '{entities.GetType()}' " +
+                    $"with request items of type '{items.GetType()}'. ";
 
                 throw new BadCrudConfigurationException(message);
             }
 
-            if (_entitiesUpdators.TryGetValue(typeof(TEntity), out var updator))
-                return (TEntity[]) await updator(request, entities).Configure();
-
-            throw new BadCrudConfigurationException(
-                $"No updator defined for entities '{typeof(TEntity)}' " +
-                $"for request '{typeof(TRequest)}'.");
+            return joiner(items, entities).Select(t => new Tuple<object, TEntity>(t.Item1, (TEntity)t.Item2));
         }
 
         public TEntity GetDefaultFor<TEntity>()
@@ -284,6 +282,23 @@ namespace Turner.Infrastructure.Crud.Configuration
             _actions[type].SetPostActionsFor(typeof(TEntity), actions);
         }
 
+        internal void SetEntityRequestData<TEntity>(IRequestData dataSource)
+            where TEntity : class
+        {
+            _entityRequestData[typeof(TEntity)] = dataSource;
+        }
+
+        internal void SetRequestKey(IKey key)
+        {
+            _requestKey = key;
+        }
+
+        internal void SetEntityKey<TEntity>(IKey key)
+            where TEntity : class
+        {
+            _entityKeys[typeof(TEntity)] = key;
+        }
+
         internal void SetEntitySelector<TEntity>(ISelector selector)
             where TEntity : class
         {
@@ -305,21 +320,14 @@ namespace Turner.Infrastructure.Crud.Configuration
             Func<object, Task<TEntity>> creator)
             where TEntity : class
         {
-            _entityCreators[typeof(TEntity)] = async request => await creator(request).Configure();
-        }
-
-        internal void SetEntitiesCreator<TEntity>(
-            Func<object, Task<TEntity[]>> creator)
-            where TEntity : class
-        {
-            _entitiesCreators[typeof(TEntity)] = async request => await creator(request).Configure();
+            _entityCreators[typeof(TEntity)] = async item => await creator(item).Configure();
         }
 
         internal void SetEntityUpdator<TEntity>(
             Func<object, TEntity, Task<TEntity>> updator)
             where TEntity : class
         {
-            _entityUpdators[typeof(TEntity)] = async (request, entity) => await updator(request, (TEntity) entity);
+            _entityUpdators[typeof(TEntity)] = async (item, entity) => await updator(item, (TEntity) entity);
         }
 
         internal void SetEntitiesUpdator<TEntity>(
@@ -327,6 +335,14 @@ namespace Turner.Infrastructure.Crud.Configuration
             where TEntity : class
         {
             _entitiesUpdators[typeof(TEntity)] = async (request, entities) => await updator(request, (TEntity[]) entities).Configure();
+        }
+
+        internal void SetEntityJoiner<TEntity>(
+            Func<IEnumerable<object>, IEnumerable<TEntity>, IEnumerable<Tuple<object, TEntity>>> joiner)
+            where TEntity : class
+        {
+            _entityJoiners[typeof(TEntity)] = (x, y) => 
+                joiner(x, y.Cast<TEntity>()).Select(t => new Tuple<object, object>(t.Item1, t.Item2));
         }
 
         internal void SetEntityDefault<TEntity>(

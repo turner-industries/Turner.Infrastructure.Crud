@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -128,18 +129,19 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public UserDto[] Users { get; set; }
     }
     
-    public class CreateUsersRequestProfile : CrudRequestProfile<ICreateAllCommon>
+    public class CreateUsersRequestProfile : CrudBulkRequestProfile<ICreateAllCommon, UserDto>
     {
         public CreateUsersRequestProfile()
         {
             ForEntity<User>()
+                .WithData(request => request.Users)
+                .CreateWith(user => Mapper.Map<User>(user))
                 .BeforeCreating(request =>
                 {
                     for (int i = 0; i < request.Users.Length; ++i)
                         request.Users[i].PreMessage += $"/User[{i}]";
                 })
-                .AfterCreating(user => user.PostMessage += $"/User[{user.Name}]")
-                .CreateAllWith(request => request.Users);
+                .AfterCreating(user => user.PostMessage += $"/User[{user.Name}]");
         }
     }
 }

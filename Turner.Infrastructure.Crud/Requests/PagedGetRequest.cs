@@ -49,9 +49,20 @@ namespace Turner.Infrastructure.Crud.Requests
         public int PageSize { get; set; }
     }
 
+    public class PagedGetProfile<TEntity, TKey, TOut>
+        : CrudRequestProfile<PagedGetRequest<TEntity, TKey, TOut>>
+        where TEntity : class
+    {
+        public PagedGetProfile()
+        {
+            ForEntity<TEntity>().WithRequestKey(request => request.Key);
+        }
+    }
+
     [Obsolete("Linq does not currently support positional queries. PagedGetRequest may cause a large result set to be created.")]
     [DoNotValidate]
-    public class PagedGetByIdRequest<TEntity, TOut> : PagedGetRequest<TEntity, int, TOut>
+    public class PagedGetByIdRequest<TEntity, TOut> 
+        : PagedGetRequest<TEntity, int, TOut>
         where TEntity : class
     {
         public PagedGetByIdRequest(int id, int pageSize = 10)
@@ -66,14 +77,14 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public PagedGetByIdRequestProfile()
         {
-            ForEntity<TEntity>()
-                .SelectWith(builder => builder.Single(request => request.Key, "Id"));
+            ForEntity<TEntity>().WithEntityKey("Id");
         }
     }
 
     [Obsolete("Linq does not currently support positional queries. PagedGetRequest may cause a large result set to be created.")]
     [DoNotValidate]
-    public class PagedGetByGuidRequest<TEntity, TOut> : PagedGetRequest<TEntity, Guid, TOut>
+    public class PagedGetByGuidRequest<TEntity, TOut> 
+        : PagedGetRequest<TEntity, Guid, TOut>
         where TEntity : class
     {
         public PagedGetByGuidRequest(Guid guid, int pageSize = 10)
@@ -88,8 +99,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public PagedGetByGuidRequestProfile()
         {
-            ForEntity<TEntity>()
-                .SelectWith(builder => builder.Single(request => request.Key, "Guid"));
+            ForEntity<TEntity>().WithEntityKey("Guid");
         }
     }
 

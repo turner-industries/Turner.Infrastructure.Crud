@@ -57,7 +57,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public int PageSize { get; set; }
     }
 
-    public class PagedFindUserProfile : CrudRequestProfile<IPagedFindRequest>
+    public class PagedFindUserProfile 
+        : CrudRequestProfile<IPagedFindRequest>
     {
         public PagedFindUserProfile()
         {

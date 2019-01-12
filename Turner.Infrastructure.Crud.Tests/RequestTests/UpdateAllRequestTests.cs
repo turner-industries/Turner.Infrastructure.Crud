@@ -90,11 +90,14 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public List<UserGetDto> Items { get; set; }
     }
 
-    public class UpdateAllUsersByIdProfile : CrudRequestProfile<UpdateAllUsersByIdRequest>
+    public class UpdateAllUsersByIdProfile 
+        : CrudBulkRequestProfile<UpdateAllUsersByIdRequest, UserGetDto>
     {
         public UpdateAllUsersByIdProfile()
         {
-            ForEntity<User>().UpdateAllWith(request => request.Items, item => item.Id, user => user.Id);
+            ForEntity<User>()
+                .WithData(request => request.Items)
+                .WithKeys(item => item.Id, entity => entity.Id);
         }
     }
 }

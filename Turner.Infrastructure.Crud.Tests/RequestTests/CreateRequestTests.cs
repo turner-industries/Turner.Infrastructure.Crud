@@ -124,7 +124,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public object OtherStuff { get; set; }
     }
     
-    public class CreateRequestProfile : CrudRequestProfile<ICreateRequest>
+    public class CreateRequestProfile 
+        : CrudRequestProfile<ICreateRequest>
     {
         public CreateRequestProfile()
         {
@@ -148,7 +149,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         }
     }
 
-    public class CreateUserWithoutResponseProfile : CrudRequestProfile<CreateUserWithoutResponseRequest>
+    public class CreateUserWithoutResponseProfile 
+        : CrudRequestProfile<CreateUserWithoutResponseRequest>
     {
         public CreateUserWithoutResponseProfile()
         {
