@@ -44,10 +44,10 @@ namespace Turner.Infrastructure.Crud.Requests
         : CrudBulkRequestProfile<CreateAllRequest<TEntity, TIn>, TIn>
         where TEntity : class
     {
-        public CreateAllRequestProfile()
+        public CreateAllRequestProfile() 
+            : base(request => request.Items)
         {
             ForEntity<TEntity>()
-                .UseData(request => request.Items)
                 .CreateWith(item => Mapper.Map<TEntity>(item));
         }
     }
@@ -66,9 +66,9 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
     {
         public CreateAllRequestProfile()
+            : base(request => request.Items)
         {
             ForEntity<TEntity>()
-                .UseData(request => request.Items)
                 .CreateWith(item => Mapper.Map<TEntity>(item));
         }
     }

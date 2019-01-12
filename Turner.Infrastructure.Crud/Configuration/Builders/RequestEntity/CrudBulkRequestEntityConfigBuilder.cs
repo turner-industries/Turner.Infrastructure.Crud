@@ -16,7 +16,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
     {
         private Expression<Func<TRequest, IEnumerable<TItem>>> _getRequestItems;
         
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseData(
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithData(
             Expression<Func<TRequest, IEnumerable<TItem>>> requestItemsExpr)
         {
             _getRequestItems = requestItemsExpr;
@@ -88,7 +88,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             {
                 var message =
                     $"No request data has been defined for '{typeof(TRequest)}'." +
-                    $"Define data by calling `{nameof(UseData)}`.";
+                    $"Define data by calling `{nameof(WithData)}`.";
 
                 throw new BadCrudConfigurationException(message);
             }

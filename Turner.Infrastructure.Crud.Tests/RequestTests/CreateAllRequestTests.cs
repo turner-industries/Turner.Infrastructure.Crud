@@ -134,7 +134,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public CreateUsersRequestProfile()
         {
             ForEntity<User>()
-                .UseData(request => request.Users)
+                .WithData(request => request.Users)
                 .CreateWith(user => Mapper.Map<User>(user))
                 .BeforeCreating(request =>
                 {

@@ -240,10 +240,25 @@ namespace Turner.Infrastructure.Crud.Configuration
     public abstract class CrudBulkRequestProfile<TRequest, TItem>
         : CrudRequestProfileCommon<TRequest>
     {
+        private readonly Expression<Func<TRequest, IEnumerable<TItem>>> _defaultDataSource;
+
+        public CrudBulkRequestProfile()
+        {
+        }
+
+        public CrudBulkRequestProfile(Expression<Func<TRequest, IEnumerable<TItem>>> defaultDataSource)
+        {
+            _defaultDataSource = defaultDataSource;
+        }
+
         protected CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> ForEntity<TEntity>()
             where TEntity : class
         {
             var builder = new CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>();
+
+            if (_defaultDataSource != null)
+                builder.WithData(_defaultDataSource);
+
             _requestEntityBuilders[typeof(TEntity)] = builder;
 
             return builder;

@@ -52,9 +52,9 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
     {
         public UpdateAllByIdRequestProfile()
+            : base(request => request.Items)
         {
             ForEntity<TEntity>()
-                .UseData(request => request.Items)
                 .WithKeys("Id");
         }
     }
@@ -71,9 +71,9 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
     {
         public UpdateAllByGuidRequestProfile()
+            : base(request => request.Items)
         {
             ForEntity<TEntity>()
-                .UseData(request => request.Items)
                 .WithKeys("Guid");
         }
     }
@@ -99,9 +99,9 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
     {
         public UpdateAllByIdRequestProfile()
+            : base(request => request.Items)
         {
             ForEntity<TEntity>()
-                .UseData(request => request.Items)
                 .WithKeys("Id");
         }
     }
@@ -118,9 +118,9 @@ namespace Turner.Infrastructure.Crud.Requests
         where TEntity : class
     {
         public UpdateAllByGuidRequestProfile()
+            : base(request => request.Items)
         {
             ForEntity<TEntity>()
-                .UseData(request => request.Items)
                 .WithKeys("Guid");
         }
     }
