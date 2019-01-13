@@ -24,15 +24,21 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity[]> SynchronizeEntities(TRequest request)
         {
-            // TODO: Collapse actions (Replace with hooks)
-            await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Synchronize, request).Configure();
+            var requestHooks = RequestConfig.GetRequestHooks(request);
+            foreach (var hook in requestHooks)
+                await hook.Run(request).Configure();
             
             await DeleteEntities(request).Configure();
 
-            var data = RequestConfig.GetRequestDataFor<TEntity>();
-            
             var entities = await GetEntities(request).Configure();
-            var items = (IEnumerable<object>)data.DataSource(request);
+            
+            var data = RequestConfig.GetRequestItemSourceFor<TEntity>();
+            var items = ((IEnumerable<object>)data.ItemSource(request)).ToArray();
+
+            var itemHooks = RequestConfig.GetItemHooksFor<TEntity>(request);
+            foreach (var item in items)
+                foreach (var hook in itemHooks)
+                    await hook.Run(request, item).Configure();
 
             var joinedItems = RequestConfig
                 .Join(items.Where(x => x != null), entities)
@@ -46,9 +52,10 @@ namespace Turner.Infrastructure.Crud.Requests
 
             var changedEntities = updatedEntities.Concat(createdEntities).ToArray();
 
-            // TODO: Replace with hooks
+            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>(request);
             foreach (var entity in changedEntities)
-                await RequestConfig.RunPostActionsFor(ActionType.Synchronize, request, entity).Configure();
+                foreach (var hook in entityHooks)
+                    await hook.Run(request, entity).Configure();
 
             await Context.ApplyChangesAsync().Configure();
 

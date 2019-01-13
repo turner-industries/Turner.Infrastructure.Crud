@@ -33,11 +33,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsNotNull(users);
             Assert.AreEqual(2, users.Count);
             Assert.AreEqual("TestUser1", users[0].Name);
-            Assert.AreEqual("/User[0]", users[0].PreMessage);
-            Assert.AreEqual("PostCreate/Entity/User[TestUser1]", users[0].PostMessage);
             Assert.AreEqual("TestUser2", users[1].Name);
-            Assert.AreEqual("/User[1]", users[1].PreMessage);
-            Assert.AreEqual("PostCreate/Entity/User[TestUser2]", users[1].PostMessage);
         }
         
         [Test]
@@ -60,11 +56,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsNotNull(response.Data.Items);
             Assert.AreEqual(2, response.Data.Items.Count);
             Assert.AreEqual("TestUser1", response.Data.Items[0].Name);
-            Assert.AreEqual("/User[0]", response.Data.Items[0].PreMessage);
-            Assert.AreEqual("PostCreate/Entity/User[TestUser1]", response.Data.Items[0].PostMessage);
             Assert.AreEqual("TestUser2", response.Data.Items[1].Name);
-            Assert.AreEqual("/User[1]", response.Data.Items[1].PreMessage);
-            Assert.AreEqual("PostCreate/Entity/User[TestUser2]", response.Data.Items[1].PostMessage);
         }
 
         [Test]
@@ -84,9 +76,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsNotNull(users);
             Assert.AreEqual(2, users.Count);
             Assert.AreEqual("TestUser1", users[0].Name);
-            Assert.AreEqual("PostCreate/Entity", users[0].PostMessage);
             Assert.AreEqual("TestUser2", users[1].Name);
-            Assert.AreEqual("PostCreate/Entity", users[1].PostMessage);
         }
 
         [Test]
@@ -106,9 +96,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsNotNull(response.Data.Items);
             Assert.AreEqual(2, response.Data.Items.Count);
             Assert.AreEqual("TestUser1", response.Data.Items[0].Name);
-            Assert.AreEqual("PostCreate/Entity", response.Data.Items[0].PostMessage);
             Assert.AreEqual("TestUser2", response.Data.Items[1].Name);
-            Assert.AreEqual("PostCreate/Entity", response.Data.Items[1].PostMessage);
         }
     }
 
@@ -134,14 +122,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public CreateUsersRequestProfile()
         {
             ForEntity<User>()
-                .WithData(request => request.Users)
                 .CreateWith(user => Mapper.Map<User>(user))
-                .BeforeCreating(request =>
-                {
-                    for (int i = 0; i < request.Users.Length; ++i)
-                        request.Users[i].PreMessage += $"/User[{i}]";
-                })
-                .AfterCreating(user => user.PostMessage += $"/User[{user.Name}]");
+                .WithItems(request => request.Users);
         }
     }
 }

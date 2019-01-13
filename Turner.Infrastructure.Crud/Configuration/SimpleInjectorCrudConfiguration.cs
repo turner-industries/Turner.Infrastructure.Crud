@@ -21,6 +21,10 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             container.RegisterSingleton(() => new CrudConfigManager(configAssemblies));
 
+            TypeRequestHookFactory.BindContainer(container.GetInstance);
+            TypeEntityHookFactory.BindContainer(container.GetInstance);
+            TypeItemHookFactory.BindContainer(container.GetInstance);
+
             bool IfNotHandled(PredicateContext c) => !c.Handled;
 
             container.RegisterInitializer<ICrudRequestHandler>(handler =>

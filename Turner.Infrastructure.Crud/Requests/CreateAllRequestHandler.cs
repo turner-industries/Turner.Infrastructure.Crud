@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
@@ -18,11 +20,18 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity[]> CreateEntities(TRequest request)
         {
-            await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Create, request).Configure();
+            var requestHooks = RequestConfig.GetRequestHooks(request);
+            foreach (var hook in requestHooks)
+                await hook.Run(request).Configure();
 
-            var data = RequestConfig.GetRequestDataFor<TEntity>();
-            
-            var items = data.DataSource(request) as IEnumerable<object>;
+            var itemSource = RequestConfig.GetRequestItemSourceFor<TEntity>();
+            var items = ((IEnumerable<object>)itemSource.ItemSource(request)).ToArray();
+
+            var itemHooks = RequestConfig.GetItemHooksFor<TEntity>(request);
+            foreach (var item in items)
+                foreach (var hook in itemHooks)
+                    await hook.Run(request, item).Configure();
+
             var creator = RequestConfig.GetCreatorFor<TEntity>();
             
             var newEntities = new List<TEntity>();
@@ -31,8 +40,10 @@ namespace Turner.Infrastructure.Crud.Requests
             
             var entities = await Context.EntitySet<TEntity>().CreateAsync(newEntities).Configure();
 
+            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>(request);
             foreach (var entity in entities)
-                await RequestConfig.RunPostActionsFor(ActionType.Create, request, entity).Configure();
+                foreach (var hook in entityHooks)
+                    await hook.Run(request, entity).Configure();
 
             await Context.ApplyChangesAsync().Configure();
 

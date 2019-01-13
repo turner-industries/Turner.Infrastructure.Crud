@@ -18,11 +18,13 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
     public class SortEntity : IEntity
     {
         public int Id { get; set; }
-        public string PostMessage { get; set; }
+
         public bool IsDeleted { get; set; }
 
         public int Col1 { get; set; }
+
         public string Col2 { get; set; }
+
         public long Col3 { get; set; }
     }
 
@@ -35,24 +37,6 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
     {
         public CrudRequestProfile()
         {
-            BeforeCreating(request =>
-            {
-                if (request is IHasPreMessage tRequest)
-                    tRequest.PreMessage = "PreCreate";
-            });
-
-            BeforeUpdating(request =>
-            {
-                if (request is IHasPreMessage tRequest)
-                    tRequest.PreMessage = "PreUpdate";
-            });
-
-            BeforeDeleting(request =>
-            {
-                if (request is IHasPreMessage tRequest)
-                    tRequest.PreMessage += "PreDelete";
-            });
-
             ConfigureErrors(config =>
             {
                 config.FailedToFindInDeleteIsError = true;
@@ -63,11 +47,6 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
 
             ForEntity<NonEntity>()
                 .ConfigureOptions(config => config.UseProjection = false);
-
-            ForEntity<IEntity>()
-                .AfterCreating(entity => entity.PostMessage = "PostCreate/Entity")
-                .AfterUpdating(entity => entity.PostMessage = "PostUpdate/Entity")
-                .AfterDeleting(entity => entity.PostMessage = "PostDelete/Entity");
         }
     }
 

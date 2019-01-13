@@ -17,34 +17,22 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         where TEntity : class
         where TBuilder : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
     {
-        private readonly Dictionary<ActionType, List<Func<TRequest, Task>>> _preActions
-            = new Dictionary<ActionType, List<Func<TRequest, Task>>>();
-
-        private readonly Dictionary<ActionType, List<Func<TEntity, Task>>> _postActions
-            = new Dictionary<ActionType, List<Func<TEntity, Task>>>();
-
         private readonly List<IFilter> _filters = new List<IFilter>();
+
+        protected readonly List<IEntityHookFactory> EntityHooks
+            = new List<IEntityHookFactory>();
 
         protected CrudOptionsConfig OptionsConfig;
         protected TEntity DefaultValue;
         protected ISorter Sorter;
         protected ISelector Selector;
-        protected IRequestData RequestDataSource;
+        protected IRequestItemSource RequestItemSource;
         protected Key EntityKey;
         protected Key RequestItemKey;
         protected Func<object, Task<TEntity>> CreateEntity;
         protected Func<object, TEntity, Task<TEntity>> UpdateEntity;
         protected Func<ICrudErrorHandler> ErrorHandlerFactory;
-
-        public CrudRequestEntityConfigBuilderCommon()
-        {
-            foreach (var type in (ActionType[]) Enum.GetValues(typeof(ActionType)))
-            {
-                _preActions[type] = new List<Func<TRequest, Task>>();
-                _postActions[type] = new List<Func<TEntity, Task>>();
-            }
-        }
-
+        
         public TBuilder ConfigureOptions(Action<CrudOptionsConfig> config)
         {
             if (config == null)
@@ -67,54 +55,35 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return (TBuilder)this;
         }
 
-        public TBuilder BeforeCreating(Func<TRequest, Task> action) 
-            => AddPreAction(ActionType.Create, action);
+        public TBuilder WithEntityHook<THook>()
+            where THook : IEntityHook<TRequest, TEntity>
+        {
+            EntityHooks.Add(TypeEntityHookFactory.From<THook, TRequest, TEntity>());
 
-        public TBuilder BeforeCreating(Action<TRequest> action)
-            => AddPreAction(ActionType.Create, action);
-
-        public TBuilder AfterCreating(Func<TEntity, Task> action)
-            => AddPostAction(ActionType.Create, action);
-
-        public TBuilder AfterCreating(Action<TEntity> action)
-            => AddPostAction(ActionType.Create, action);
-
-        public TBuilder BeforeUpdating(Func<TRequest, Task> action)
-            => AddPreAction(ActionType.Update, action);
-
-        public TBuilder BeforeUpdating(Action<TRequest> action)
-            => AddPreAction(ActionType.Update, action);
-
-        public TBuilder AfterUpdating(Func<TEntity, Task> action)
-            => AddPostAction(ActionType.Update, action);
-
-        public TBuilder AfterUpdating(Action<TEntity> action)
-            => AddPostAction(ActionType.Update, action);
-
-        public TBuilder BeforeDeleting(Func<TRequest, Task> action)
-            => AddPreAction(ActionType.Delete, action);
-
-        public TBuilder BeforeDeleting(Action<TRequest> action)
-            => AddPreAction(ActionType.Delete, action);
-
-        public TBuilder AfterDeleting(Func<TEntity, Task> action) 
-            => AddPostAction(ActionType.Delete, action);
-
-        public TBuilder AfterDeleting(Action<TEntity> action)
-            => AddPostAction(ActionType.Delete, action);
-
-        public TBuilder BeforeSaving(Func<TRequest, Task> action)
-            => AddPreAction(ActionType.Save, action);
-
-        public TBuilder BeforeSaving(Action<TRequest> action)
-            => AddPreAction(ActionType.Save, action);
-
-        public TBuilder AfterSaving(Func<TEntity, Task> action)
-            => AddPostAction(ActionType.Save, action);
-
-        public TBuilder AfterSaving(Action<TEntity> action)
-            => AddPostAction(ActionType.Save, action);
+            return (TBuilder)this;
+        }
         
+        public TBuilder WithEntityHook(IEntityHook<TRequest, TEntity> hook)
+        {
+            EntityHooks.Add(InstanceEntityHookFactory.From(hook));
+
+            return (TBuilder)this;
+        }
+
+        public TBuilder WithEntityHook(Func<TRequest, TEntity, Task> hook)
+        {
+            EntityHooks.Add(FunctionEntityHookFactory.From(hook));
+
+            return (TBuilder)this;
+        }
+
+        public TBuilder WithEntityHook(Action<TRequest, TEntity> hook)
+        {
+            EntityHooks.Add(FunctionEntityHookFactory.From(hook));
+
+            return (TBuilder)this;
+        }
+
         public TBuilder WithEntityKey<TKey>(Expression<Func<TEntity, TKey>> entityKeyExpr)
         {
             EntityKey = new Key(typeof(TKey), entityKeyExpr);
@@ -134,7 +103,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return (TBuilder)this;
         }
         
-        public TBuilder UseDefault(TEntity defaultValue)
+        public TBuilder WithDefault(TEntity defaultValue)
         {
             DefaultValue = defaultValue;
 
@@ -189,8 +158,8 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             if (EntityKey != null)
                 config.SetEntityKey<TEntity>(EntityKey);
 
-            if (RequestDataSource != null)
-                config.SetEntityRequestData<TEntity>(RequestDataSource);
+            if (RequestItemSource != null)
+                config.SetEntityRequestItemSource<TEntity>(RequestItemSource);
                 
             if (Selector != null)
                 config.SetEntitySelector<TEntity>(Selector);
@@ -207,71 +176,13 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             if (_filters.Count > 0)
                 config.SetEntityFilters<TEntity>(_filters);
 
-            foreach (var type in (ActionType[]) Enum.GetValues(typeof(ActionType)))
-            {
-                Func<object, Task> ConvertAction<TArg>(Func<TArg, Task> action)
-                    => x => action((TArg) x);
-
-                var preActions = _preActions[type];
-                if (preActions.Count > 0)
-                {
-                    config.SetPreActionsFor<TEntity>(type, 
-                        new ActionList(preActions.Select(ConvertAction<TRequest>)));
-                }
-
-                var postActions = _postActions[type];
-                if (postActions.Count > 0)
-                {
-                    config.SetPostActionsFor<TEntity>(type,
-                        new ActionList(postActions.Select(ConvertAction<TEntity>)));
-                }
-            }
+            config.SetEntityHooksFor<TEntity>(EntityHooks);
         }
 
         private TBuilder AddRequestFilter(IFilter filter)
         {
             if (filter != null)
                 _filters.Add(filter);
-
-            return (TBuilder)this;
-        }
-
-        private TBuilder AddPreAction(ActionType type, Func<TRequest, Task> action)
-        {
-            if (action != null)
-                _preActions[type].Add(action);
-
-            return (TBuilder)this;
-        }
-
-        private TBuilder AddPreAction(ActionType type, Action<TRequest> action)
-        {
-            if (action != null)
-                _preActions[type].Add(request =>
-                {
-                    action(request);
-                    return Task.CompletedTask;
-                });
-
-            return (TBuilder)this;
-        }
-
-        private TBuilder AddPostAction(ActionType type, Func<TEntity, Task> action)
-        {
-            if (action != null)
-                _postActions[type].Add(action);
-
-            return (TBuilder)this;
-        }
-
-        private TBuilder AddPostAction(ActionType type, Action<TEntity> action)
-        {
-            if (action != null)
-                _postActions[type].Add(request =>
-                {
-                    action(request);
-                    return Task.CompletedTask;
-                });
 
             return (TBuilder)this;
         }

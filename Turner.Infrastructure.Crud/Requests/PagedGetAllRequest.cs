@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using Turner.Infrastructure.Mediator;
-using Turner.Infrastructure.Mediator.Decorators;
 // ReSharper disable UnusedTypeParameter
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -12,15 +11,6 @@ namespace Turner.Infrastructure.Crud.Requests
     public interface IPagedGetAllRequest<TEntity, TOut> : IPagedGetAllRequest, IRequest<PagedGetAllResult<TOut>>
         where TEntity : class
     {
-    }
-    
-    [DoNotValidate]
-    public class PagedGetAllRequest<TEntity, TOut> : IPagedGetAllRequest<TEntity, TOut>
-        where TEntity : class
-    {
-        public int PageNumber { get; set; } = 1;
-
-        public int PageSize { get; set; } = 10;
     }
 
     public class PagedGetAllResult<TOut>

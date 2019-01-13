@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using System;
 using System.Linq;
@@ -39,8 +40,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsNotNull(response.Data);
             Assert.AreEqual(_user.Id, response.Data.Id);
             Assert.AreEqual("NewName", response.Data.Name);
-            Assert.AreEqual("PreUpdate/Update", response.Data.PreMessage);
-            Assert.AreEqual("PostMessage/Update", response.Data.PostMessage);
         }
 
         [Test]
@@ -59,8 +58,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.NotNull(user);
             Assert.AreEqual(_user.Id, user.Id);
             Assert.AreEqual("NewName", user.Name);
-            Assert.AreEqual(_user.PreMessage, user.PreMessage);
-            Assert.AreEqual(_user.PostMessage, user.PostMessage);
         }
 
         [Test]
@@ -98,8 +95,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsNotNull(user);
             Assert.AreEqual(_user.Id, user.Id);
             Assert.AreEqual(_user.Name, user.Name);
-            Assert.AreEqual(_user.PreMessage, user.PreMessage);
-            Assert.AreEqual(_user.PostMessage, user.PostMessage);
         }
 
         [Test]
@@ -117,8 +112,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsNotNull(response.Data);
             Assert.AreEqual(_user.Id, response.Data.Id);
             Assert.AreEqual(_user.Name, response.Data.Name);
-            Assert.AreEqual(_user.PreMessage, response.Data.PreMessage);
-            Assert.AreEqual(_user.PostMessage, response.Data.PostMessage);
         }
         
         [Test]
@@ -134,8 +127,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsNotNull(response.Data);
             Assert.AreEqual(_user.Id, response.Data.Id);
             Assert.AreEqual(_user.Name, response.Data.Name);
-            Assert.AreEqual(_user.PreMessage, response.Data.PreMessage);
-            Assert.AreEqual(_user.PostMessage, response.Data.PostMessage);
         }
 
         [Test]
@@ -169,17 +160,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public UserDto Data { get; set; }
     }
 
-    public class UpdateRequestProfile<TEntity, TOut> 
-        : CrudRequestProfile<IUpdateRequest<TEntity, TOut>>
-        where TEntity : class, IEntity
-    {
-        public UpdateRequestProfile()
-        {
-            ForEntity<IEntity>()
-                .AfterUpdating(entity => entity.PostMessage = "PostMessage");
-        }
-    }
-
     public class UpdateUserWithoutResponseRequestProfile 
         : CrudRequestProfile<UpdateRequest<User, UserGetDto>>
     {
@@ -206,9 +186,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public UpdateUserByIdProfile()
         {
             ForEntity<User>()
-                .SelectWith(builder => builder.Single(request => entity => entity.Id == request.Id))
-                .BeforeUpdating(request => request.PreMessage += "/Update")
-                .AfterUpdating(entity => entity.PostMessage += "/Update");
+                .SelectWith(builder => builder.Single(request => entity => entity.Id == request.Id));
 
             ConfigureErrors(config => config.FailedToFindInUpdateIsError = false);
         }

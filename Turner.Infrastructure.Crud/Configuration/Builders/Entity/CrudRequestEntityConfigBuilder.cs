@@ -11,19 +11,6 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, CrudRequestEntityConfigBuilder<TRequest, TEntity>>
         where TEntity : class
     {
-        public CrudRequestEntityConfigBuilder()
-        {
-            UseData(request => request);
-        }
-
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> UseData<TData>(
-            Func<TRequest, TData> dataSource)
-        {
-            RequestDataSource = RequestData.From(dataSource);
-
-            return this;
-        }
-
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> WithRequestKey<TKey>(
             Expression<Func<TRequest, TKey>> requestItemKeyExpr)
         {
