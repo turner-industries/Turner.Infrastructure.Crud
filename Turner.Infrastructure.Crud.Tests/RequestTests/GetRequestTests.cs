@@ -36,8 +36,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsNotNull(response.Data);
             Assert.AreEqual(_user.Id, response.Data.Id);
             Assert.AreEqual(_user.Name, response.Data.Name);
-            Assert.AreEqual(_user.PreMessage, response.Data.PreMessage);
-            Assert.AreEqual(_user.PostMessage, response.Data.PostMessage);
         }
 
         [Test]
@@ -50,8 +48,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsNotNull(response.Data);
             Assert.AreEqual(_site.Id, response.Data.Id);
             Assert.AreEqual(_site.Guid, response.Data.Guid);
-            Assert.AreEqual(_site.PreMessage, response.Data.PreMessage);
-            Assert.AreEqual(_site.PostMessage, response.Data.PostMessage);
         }
 
         [Test]
@@ -64,8 +60,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsNotNull(response.Data);
             Assert.AreEqual(_user.Id, response.Data.Id);
             Assert.AreEqual(_user.Name, response.Data.Name);
-            Assert.AreEqual(_user.PreMessage, response.Data.PreMessage);
-            Assert.AreEqual(_user.PostMessage, response.Data.PostMessage);
         }
 
         [Test]
@@ -78,8 +72,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsNotNull(response.Data);
             Assert.AreEqual(_user.Id, response.Data.Id);
             Assert.AreEqual(_user.Name, response.Data.Name);
-            Assert.AreEqual(_user.PreMessage, response.Data.PreMessage);
-            Assert.AreEqual(_user.PostMessage, response.Data.PostMessage);
         }
 
         [Test]
@@ -112,8 +104,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsNotNull(response.Data);
             Assert.AreEqual(_user.Id, response.Data.Id);
             Assert.AreEqual(_user.Name, response.Data.Name);
-            Assert.AreEqual(_user.PreMessage, response.Data.PreMessage);
-            Assert.AreEqual(_user.PostMessage, response.Data.PostMessage);
         }
 
         [Test]
@@ -126,8 +116,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsNotNull(response.Data);
             Assert.AreEqual(_user.Id, response.Data.Id);
             Assert.AreEqual(_user.Name, response.Data.Name);
-            Assert.AreEqual(_user.PreMessage, response.Data.PreMessage);
-            Assert.AreEqual(_user.PostMessage, response.Data.PostMessage);
         }
     }
 

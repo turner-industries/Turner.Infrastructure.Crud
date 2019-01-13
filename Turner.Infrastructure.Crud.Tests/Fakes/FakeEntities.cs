@@ -7,37 +7,26 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
     public interface IEntity
     {
         int Id { get; set; }
-        string PostMessage { get; set; }
+
         bool IsDeleted { get; set; }
     }
-
-    public interface IHasPreMessage
-    {
-        string PreMessage { get; set; }
-    }
-
+    
     public class Entity : IEntity
     {
         [Key, Required]
         public int Id { get; set; }
 
-        public string PostMessage { get; set; }
-
         public bool IsDeleted { get; set; } = false;
     }
 
-    public class User : Entity, IHasPreMessage
+    public class User : Entity
     {
         public string Name { get; set; }
-
-        public string PreMessage { get; set; }
     }
     
-    public class UserDto : IHasPreMessage
+    public class UserDto
     {
         public string Name { get; set; }
-
-        public string PreMessage { get; set; }
     }
     
     public class UserGetDto : UserDto
@@ -45,8 +34,6 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         public int Id { get; set; }
 
         public bool IsDeleted { get; set; }
-
-        public string PostMessage { get; set; }
     }
 
     public class UserProfiles : Profile
@@ -58,26 +45,20 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         }
     }
 
-    public class Site : Entity, IHasPreMessage
+    public class Site : Entity
     {
         [Required]
         public Guid Guid { get; set; }
-
-        public string PreMessage { get; set; }
     }
 
-    public class SiteDto : IHasPreMessage
+    public class SiteDto
     {
         public Guid Guid { get; set; }
-
-        public string PreMessage { get; set; }
     }
 
     public class SiteGetDto : SiteDto
     {
         public int Id { get; set; }
-
-        public string PostMessage { get; set; }
     }
 
     public class SiteProfiles : Profile
