@@ -11,11 +11,6 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, CrudRequestEntityConfigBuilder<TRequest, TEntity>>
         where TEntity : class
     {
-        public CrudRequestEntityConfigBuilder()
-        {
-            RequestItemSource = Crud.RequestItemSource.From<TRequest, TRequest>(request => request);
-        }
-
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> WithRequestKey<TKey>(
             Expression<Func<TRequest, TKey>> requestItemKeyExpr)
         {

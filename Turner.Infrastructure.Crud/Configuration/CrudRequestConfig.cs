@@ -187,9 +187,10 @@ namespace Turner.Infrastructure.Crud.Configuration
                     return itemSource;
             }
 
-            throw new BadCrudConfigurationException(
-                $"No item source defined for entity '{typeof(TEntity)}' " +
-                $"for request '{typeof(TRequest)}'.");
+            var source = RequestItemSource.From<TRequest, TRequest>(request => request);
+            _entityRequestItemSources[typeof(TEntity)] = source;
+
+            return source;
         }
 
         public IKey GetRequestKey() => _requestKey;
