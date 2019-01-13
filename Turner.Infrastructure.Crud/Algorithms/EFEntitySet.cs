@@ -26,7 +26,7 @@ namespace Turner.Infrastructure.Crud.Algorithms
 
         IAsyncEnumerator<TEntity> IAsyncEnumerable<TEntity>.GetEnumerator() => _set.ToAsyncEnumerable().GetEnumerator();
 
-        public static EFEntitySet<TEntity> From(DbSet<TEntity> set)
+        internal static EFEntitySet<TEntity> From(DbSet<TEntity> set)
         {
             var entitySet = new EFEntitySet<TEntity>();
             entitySet._set = set;

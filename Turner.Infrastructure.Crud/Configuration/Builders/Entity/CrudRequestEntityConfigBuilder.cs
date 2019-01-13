@@ -13,15 +13,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
     {
         public CrudRequestEntityConfigBuilder()
         {
-            UseData(request => request);
-        }
-
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> UseData<TData>(
-            Func<TRequest, TData> dataSource)
-        {
-            RequestDataSource = RequestData.From(dataSource);
-
-            return this;
+            RequestItemSource = Crud.RequestItemSource.From<TRequest, TRequest>(request => request);
         }
 
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> WithRequestKey<TKey>(

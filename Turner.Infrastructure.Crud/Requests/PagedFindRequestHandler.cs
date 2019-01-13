@@ -31,6 +31,10 @@ namespace Turner.Infrastructure.Crud.Requests
 
             try
             {
+                var requestHooks = RequestConfig.GetRequestHooks(request);
+                foreach (var hook in requestHooks)
+                    await hook.Run(request).Configure();
+
                 var selector = RequestConfig.GetSelectorFor<TEntity>();
                 var entities = Context
                     .EntitySet<TEntity>()

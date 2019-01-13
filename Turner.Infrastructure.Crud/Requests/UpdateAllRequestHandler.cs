@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
-using Turner.Infrastructure.Crud.Exceptions;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -23,12 +22,20 @@ namespace Turner.Infrastructure.Crud.Requests
         
         protected async Task<TEntity[]> UpdateEntities(TRequest request)
         {
-            await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Update, request).Configure();
-
-            var data = RequestConfig.GetRequestDataFor<TEntity>();
+            var requestHooks = RequestConfig.GetRequestHooks(request);
+            foreach (var hook in requestHooks)
+                await hook.Run(request).Configure();
 
             var entities = await GetEntities(request).Configure();
-            var items = (IEnumerable<object>)data.DataSource(request);
+
+            var data = RequestConfig.GetRequestItemSourceFor<TEntity>();
+            var items = ((IEnumerable<object>)data.ItemSource(request)).ToArray();
+
+            var itemHooks = RequestConfig.GetItemHooksFor<TEntity>(request);
+            foreach (var item in items)
+                foreach (var hook in itemHooks)
+                    await hook.Run(request, item).Configure();
+
             var updator = RequestConfig.GetUpdatorFor<TEntity>();
 
             var updatedEntities = new List<TEntity>(entities.Length);
@@ -42,8 +49,10 @@ namespace Turner.Infrastructure.Crud.Requests
 
             entities = await Context.EntitySet<TEntity>().UpdateAsync(updatedEntities).Configure();
 
-            foreach (var entity in entities)
-                await RequestConfig.RunPostActionsFor(ActionType.Update, request, entity).Configure();
+            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>(request);
+            foreach (var entity in updatedEntities)
+                foreach (var hook in entityHooks)
+                    await hook.Run(request, entity).Configure();
 
             await Context.ApplyChangesAsync().Configure();
 

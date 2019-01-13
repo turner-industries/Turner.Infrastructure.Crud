@@ -28,23 +28,11 @@ namespace Turner.Infrastructure.Crud.Configuration
         private readonly List<CrudRequestProfile> _inheritProfiles 
             = new List<CrudRequestProfile>();
 
-        private readonly Dictionary<ActionType, ActionList> _preActions
-            = new Dictionary<ActionType, ActionList>();
-
-        private readonly Dictionary<ActionType, ActionList> _postActions
-            = new Dictionary<ActionType, ActionList>();
-
         private Action<CrudOptionsConfig> _optionsConfig;
         private Action<CrudRequestErrorConfig> _errorConfig;
-        
-        protected CrudRequestProfileCommon()
-        {
-            foreach (var type in (ActionType[])Enum.GetValues(typeof(ActionType)))
-            {
-                _preActions[type] = new ActionList();
-                _postActions[type] = new ActionList();
-            }
-        }
+ 
+        protected readonly List<IRequestHookFactory> RequestHooks
+            = new List<IRequestHookFactory>();
         
         public override Type RequestType => typeof(TRequest);
 
@@ -84,17 +72,34 @@ namespace Turner.Infrastructure.Crud.Configuration
                 _optionsConfig(options);
                 config.SetOptions(options);
             }
-
-            foreach (var type in (ActionType[])Enum.GetValues(typeof(ActionType)))
-            {
-                config.AddPreActions(type, _preActions[type]);
-                config.AddPostActions(type, _postActions[type]);
-            }
-
+            
+            config.AddRequestHooks(RequestHooks);
+            
             ApplyErrorConfig(config);
 
             foreach (var builder in _requestEntityBuilders.Values)
                 builder.Build(config);
+        }
+
+        protected void WithRequestHook<THook>()
+            where THook : IRequestHook<TRequest>
+        {
+            RequestHooks.Add(TypeRequestHookFactory.From<THook, TRequest>());
+        }
+
+        protected void WithRequestHook(IRequestHook<TRequest> hook)
+        {
+            RequestHooks.Add(InstanceRequestHookFactory.From(hook));
+        }
+
+        protected void WithRequestHook(Func<TRequest, Task> hook)
+        {
+            RequestHooks.Add(FunctionRequestHookFactory.From(hook));
+        }
+
+        protected void WithRequestHook(Action<TRequest> hook)
+        {
+            RequestHooks.Add(FunctionRequestHookFactory.From(hook));
         }
 
         protected void ConfigureOptions(Action<CrudOptionsConfig> config)
@@ -106,54 +111,6 @@ namespace Turner.Infrastructure.Crud.Configuration
         {
             _errorConfig = config;
         }
-        
-        protected void BeforeCreating(Func<TRequest, Task> action)
-            => AddPreAction(ActionType.Create, action);
-
-        protected void BeforeCreating(Action<TRequest> action)
-            => AddPreAction(ActionType.Create, action);
-
-        protected void AfterCreating(Func<TRequest, Task> action)
-            => AddPostAction(ActionType.Create, action);
-
-        protected void AfterCreating(Action<TRequest> action)
-            => AddPostAction(ActionType.Create, action);
-
-        protected void BeforeUpdating(Func<TRequest, Task> action)
-            => AddPreAction(ActionType.Update, action);
-
-        protected void BeforeUpdating(Action<TRequest> action)
-            => AddPreAction(ActionType.Update, action);
-
-        protected void AfterUpdating(Func<TRequest, Task> action)
-            => AddPostAction(ActionType.Update, action);
-
-        protected void AfterUpdating(Action<TRequest> action)
-            => AddPostAction(ActionType.Update, action);
-
-        protected void BeforeDeleting(Func<TRequest, Task> action)
-            => AddPreAction(ActionType.Delete, action);
-
-        protected void BeforeDeleting(Action<TRequest> action)
-            => AddPreAction(ActionType.Delete, action);
-
-        protected void AfterDeleting(Func<TRequest, Task> action)
-            => AddPostAction(ActionType.Delete, action);
-
-        protected void AfterDeleting(Action<TRequest> action)
-            => AddPostAction(ActionType.Delete, action);
-        
-        protected void BeforeSaving(Func<TRequest, Task> action)
-            => AddPreAction(ActionType.Save, action);
-
-        protected void BeforeSaving(Action<TRequest> action)
-            => AddPreAction(ActionType.Save, action);
-
-        protected void AfterSaving(Func<TRequest, Task> action)
-            => AddPostAction(ActionType.Save, action);
-
-        protected void AfterSaving(Action<TRequest> action)
-            => AddPostAction(ActionType.Save, action);
         
         private void ApplyErrorConfig<TPerspective>(CrudRequestConfig<TPerspective> config)
         {
@@ -177,38 +134,6 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             if (errorConfig.ErrorHandlerFactory != null)
                 config.ErrorConfig.SetErrorHandler(errorConfig.ErrorHandlerFactory);
-        }
-
-        private void AddPreAction(ActionType type, Func<TRequest, Task> action)
-        {
-            if (action != null)
-                _preActions[type].Add(request => action((TRequest) request));
-        }
-
-        private void AddPreAction(ActionType type, Action<TRequest> action)
-        {
-            if (action != null)
-                _preActions[type].Add(request =>
-                {
-                    action((TRequest) request);
-                    return Task.CompletedTask;
-                });
-        }
-
-        private void AddPostAction(ActionType type, Func<TRequest, Task> action)
-        {
-            if (action != null)
-                _postActions[type].Add(request => action((TRequest)request));
-        }
-
-        private void AddPostAction(ActionType type, Action<TRequest> action)
-        {
-            if (action != null)
-                _postActions[type].Add(request =>
-                {
-                    action((TRequest)request);
-                    return Task.CompletedTask;
-                });
         }
     }
     
@@ -240,15 +165,15 @@ namespace Turner.Infrastructure.Crud.Configuration
     public abstract class CrudBulkRequestProfile<TRequest, TItem>
         : CrudRequestProfileCommon<TRequest>
     {
-        private readonly Expression<Func<TRequest, IEnumerable<TItem>>> _defaultDataSource;
-
+        private readonly Expression<Func<TRequest, IEnumerable<TItem>>> _defaultItemSource;
+        
         public CrudBulkRequestProfile()
         {
         }
 
         public CrudBulkRequestProfile(Expression<Func<TRequest, IEnumerable<TItem>>> defaultDataSource)
         {
-            _defaultDataSource = defaultDataSource;
+            _defaultItemSource = defaultDataSource;
         }
 
         protected CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> ForEntity<TEntity>()
@@ -256,8 +181,8 @@ namespace Turner.Infrastructure.Crud.Configuration
         {
             var builder = new CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>();
 
-            if (_defaultDataSource != null)
-                builder.WithData(_defaultDataSource);
+            if (_defaultItemSource != null)
+                builder.WithItems(_defaultItemSource);
 
             _requestEntityBuilders[typeof(TEntity)] = builder;
 

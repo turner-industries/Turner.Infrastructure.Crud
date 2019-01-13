@@ -30,20 +30,28 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity> SaveEntity(TRequest request, TEntity entity)
         {
-            await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Save, request).Configure();
+            var requestHooks = RequestConfig.GetRequestHooks(request);
+            foreach (var hook in requestHooks)
+                await hook.Run(request).Configure();
 
-            var item = RequestConfig.GetRequestDataFor<TEntity>().DataSource(request);
+            var item = RequestConfig.GetRequestItemSourceFor<TEntity>().ItemSource(request);
 
             if (entity == null)
             {
                 entity = await CreateEntity(request, item).Configure();
-                await RequestConfig.RunPostActionsFor(ActionType.Save, request, entity).Configure();
+                var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>(request);
+                foreach (var hook in entityHooks)
+                    await hook.Run(request, entity).Configure();
+
                 await Context.ApplyChangesAsync().Configure();
             }
             else
             {
                 entity = await UpdateEntity(request, item, entity).Configure();
-                await RequestConfig.RunPostActionsFor(ActionType.Save, request, entity).Configure();
+                var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>(request);
+                foreach (var hook in entityHooks)
+                    await hook.Run(request, entity).Configure();
+
                 await Context.ApplyChangesAsync().Configure();
             }
 
@@ -52,38 +60,18 @@ namespace Turner.Infrastructure.Crud.Requests
 
         private async Task<TEntity> CreateEntity(TRequest request, object data)
         {
-            if (!Options.SuppressCreateActionsInSave)
-            {
-                await RequestConfig
-                    .RunPreActionsFor<TEntity>(ActionType.Create, request)
-                    .Configure();
-            }
-
             var creator = RequestConfig.GetCreatorFor<TEntity>();
             var entity = await creator(data).Configure();
             entity = await Context.EntitySet<TEntity>().CreateAsync(entity).Configure();
 
-            if (!Options.SuppressCreateActionsInSave)
-                await RequestConfig.RunPostActionsFor(ActionType.Create, request, entity).Configure();
-            
             return entity;
         }
 
         private async Task<TEntity> UpdateEntity(TRequest request, object data, TEntity entity)
         {
-            if (!Options.SuppressUpdateActionsInSave)
-            {
-                await RequestConfig
-                    .RunPreActionsFor<TEntity>(ActionType.Update, request)
-                    .Configure();
-            }
-
             var updator = RequestConfig.GetUpdatorFor<TEntity>();
             await updator(data, entity).Configure();
             entity = await Context.EntitySet<TEntity>().UpdateAsync(entity).Configure();
-
-            if (!Options.SuppressUpdateActionsInSave)
-                await RequestConfig.RunPostActionsFor(ActionType.Update, request, entity).Configure();
 
             return entity;
         }

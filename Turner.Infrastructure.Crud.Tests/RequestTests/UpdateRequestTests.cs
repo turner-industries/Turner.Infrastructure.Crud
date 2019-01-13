@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using System;
 using System.Linq;
@@ -39,7 +40,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsNotNull(response.Data);
             Assert.AreEqual(_user.Id, response.Data.Id);
             Assert.AreEqual("NewName", response.Data.Name);
-            Assert.AreEqual("PreUpdate/Update", response.Data.PreMessage);
+            Assert.AreEqual("Pre/Update", response.Data.PreMessage);
             Assert.AreEqual("PostMessage/Update", response.Data.PostMessage);
         }
 
@@ -176,7 +177,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public UpdateRequestProfile()
         {
             ForEntity<IEntity>()
-                .AfterUpdating(entity => entity.PostMessage = "PostMessage");
+                .WithEntityHook((request, entity) => entity.PostMessage = "PostMessage");
         }
     }
 
@@ -205,10 +206,11 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     {
         public UpdateUserByIdProfile()
         {
+            WithRequestHook(request => request.PreMessage += "/Update");
+
             ForEntity<User>()
                 .SelectWith(builder => builder.Single(request => entity => entity.Id == request.Id))
-                .BeforeUpdating(request => request.PreMessage += "/Update")
-                .AfterUpdating(entity => entity.PostMessage += "/Update");
+                .WithEntityHook((request, entity) => entity.PostMessage += "/Update");
 
             ConfigureErrors(config => config.FailedToFindInUpdateIsError = false);
         }

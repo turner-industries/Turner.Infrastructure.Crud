@@ -15,12 +15,47 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         where TEntity : class
     {
         private Expression<Func<TRequest, IEnumerable<TItem>>> _getRequestItems;
+
+        private readonly List<IItemHookFactory> _itemHooks
+            = new List<IItemHookFactory>();
         
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithData(
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItems(
             Expression<Func<TRequest, IEnumerable<TItem>>> requestItemsExpr)
         {
             _getRequestItems = requestItemsExpr;
-            RequestDataSource = RequestData.From(BuildDataSource(requestItemsExpr));
+            RequestItemSource = Crud.RequestItemSource.From(BuildItemSource(requestItemsExpr));
+
+            return this;
+        }
+
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItemHook<THook>()
+            where THook : IItemHook<TRequest, TItem>
+        {
+            _itemHooks.Add(TypeItemHookFactory.From<THook, TRequest, TItem>());
+
+            return this;
+        }
+
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItemHook(
+            IItemHook<TRequest, TItem> hook)
+        {
+            _itemHooks.Add(InstanceItemHookFactory.From(hook));
+
+            return this;
+        }
+
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItemHook(
+            Func<TRequest, TItem, Task> hook)
+        {
+            _itemHooks.Add(FunctionItemHookFactory.From(hook));
+
+            return this;
+        }
+
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItemHook(
+            Action<TRequest, TItem> hook)
+        {
+            _itemHooks.Add(FunctionItemHookFactory.From(hook));
 
             return this;
         }
@@ -87,8 +122,8 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             if (_getRequestItems == null)
             {
                 var message =
-                    $"No request data has been defined for '{typeof(TRequest)}'." +
-                    $"Define data by calling `{nameof(WithData)}`.";
+                    $"No request item source has been defined for '{typeof(TRequest)}'." +
+                    $"Define item source by calling `{nameof(WithItems)}` in the request's profile.";
 
                 throw new BadCrudConfigurationException(message);
             }
@@ -99,9 +134,11 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
                 DefaultSelector(config);
 
             BuildJoiner(config);
+
+            config.SetItemHooksFor<TEntity>(_itemHooks);
         }
 
-        private Func<TRequest, object> BuildDataSource(Expression<Func<TRequest, IEnumerable<TItem>>> itemsExpr)
+        private Func<TRequest, object> BuildItemSource(Expression<Func<TRequest, IEnumerable<TItem>>> itemsExpr)
         {
             var enumerableMethods = typeof(Enumerable).GetMethods();
             var rParamExpr = Expression.Parameter(typeof(TRequest));

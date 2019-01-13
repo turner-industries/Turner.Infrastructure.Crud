@@ -25,7 +25,7 @@ namespace Turner.Infrastructure.Crud.Configuration
         ISorter GetSorterFor<TEntity>()
             where TEntity : class;
 
-        IRequestData GetRequestDataFor<TEntity>()
+        IRequestItemSource GetRequestItemSourceFor<TEntity>()
             where TEntity : class;
 
         TEntity GetDefaultFor<TEntity>()
@@ -33,10 +33,12 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         IEnumerable<IFilter> GetFiltersFor<TEntity>();
 
-        Task RunPreActionsFor<TEntity>(ActionType type, object item)
+        List<IBoxedRequestHook> GetRequestHooks(object request);
+
+        List<IBoxedEntityHook> GetEntityHooksFor<TEntity>(object request)
             where TEntity : class;
 
-        Task RunPostActionsFor<TEntity>(ActionType type, object item, TEntity entity)
+        List<IBoxedItemHook> GetItemHooksFor<TEntity>(object request)
             where TEntity : class;
 
         Func<object, Task<TEntity>> GetCreatorFor<TEntity>()
@@ -54,7 +56,14 @@ namespace Turner.Infrastructure.Crud.Configuration
     {
         private IKey _requestKey;
 
-        private readonly ActionConfig _actions = new ActionConfig();
+        private readonly RequestHookConfig<TRequest> _requestHooks = new RequestHookConfig<TRequest>();
+
+        private readonly Dictionary<Type, EntityHookConfig<TRequest>> _entityHooks 
+            = new Dictionary<Type, EntityHookConfig<TRequest>>();
+        
+        private readonly Dictionary<Type, ItemHookConfig<TRequest>> _itemHooks
+            = new Dictionary<Type, ItemHookConfig<TRequest>>();
+
         private readonly RequestOptions _options = new RequestOptions();
 
         private readonly Dictionary<Type, CrudOptionsConfig> _entityOptionOverrides
@@ -66,8 +75,8 @@ namespace Turner.Infrastructure.Crud.Configuration
         private readonly Dictionary<Type, Func<IEnumerable<object>, IEnumerable<object>, IEnumerable<Tuple<object, object>>>> _entityJoiners
             = new Dictionary<Type, Func<IEnumerable<object>, IEnumerable<object>, IEnumerable<Tuple<object, object>>>>();
 
-        private readonly Dictionary<Type, IRequestData> _entityRequestData
-            = new Dictionary<Type, IRequestData>();
+        private readonly Dictionary<Type, IRequestItemSource> _entityRequestItemSources
+            = new Dictionary<Type, IRequestItemSource>();
 
         private readonly Dictionary<Type, IKey> _entityKeys
             = new Dictionary<Type, IKey>();
@@ -108,48 +117,78 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             return options;
         }
+
+        public List<IBoxedRequestHook> GetRequestHooks(object request)
+        {
+            if (!(request is TRequest))
+            {
+                var message =
+                    $"Unable to get request hooks for request of type '{request.GetType()}'. " +
+                    $"Configuration expected a request of type '{typeof(TRequest)}'.";
+
+                throw new BadCrudConfigurationException(message);
+            }
+
+            return _requestHooks.GetHooks((TRequest)request);
+        }
+
+        public List<IBoxedEntityHook> GetEntityHooksFor<TEntity>(object request)
+            where TEntity : class
+        {
+            if (!(request is TRequest))
+            {
+                var message =
+                    $"Unable to get entity hooks for request of type '{request.GetType()}'. " +
+                    $"Configuration expected a request of type '{typeof(TRequest)}'.";
+
+                throw new BadCrudConfigurationException(message);
+            }
+
+            var hooks = new List<IBoxedEntityHook>();
+
+            foreach (var type in typeof(TEntity).BuildTypeHierarchyDown())
+            {
+                if (_entityHooks.TryGetValue(type, out var entityHooks))
+                    hooks.AddRange(entityHooks.GetHooks((TRequest)request));
+            }
+
+            return hooks;
+        }
+
+        public List<IBoxedItemHook> GetItemHooksFor<TEntity>(object request)
+            where TEntity : class
+        {
+            if (!(request is TRequest))
+            {
+                var message =
+                    $"Unable to get item hooks for request of type '{request.GetType()}'. " +
+                    $"Configuration expected a request of type '{typeof(TRequest)}'.";
+
+                throw new BadCrudConfigurationException(message);
+            }
+
+            var hooks = new List<IBoxedItemHook>();
+
+            foreach (var type in typeof(TEntity).BuildTypeHierarchyDown())
+            {
+                if (_itemHooks.TryGetValue(type, out var itemHooks))
+                    hooks.AddRange(itemHooks.GetHooks((TRequest)request));
+            }
+
+            return hooks;
+        }
         
-        public Task RunPreActionsFor<TEntity>(ActionType type, object request)
-            where TEntity : class
-        {
-            if (!(request is TRequest))
-            {
-                var message =
-                    $"Unable to run {type.ToString()} pre actions on a request of type '{request.GetType()}'. " +
-                    $"Configuration expected a request of type '{typeof(TRequest)}'.";
-
-                throw new BadCrudConfigurationException(message);
-            }
-
-            return _actions[type].RunPreActionsFor(typeof(TEntity), request);
-        }
-
-        public Task RunPostActionsFor<TEntity>(ActionType type, object request, TEntity entity)
-            where TEntity : class
-        {
-            if (!(request is TRequest))
-            {
-                var message =
-                    $"Unable to run {type.ToString()} post actions on a request of type '{request.GetType()}'. " +
-                    $"Configuration expected a request of type '{typeof(TRequest)}'.";
-
-                throw new BadCrudConfigurationException(message);
-            }
-
-            return _actions[type].RunPostActionsFor(typeof(TEntity), request, entity);
-        }
-
-        public IRequestData GetRequestDataFor<TEntity>()
+        public IRequestItemSource GetRequestItemSourceFor<TEntity>()
             where TEntity : class
         {
             foreach (var type in typeof(TEntity).BuildTypeHierarchyUp())
             {
-                if (_entityRequestData.TryGetValue(type, out var dataSource))
-                    return dataSource;
+                if (_entityRequestItemSources.TryGetValue(type, out var itemSource))
+                    return itemSource;
             }
 
             throw new BadCrudConfigurationException(
-                $"No data defined for entity '{typeof(TEntity)}' " +
+                $"No item source defined for entity '{typeof(TEntity)}' " +
                 $"for request '{typeof(TRequest)}'.");
         }
 
@@ -260,32 +299,32 @@ namespace Turner.Infrastructure.Crud.Configuration
             _entityOptionOverrides[typeof(TEntity)] = options;
         }
 
-        internal void AddPreActions(ActionType type, ActionList actions)
+        internal void AddRequestHooks(List<IRequestHookFactory> hooks)
         {
-            _actions[type].AddPreActions(actions);
+            _requestHooks.AddHooks(hooks);
         }
 
-        internal void AddPostActions(ActionType type, ActionList actions)
-        {
-            _actions[type].AddPostActions(actions);
-        }
-
-        internal void SetPreActionsFor<TEntity>(ActionType type, ActionList actions)
+        internal void SetEntityHooksFor<TEntity>(List<IEntityHookFactory> hooks)
             where TEntity : class
         {
-            _actions[type].SetPreActionsFor(typeof(TEntity), actions);
+            var config = new EntityHookConfig<TRequest>();
+            config.SetHooks(hooks);
+
+            _entityHooks[typeof(TEntity)] = config;
         }
 
-        internal void SetPostActionsFor<TEntity>(ActionType type, ActionList actions)
-            where TEntity : class
+        internal void SetItemHooksFor<TEntity>(List<IItemHookFactory> hooks)
         {
-            _actions[type].SetPostActionsFor(typeof(TEntity), actions);
+            var config = new ItemHookConfig<TRequest>();
+            config.SetHooks(hooks);
+
+            _itemHooks[typeof(TEntity)] = config;
         }
 
-        internal void SetEntityRequestData<TEntity>(IRequestData dataSource)
+        internal void SetEntityRequestItemSource<TEntity>(IRequestItemSource itemSource)
             where TEntity : class
         {
-            _entityRequestData[typeof(TEntity)] = dataSource;
+            _entityRequestItemSources[typeof(TEntity)] = itemSource;
         }
 
         internal void SetRequestKey(IKey key)
@@ -363,12 +402,6 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         private void OverrideOptions(RequestOptions options, CrudOptionsConfig config)
         {
-            if (config.SuppressCreateActionsInSave.HasValue)
-                options.SuppressCreateActionsInSave = config.SuppressCreateActionsInSave.Value;
-
-            if (config.SuppressUpdateActionsInSave.HasValue)
-                options.SuppressUpdateActionsInSave = config.SuppressUpdateActionsInSave.Value;
-
             if (config.UseProjection.HasValue)
                 options.UseProjection = config.UseProjection.Value;
         }

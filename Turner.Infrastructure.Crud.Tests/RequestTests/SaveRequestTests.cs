@@ -28,7 +28,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             var user = Context.Set<User>().FirstOrDefault();
             Assert.IsNotNull(user);
             Assert.AreEqual("TestUser", user.Name);
-            Assert.AreEqual("/Save", user.PostMessage);
         }
 
         [Test]
@@ -45,7 +44,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.AreEqual(1, Context.Set<User>().Count());
             Assert.IsNotNull(response.Data);
             Assert.AreEqual("TestUser", response.Data.Name);
-            Assert.AreEqual("PostCreate/Entity/Save", response.Data.PostMessage);
+            Assert.AreEqual("Post/Entity", response.Data.PostMessage);
         }
 
         [Test]
@@ -69,7 +68,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             var user = Context.Set<User>().FirstOrDefault();
             Assert.IsNotNull(user);
             Assert.AreEqual("NewUser", user.Name);
-            Assert.AreEqual("PostUpdate/Entity/Save", user.PostMessage);
+            Assert.AreEqual("Post/Entity/Save", user.PostMessage);
         }
 
         [Test]
@@ -90,9 +89,9 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.AreEqual(1, Context.Set<User>().Count());
             Assert.IsNotNull(response.Data);
             Assert.AreEqual("TestUser", response.Data.Name);
-            Assert.AreEqual(null, response.Data.PreMessage);
-            Assert.AreEqual(null, Context.Set<User>().First().PreMessage);
-            Assert.AreEqual("/Save", response.Data.PostMessage);
+            Assert.AreEqual("Pre", response.Data.PreMessage);
+            Assert.AreEqual("Pre", Context.Set<User>().First().PreMessage);
+            Assert.AreEqual("Post/Entity", response.Data.PostMessage);
         }
 
         [Test]
@@ -110,10 +109,9 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             var user = Context.Set<User>().First();
             Assert.IsNotNull(user);
             Assert.AreNotEqual(0, user.Id);
-            Assert.AreEqual("NewUser", user.Name);
-            Assert.AreEqual("PostSave", request.Data.Name);
+            Assert.AreEqual("NewUser", request.Data.Name);
             Assert.AreEqual(null, user.PreMessage);
-            Assert.AreEqual("PostCreate/Entity", user.PostMessage);
+            Assert.AreEqual("Post/Entity", user.PostMessage);
         }
 
         [Test]
@@ -132,7 +130,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.AreNotEqual(0, response.Data.Id);
             Assert.AreEqual("NewUser", response.Data.Name);
             Assert.AreEqual(null, response.Data.PreMessage);
-            Assert.AreEqual("PostCreate/Entity", response.Data.PostMessage);
+            Assert.AreEqual("Post/Entity", response.Data.PostMessage);
         }
         
         [Test]
@@ -175,8 +173,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public SaveRequestProfile()
         {
             ForEntity<IEntity>()
-                .AfterCreating(entity => entity.PostMessage = "PostCreate/Entity")
-                .AfterUpdating(entity => entity.PostMessage = "PostUpdate/Entity");
+                .WithEntityHook((request, entity) => entity.PostMessage = "Post/Entity");
         }
     }
 
@@ -186,10 +183,10 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public SaveUserWithoutResponseProfile()
         {
             ForEntity<User>()
-                .SelectWith((Configuration.Builders.Select.SelectorBuilder<SaveUserWithoutResponseRequest, User> builder) => builder.Single(r => r.Id, e => e.Id))
+                .SelectWith(builder => builder.Single(r => r.Id, e => e.Id))
+                .WithEntityHook((request, user) => user.PostMessage += "/Save")
                 .CreateWith(request => Mapper.Map<User>(request.User))
                 .UpdateWith((request, entity) => Mapper.Map(request.User, entity))
-                .AfterSaving(entity => entity.PostMessage += "/Save")
                 .ConfigureOptions(options => options.SuppressCreateActionsInSave = true);
         }
     }
@@ -201,8 +198,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         {
             ForEntity<User>()
                 .SelectWith(builder => builder.Single("Name"))
-                .AfterUpdating(entity => entity.PostMessage = "PostUpdate/Entity")
-                .AfterSaving(entity => entity.PostMessage += "/Save")
                 .ConfigureOptions(options => options.SuppressUpdateActionsInSave = true);
         }
     }
@@ -214,8 +209,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         {
             ForEntity<User>()
                 .SelectWith(builder => builder.Single(r => e => r.Data.Id == e.Id));
-
-            AfterSaving(request => request.Data.Name = "PostSave");
         }
     }
 

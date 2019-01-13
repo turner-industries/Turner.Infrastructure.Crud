@@ -35,22 +35,12 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
     {
         public CrudRequestProfile()
         {
-            BeforeCreating(request =>
+            WithRequestHook(request =>
             {
                 if (request is IHasPreMessage tRequest)
-                    tRequest.PreMessage = "PreCreate";
-            });
-
-            BeforeUpdating(request =>
-            {
-                if (request is IHasPreMessage tRequest)
-                    tRequest.PreMessage = "PreUpdate";
-            });
-
-            BeforeDeleting(request =>
-            {
-                if (request is IHasPreMessage tRequest)
-                    tRequest.PreMessage += "PreDelete";
+                    tRequest.PreMessage = string.IsNullOrEmpty(tRequest.PreMessage) 
+                        ? "Pre"
+                        : $"Pre/{tRequest.PreMessage}";
             });
 
             ConfigureErrors(config =>
@@ -65,9 +55,12 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
                 .ConfigureOptions(config => config.UseProjection = false);
 
             ForEntity<IEntity>()
-                .AfterCreating(entity => entity.PostMessage = "PostCreate/Entity")
-                .AfterUpdating(entity => entity.PostMessage = "PostUpdate/Entity")
-                .AfterDeleting(entity => entity.PostMessage = "PostDelete/Entity");
+                .WithEntityHook((request, entity) =>
+                {
+                    entity.PostMessage = string.IsNullOrEmpty(entity.PostMessage)
+                        ? "Post/Entity"
+                        : $"Post/Entity/{entity.PostMessage}";
+                });
         }
     }
 

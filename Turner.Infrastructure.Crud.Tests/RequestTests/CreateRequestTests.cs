@@ -28,8 +28,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             var user = Context.Set<User>().FirstOrDefault();
             Assert.IsNotNull(user);
             Assert.AreEqual("TestUser", user.Name);
-            Assert.AreEqual(null, user.PreMessage);
-            Assert.AreEqual("PostCreate/Entity/User", user.PostMessage);
         }
 
         [Test]
@@ -49,8 +47,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             var user = Context.Set<User>().FirstOrDefault();
             Assert.IsNotNull(user);
             Assert.AreEqual("TestUser", user.Name);
-            Assert.AreEqual(null, user.PreMessage);
-            Assert.AreEqual("PostCreate/Entity/User", user.PostMessage);
         }
 
         [Test]
@@ -68,8 +64,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsNotNull(response.Data);
             Assert.AreEqual("TestUser", response.Data.Name);
             Assert.AreEqual(response.Data.Id, Context.Set<User>().First().Id);
-            Assert.AreEqual("PreCreate/Entity/User", response.Data.PreMessage);
-            Assert.AreEqual("PostCreate/Entity", response.Data.PostMessage);
         }
 
         [Test]
@@ -88,8 +82,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             var user = Context.Set<User>().FirstOrDefault();
             Assert.IsNotNull(user);
             Assert.AreEqual("TestUser", user.Name);
-            Assert.AreEqual(null, user.PreMessage);
-            Assert.AreEqual("Default", user.PostMessage);
         }
 
         [Test]
@@ -103,8 +95,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsNotNull(response.Data);
             Assert.AreEqual("TestUser", response.Data.Name);
             Assert.AreEqual(response.Data.Id, Context.Set<User>().First().Id);
-            Assert.AreEqual(null, response.Data.PreMessage);
-            Assert.AreEqual("PostCreate/Entity", response.Data.PostMessage);
         }
     }
 
@@ -123,31 +113,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     {
         public object OtherStuff { get; set; }
     }
-    
-    public class CreateRequestProfile 
-        : CrudRequestProfile<ICreateRequest>
-    {
-        public CreateRequestProfile()
-        {
-            ForEntity<IHasPreMessage>()
-                .BeforeCreating(request =>
-                {
-                    if (request is IHasPreMessage withMessage)
-                        withMessage.PreMessage += "/Entity";
-
-                    return Task.CompletedTask;
-                });
-
-            ForEntity<User>()
-                .BeforeCreating(request =>
-                {
-                    if (request is UserDto dto)
-                        dto.PreMessage += "/User";
-
-                    return Task.CompletedTask;
-                });
-        }
-    }
 
     public class CreateUserWithoutResponseProfile 
         : CrudRequestProfile<CreateUserWithoutResponseRequest>
@@ -155,29 +120,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public CreateUserWithoutResponseProfile()
         {
             ForEntity<User>()
-                .CreateWith(request => Mapper.Map<User>(request.User))
-                .AfterCreating(user =>
-                {
-                    user.PostMessage += "/User";
-                    return Task.CompletedTask;
-                });
-        }
-    }
-
-    public class DefaultCreateRequestProfile<TEntity, TIn> 
-        : CrudRequestProfile<CreateRequest<TEntity, TIn>>
-        where TEntity : class
-    {
-        public DefaultCreateRequestProfile()
-        {
-            ForEntity<TEntity>()
-                .AfterCreating(entity =>
-                {
-                    if (entity is IEntity ent)
-                        ent.PostMessage = "Default";
-
-                    return Task.CompletedTask;
-                });
+                .CreateWith(request => Mapper.Map<User>(request.User));
         }
     }
 }

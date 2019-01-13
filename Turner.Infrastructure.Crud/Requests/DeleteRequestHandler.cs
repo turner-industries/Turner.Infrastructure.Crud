@@ -27,9 +27,15 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity> DeleteEntity(TRequest request, TEntity entity)
         {
-            await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Delete, request).Configure();
+            var requestHooks = RequestConfig.GetRequestHooks(request);
+            foreach (var hook in requestHooks)
+                await hook.Run(request).Configure();
+
             entity = await Context.EntitySet<TEntity>().DeleteAsync(entity).Configure();
-            await RequestConfig.RunPostActionsFor(ActionType.Delete, request, entity).Configure();
+
+            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>(request);
+            foreach (var hook in entityHooks)
+                await hook.Run(request, entity).Configure();
 
             await Context.ApplyChangesAsync().Configure();
 

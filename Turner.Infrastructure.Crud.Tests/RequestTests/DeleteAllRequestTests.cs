@@ -48,9 +48,9 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsNotNull(response.Data.Items);
             Assert.AreEqual(2, response.Data.Items.Count);
             Assert.IsTrue(response.Data.Items[0].IsDeleted);
-            Assert.AreEqual("PostDelete/Entity/Delete", response.Data.Items[0].PostMessage);
+            Assert.AreEqual("Post/Entity/Delete", response.Data.Items[0].PostMessage);
             Assert.IsTrue(response.Data.Items[1].IsDeleted);
-            Assert.AreEqual("PostDelete/Entity/Delete", response.Data.Items[1].PostMessage);
+            Assert.AreEqual("Post/Entity/Delete", response.Data.Items[1].PostMessage);
             Assert.IsFalse(Context.Set<User>().First(x => x.Name == "TestUser2").IsDeleted);
             Assert.IsFalse(Context.Set<User>().First(x => x.Name == "TestUser4").IsDeleted);
         }
@@ -94,7 +94,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         {
             ForEntity<User>()
                 .FilterWith(builder => builder.FilterOn(r => r.Ids, "Id"))
-                .AfterDeleting(entity => entity.PostMessage += "/Delete");
+                .WithEntityHook((request, entity) => entity.PostMessage += "/Delete");
 
             ConfigureErrors(config => config.FailedToFindInDeleteIsError = false);
         }

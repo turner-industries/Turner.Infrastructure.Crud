@@ -19,7 +19,7 @@ namespace Turner.Infrastructure.Crud
         private Type _boundRequestType;
         private Type _boundEntityType;
 
-        public static Selector From<TRequest, TEntity>(
+        internal static Selector From<TRequest, TEntity>(
             Func<TRequest, Expression<Func<TEntity, bool>>> selector)
             where TEntity : class
         {

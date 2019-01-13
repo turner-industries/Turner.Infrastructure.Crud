@@ -78,7 +78,7 @@ namespace Turner.Infrastructure.Crud.Tests
             var user = await Mediator.HandleAsync(new GetByIdRequest<User, UserGetDto>(1));
             Assert.IsNotNull(user);
             Assert.IsNotNull(user.Data);
-            Assert.AreEqual(request.Data.Name, user.Data.Name);
+            Assert.AreEqual(request.Item.Name, user.Data.Name);
         }
     }
     

@@ -601,7 +601,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public GetWithDefaultWithErrorProfile()
         {
             ConfigureErrors(config => config.FailedToFindInGetAllIsError = true);
-            ForEntity<User>().UseDefault(new User { Name = "DefaultUser" });
+            ForEntity<User>().WithDefault(new User { Name = "DefaultUser" });
         }
     }
 
@@ -610,7 +610,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     {
         public GetWithDefaultWithoutErrorProfile()
         {
-            ForEntity<User>().UseDefault(new User { Name = "DefaultUser" });
+            ForEntity<User>().WithDefault(new User { Name = "DefaultUser" });
             ConfigureErrors(config => config.FailedToFindInGetAllIsError = false);
         }
     }

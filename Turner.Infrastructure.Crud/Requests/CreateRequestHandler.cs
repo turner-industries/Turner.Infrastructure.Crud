@@ -17,15 +17,20 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity> CreateEntity(TRequest request)
         {
-            await RequestConfig.RunPreActionsFor<TEntity>(ActionType.Create, request).Configure();
+            var requestHooks = RequestConfig.GetRequestHooks(request);
+            foreach (var hook in requestHooks)
+                await hook.Run(request).Configure();
 
-            var data = RequestConfig.GetRequestDataFor<TEntity>().DataSource(request);
+            var data = RequestConfig.GetRequestItemSourceFor<TEntity>().ItemSource(request);
             var creator = RequestConfig.GetCreatorFor<TEntity>();
             var entity = await creator(data).Configure();
 
             entity = await Context.EntitySet<TEntity>().CreateAsync(entity).Configure();
 
-            await RequestConfig.RunPostActionsFor(ActionType.Create, request, entity).Configure();
+            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>(request);
+            foreach (var hook in entityHooks)
+                await hook.Run(request, entity).Configure();
+
             await Context.ApplyChangesAsync().Configure();
 
             return entity;

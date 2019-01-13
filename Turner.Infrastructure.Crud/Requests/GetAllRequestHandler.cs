@@ -26,6 +26,10 @@ namespace Turner.Infrastructure.Crud.Requests
         {
             List<TOut> items;
 
+            var requestHooks = RequestConfig.GetRequestHooks(request);
+            foreach (var hook in requestHooks)
+                await hook.Run(request).Configure();
+
             var entities = Context.EntitySet<TEntity>().AsQueryable();
 
             foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
