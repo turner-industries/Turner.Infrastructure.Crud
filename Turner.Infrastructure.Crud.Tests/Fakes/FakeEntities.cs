@@ -75,4 +75,30 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         [Key, Required]
         public int Id { get; set; }
     }
+
+    public interface IHookEntity
+    {
+        string RequestHookMessage { get; set; }
+
+        string EntityHookMessage { get; set; }
+
+        string ItemHookMessage { get; set; }
+    }
+
+    public class HookAutoMapperProfile : Profile
+    {
+        public HookAutoMapperProfile()
+        {
+            CreateMap<HookDto, HookEntity>().ReverseMap();
+        }
+    }
+
+    public class HookEntity : Entity, IHookEntity
+    {
+        public string RequestHookMessage { get; set; }
+
+        public string EntityHookMessage { get; set; }
+
+        public string ItemHookMessage { get; set; }
+    }
 }
