@@ -32,7 +32,13 @@ namespace Turner.Infrastructure.Crud.Tests
             ConfigureFluentValidation(container, assemblies);
 
             container.ConfigureMediator(assemblies);
-            container.ConfigureCrud(assemblies);
+
+            var crudOptions = new CrudOptions
+            {
+                UseFluentValidation = true
+            };
+
+            Crud.Configure(container, assemblies, crudOptions);
             
             Container = container;
         }
@@ -62,10 +68,6 @@ namespace Turner.Infrastructure.Crud.Tests
 
         public static void ConfigureFluentValidation(Container container, Assembly[] assemblies)
         {
-            // TODO: Crud global options - UseFluentValidation ?
-            // Also, UseAutoMapper ?
-            container.Register(typeof(Validation.IValidator<>), typeof(FluentValidator<>));
-
             container.Register(typeof(FluentValidation.IValidator<>), assemblies);
 
             ValidatorOptions.CascadeMode = CascadeMode.StopOnFirstFailure;

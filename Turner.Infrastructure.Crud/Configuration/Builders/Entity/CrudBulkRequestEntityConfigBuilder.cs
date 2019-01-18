@@ -23,7 +23,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             Expression<Func<TRequest, IEnumerable<TItem>>> requestItemsExpr)
         {
             _getRequestItems = requestItemsExpr;
-            RequestItemSource = Crud.RequestItemSource.From(BuildItemSource(requestItemsExpr));
+            RequestItemSource = Infrastructure.Crud.RequestItemSource.From(BuildItemSource(requestItemsExpr));
 
             return this;
         }

@@ -31,57 +31,7 @@ namespace Turner.Infrastructure.Crud.Validation
         {
         }
     }
-
-    //internal class CrudValidationDecorator<TRequest, TValidator>
-    //    : IRequestHandler<TRequest>
-    //    where TRequest : IRequest, ICrudRequest
-    //    where TValidator : IValidator<TRequest>
-    //{
-    //    private readonly IRequestHandler<TRequest> _decoratee;
-    //    private readonly TValidator _validator;
-
-    //    public CrudValidationDecorator(IRequestHandler<TRequest> decoratee,
-    //        TValidator validator)
-    //    {
-    //        _decoratee = decoratee;
-    //        _validator = validator;
-    //    }
-
-    //    public async Task<Response> HandleAsync(TRequest request)
-    //    {
-    //        var errors = await _validator.ValidateAsync(request);
-    //        if (errors != null && errors.Count > 0)
-    //            return new Response { Errors = errors };
-
-    //        return await _decoratee.HandleAsync(request);
-    //    }
-    //}
-
-    //internal class CrudValidationDecorator<TRequest, TResult, TValidator>
-    //    : IRequestHandler<TRequest, TResult>
-    //    where TRequest : IRequest<TResult>, ICrudRequest
-    //    where TValidator : IValidator<TRequest>
-    //{
-    //    private readonly IRequestHandler<TRequest, TResult> _decoratee;
-    //    private readonly TValidator _validator;
-
-    //    public CrudValidationDecorator(IRequestHandler<TRequest, TResult> decoratee,
-    //        TValidator validator)
-    //    {
-    //        _decoratee = decoratee;
-    //        _validator = validator;
-    //    }
-
-    //    public async Task<Response<TResult>> HandleAsync(TRequest request)
-    //    {
-    //        var errors = await _validator.ValidateAsync(request);
-    //        if (errors != null && errors.Count > 0)
-    //            return new Response<TResult> { Errors = errors };
-
-    //        return await _decoratee.HandleAsync(request);
-    //    }
-    //}
-
+    
     public class CrudValidationBaseDecorator<TRequest, TResponse, TValidator> 
         where TResponse : Response, new()
         where TValidator : IValidator<TRequest>

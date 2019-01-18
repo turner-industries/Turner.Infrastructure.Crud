@@ -3,21 +3,29 @@ using System;
 using System.Linq;
 using System.Reflection;
 using Turner.Infrastructure.Crud.Algorithms;
+using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Validation;
 using Turner.Infrastructure.Mediator;
 
-namespace Turner.Infrastructure.Crud.Configuration
+namespace Turner.Infrastructure.Crud
 {
-    public static class SimpleInjectorCrudConfiguration
+    public class CrudOptions
     {
-        public static void ConfigureCrud(this Container container, Assembly[] assemblies)
+        public bool UseFluentValidation { get; set; } = true;
+    }
+
+    public static class Crud
+    {
+        public static void Configure(Container container, Assembly[] assemblies, CrudOptions options = null)
         {
             // TODO: This function has gotten too long; split it up
 
+            options = options ?? new CrudOptions();
+
             var allAssemblies = new Assembly[1 + assemblies.Length];
-            allAssemblies[0] = typeof(SimpleInjectorCrudConfiguration).Assembly;
+            allAssemblies[0] = typeof(Crud).Assembly;
             Array.Copy(assemblies, 0, allAssemblies, 1, assemblies.Length);
             
             var configAssemblies = allAssemblies.Distinct().ToArray();
@@ -152,6 +160,9 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             container.RegisterDecorator(typeof(IRequestHandler<>), ValidatorFactory, Lifestyle.Transient, ShouldValidate);
             container.RegisterDecorator(typeof(IRequestHandler<,>), ValidatorFactory, Lifestyle.Transient, ShouldValidate);
+
+            if (options.UseFluentValidation)
+                container.RegisterConditional(typeof(IValidator<>), typeof(FluentValidator<>), IfNotHandled);
         }
     }
 }
