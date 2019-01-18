@@ -13,6 +13,8 @@ namespace Turner.Infrastructure.Crud
 {
     public class CrudOptions
     {
+        public bool ValidateAllRequests { get; set; } = false;
+
         public bool UseFluentValidation { get; set; } = true;
     }
 
@@ -40,7 +42,7 @@ namespace Turner.Infrastructure.Crud
 
             bool ShouldValidate(DecoratorPredicateContext c) =>
                 typeof(ICrudRequestHandler).IsAssignableFrom(c.ImplementationType) &&
-                c.ImplementationType.RequestHasAttribute(typeof(ValidateAttribute));
+                (options.ValidateAllRequests || c.ImplementationType.RequestHasAttribute(typeof(ValidateAttribute)));
 
             Type ValidatorFactory(DecoratorPredicateContext c)
             {
