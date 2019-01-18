@@ -22,7 +22,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         protected readonly List<IEntityHookFactory> EntityHooks
             = new List<IEntityHookFactory>();
 
-        protected CrudOptionsConfig OptionsConfig;
+        protected CrudRequestOptionsConfig OptionsConfig;
         protected TEntity DefaultValue;
         protected ISorter Sorter;
         protected ISelector Selector;
@@ -33,7 +33,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         protected Func<object, TEntity, Task<TEntity>> UpdateEntity;
         protected Func<ICrudErrorHandler> ErrorHandlerFactory;
         
-        public TBuilder ConfigureOptions(Action<CrudOptionsConfig> config)
+        public TBuilder ConfigureOptions(Action<CrudRequestOptionsConfig> config)
         {
             if (config == null)
             {
@@ -41,7 +41,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             }
             else
             {
-                OptionsConfig = new CrudOptionsConfig();
+                OptionsConfig = new CrudRequestOptionsConfig();
                 config(OptionsConfig);
             }
 

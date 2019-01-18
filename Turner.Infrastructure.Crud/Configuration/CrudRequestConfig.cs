@@ -66,8 +66,8 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         private readonly RequestOptions _options = new RequestOptions();
 
-        private readonly Dictionary<Type, CrudOptionsConfig> _entityOptionOverrides
-            = new Dictionary<Type, CrudOptionsConfig>();
+        private readonly Dictionary<Type, CrudRequestOptionsConfig> _entityOptionOverrides
+            = new Dictionary<Type, CrudRequestOptionsConfig>();
 
         private readonly Dictionary<Type, RequestOptions> _optionsCache
             = new Dictionary<Type, RequestOptions>();
@@ -289,13 +289,13 @@ namespace Turner.Infrastructure.Crud.Configuration
             return null;
         }
 
-        internal void SetOptions(CrudOptionsConfig options)
+        internal void SetOptions(CrudRequestOptionsConfig options)
         {
             if (options != null)
                 OverrideOptions(_options, options);
         }
 
-        internal void SetOptionsFor<TEntity>(CrudOptionsConfig options)
+        internal void SetOptionsFor<TEntity>(CrudRequestOptionsConfig options)
         {
             _entityOptionOverrides[typeof(TEntity)] = options;
         }
@@ -401,7 +401,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             }
         }
 
-        private void OverrideOptions(RequestOptions options, CrudOptionsConfig config)
+        private void OverrideOptions(RequestOptions options, CrudRequestOptionsConfig config)
         {
             if (config.UseProjection.HasValue)
                 options.UseProjection = config.UseProjection.Value;

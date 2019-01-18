@@ -1,6 +1,6 @@
 ﻿namespace Turner.Infrastructure.Crud.Configuration
 {
-    public class CrudOptionsConfig
+    public class CrudRequestOptionsConfig
     {
         public bool? SuppressCreateActionsInSave { get; set; }
 

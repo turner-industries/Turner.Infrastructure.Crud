@@ -28,7 +28,7 @@ namespace Turner.Infrastructure.Crud.Configuration
         private readonly List<CrudRequestProfile> _inheritProfiles 
             = new List<CrudRequestProfile>();
 
-        private Action<CrudOptionsConfig> _optionsConfig;
+        private Action<CrudRequestOptionsConfig> _optionsConfig;
         private Action<CrudRequestErrorConfig> _errorConfig;
  
         protected readonly List<IRequestHookFactory> RequestHooks
@@ -68,7 +68,7 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             if (_optionsConfig != null)
             {
-                var options = new CrudOptionsConfig();
+                var options = new CrudRequestOptionsConfig();
                 _optionsConfig(options);
                 config.SetOptions(options);
             }
@@ -102,7 +102,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             RequestHooks.Add(FunctionRequestHookFactory.From(hook));
         }
 
-        protected void ConfigureOptions(Action<CrudOptionsConfig> config)
+        protected void ConfigureOptions(Action<CrudRequestOptionsConfig> config)
         {
             _optionsConfig = config;
         }

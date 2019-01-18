@@ -28,10 +28,10 @@ namespace Turner.Infrastructure.Crud.Algorithms
 
         internal static EFEntitySet<TEntity> From(DbSet<TEntity> set)
         {
-            var entitySet = new EFEntitySet<TEntity>();
-            entitySet._set = set;
-
-            return entitySet;
+            return new EFEntitySet<TEntity>
+            {
+                _set = set
+            };
         }
         
         public virtual TEntity Create(TEntity entity) => _set.Add(entity).Entity;
