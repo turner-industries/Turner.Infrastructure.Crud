@@ -5,6 +5,7 @@ using System.Reflection;
 using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Requests;
+using Turner.Infrastructure.Crud.Validation;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Configuration
@@ -13,6 +14,8 @@ namespace Turner.Infrastructure.Crud.Configuration
     {
         public static void ConfigureCrud(this Container container, Assembly[] assemblies)
         {
+            // TODO: This function has gotten too long; split it up
+
             var allAssemblies = new Assembly[1 + assemblies.Length];
             allAssemblies[0] = typeof(SimpleInjectorCrudConfiguration).Assembly;
             Array.Copy(assemblies, 0, allAssemblies, 1, assemblies.Length);
@@ -27,6 +30,56 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             bool IfNotHandled(PredicateContext c) => !c.Handled;
 
+            bool ShouldValidate(DecoratorPredicateContext c) =>
+                typeof(ICrudRequestHandler).IsAssignableFrom(c.ImplementationType) &&
+                c.ImplementationType.RequestHasAttribute(typeof(ValidateAttribute));
+
+            Type ValidatorFactory(DecoratorPredicateContext c)
+            {
+                var tRequestHandler = c.ImplementationType
+                    .GetInterfaces()
+                    .Single(x => x.IsGenericType && (
+                        x.GetGenericTypeDefinition() == typeof(IRequestHandler<>) ||
+                        x.GetGenericTypeDefinition() == typeof(IRequestHandler<,>)));
+
+                var handlerArguments = tRequestHandler.GetGenericArguments();
+                var tRequest = handlerArguments[0];
+
+                ValidateAttribute FindAttribute(Type t)
+                {
+                    var attr = t.GetCustomAttribute<ValidateAttribute>(false);
+
+                    if (attr == null && t.BaseType != null)
+                        attr = FindAttribute(t.BaseType);
+
+                    if (attr == null)
+                    {
+                        foreach (var x in t.GetInterfaces())
+                        {
+                            attr = FindAttribute(x);
+                            if (attr != null) return attr;
+                        }
+                    }
+
+                    return attr;
+                }
+
+                var validateAttribute = FindAttribute(tRequest);
+                var tValidator = validateAttribute?.ValidatorType ?? 
+                    typeof(IValidator<>).MakeGenericType(tRequest);
+
+                if (handlerArguments.Length == 1)
+                    return typeof(CrudValidationDecorator<,>).MakeGenericType(tRequest, tValidator);
+
+                if (handlerArguments.Length == 2)
+                {
+                    var tResult = handlerArguments[1];
+                    return typeof(CrudValidationDecorator<,,>).MakeGenericType(tRequest, tResult, tValidator);
+                }
+                
+                return null;
+            }
+            
             container.RegisterInitializer<ICrudRequestHandler>(handler =>
             {
                 if (handler.ErrorDispatcher.Handler == null)
@@ -41,7 +94,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             container.Register(typeof(CreateRequestHandler<,,>), configAssemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(CreateRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(CreateRequestHandler<,,>), IfNotHandled);
-
+            
             container.Register(typeof(CreateAllRequestHandler<,>), configAssemblies);
             container.Register(typeof(CreateAllRequestHandler<,,>), configAssemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(CreateAllRequestHandler<,>), IfNotHandled);
@@ -96,6 +149,9 @@ namespace Turner.Infrastructure.Crud.Configuration
             container.Register(typeof(SynchronizeRequestHandler<,,>), configAssemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(SynchronizeRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(SynchronizeRequestHandler<,,>), IfNotHandled);
+
+            container.RegisterDecorator(typeof(IRequestHandler<>), ValidatorFactory, Lifestyle.Transient, ShouldValidate);
+            container.RegisterDecorator(typeof(IRequestHandler<,>), ValidatorFactory, Lifestyle.Transient, ShouldValidate);
         }
     }
 }

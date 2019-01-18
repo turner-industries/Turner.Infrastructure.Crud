@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using NUnit.Framework;
@@ -8,6 +9,7 @@ using System;
 using System.Reflection;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Tests.Fakes;
+using Turner.Infrastructure.Crud.Validation;
 using Turner.Infrastructure.Mediator.Configuration;
 
 namespace Turner.Infrastructure.Crud.Tests
@@ -27,6 +29,7 @@ namespace Turner.Infrastructure.Crud.Tests
 
             ConfigureDatabase(container);
             ConfigureAutoMapper(container, assemblies);
+            ConfigureFluentValidation(container, assemblies);
 
             container.ConfigureMediator(assemblies);
             container.ConfigureCrud(assemblies);
@@ -55,6 +58,17 @@ namespace Turner.Infrastructure.Crud.Tests
             {
                 config.AddProfiles(assemblies);
             });
+        }
+
+        public static void ConfigureFluentValidation(Container container, Assembly[] assemblies)
+        {
+            // TODO: Crud global options - UseFluentValidation ?
+            // Also, UseAutoMapper ?
+            container.Register(typeof(Validation.IValidator<>), typeof(FluentValidator<>));
+
+            container.Register(typeof(FluentValidation.IValidator<>), assemblies);
+
+            ValidatorOptions.CascadeMode = CascadeMode.StopOnFirstFailure;
         }
     }
 }
