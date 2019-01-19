@@ -44,6 +44,11 @@ namespace Turner.Infrastructure.Crud
                 typeof(ICrudRequestHandler).IsAssignableFrom(c.ImplementationType) &&
                 (options.ValidateAllRequests || c.ImplementationType.RequestHasAttribute(typeof(ValidateAttribute)));
 
+            bool ShouldMaybeValidate(DecoratorPredicateContext c) =>
+                typeof(ICrudRequestHandler).IsAssignableFrom(c.ImplementationType) &&
+                !ShouldValidate(c) &&
+                c.ImplementationType.RequestHasAttribute(typeof(MaybeValidateAttribute));
+
             Type ValidatorFactory(DecoratorPredicateContext c)
             {
                 var tRequestHandler = c.ImplementationType
@@ -79,12 +84,12 @@ namespace Turner.Infrastructure.Crud
                     typeof(IValidator<>).MakeGenericType(tRequest);
 
                 if (handlerArguments.Length == 1)
-                    return typeof(CrudValidationDecorator<,>).MakeGenericType(tRequest, tValidator);
+                    return typeof(CrudValidateDecorator<,>).MakeGenericType(tRequest, tValidator);
 
                 if (handlerArguments.Length == 2)
                 {
                     var tResult = handlerArguments[1];
-                    return typeof(CrudValidationDecorator<,,>).MakeGenericType(tRequest, tResult, tValidator);
+                    return typeof(CrudValidateDecorator<,,>).MakeGenericType(tRequest, tResult, tValidator);
                 }
                 
                 return null;
@@ -159,10 +164,14 @@ namespace Turner.Infrastructure.Crud
             container.Register(typeof(SynchronizeRequestHandler<,,>), configAssemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(SynchronizeRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(SynchronizeRequestHandler<,,>), IfNotHandled);
-
+            
             container.RegisterDecorator(typeof(IRequestHandler<>), ValidatorFactory, Lifestyle.Transient, ShouldValidate);
             container.RegisterDecorator(typeof(IRequestHandler<,>), ValidatorFactory, Lifestyle.Transient, ShouldValidate);
 
+            container.RegisterInstance(new ValidatorFactory(container.GetInstance));
+            container.RegisterDecorator(typeof(IRequestHandler<>), typeof(CrudMaybeValidateDecorator<>), ShouldMaybeValidate);
+            container.RegisterDecorator(typeof(IRequestHandler<,>), typeof(CrudMaybeValidateDecorator<,>), ShouldMaybeValidate);
+            
             if (options.UseFluentValidation)
                 container.RegisterConditional(typeof(IValidator<>), typeof(FluentValidator<>), IfNotHandled);
         }

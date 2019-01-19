@@ -32,13 +32,13 @@ namespace Turner.Infrastructure.Crud.Validation
         }
     }
     
-    public class CrudValidationBaseDecorator<TRequest, TResponse, TValidator> 
+    public class CrudValidateBaseDecorator<TRequest, TResponse, TValidator> 
         where TResponse : Response, new()
         where TValidator : IValidator<TRequest>
     {
         private readonly TValidator _validator;
 
-        public CrudValidationBaseDecorator(TValidator validator)
+        public CrudValidateBaseDecorator(TValidator validator)
         {
             _validator = validator;
         }
@@ -48,32 +48,21 @@ namespace Turner.Infrastructure.Crud.Validation
             var errors = await _validator.ValidateAsync(request);
             if (errors == null || errors.Count == 0)
                 return await processRequest();
-
-            var response = new TResponse
-            {
-                Errors = errors
-                    .Select(x => new Error
-                    {
-                        PropertyName = x.PropertyName,
-                        ErrorMessage = x.ErrorMessage
-                    })
-                    .ToList()
-            };
-
-            return response;
+            
+            return new TResponse { Errors = errors };
         }
     }
 
-    public class CrudValidationDecorator<TRequest, TValidator> 
+    public class CrudValidateDecorator<TRequest, TValidator> 
         : IRequestHandler<TRequest> 
         where TRequest : IRequest, ICrudRequest
         where TValidator : IValidator<TRequest>
     {
         private readonly Func<IRequestHandler<TRequest>> _decorateeFactory;
-        private readonly CrudValidationBaseDecorator<TRequest, Response, TValidator> _validationHandler;
+        private readonly CrudValidateBaseDecorator<TRequest, Response, TValidator> _validationHandler;
 
-        public CrudValidationDecorator(Func<IRequestHandler<TRequest>> decorateeFactory,
-            CrudValidationBaseDecorator<TRequest, Response, TValidator> validationHandler)
+        public CrudValidateDecorator(Func<IRequestHandler<TRequest>> decorateeFactory,
+            CrudValidateBaseDecorator<TRequest, Response, TValidator> validationHandler)
         {
             _decorateeFactory = decorateeFactory;
             _validationHandler = validationHandler;
@@ -83,16 +72,16 @@ namespace Turner.Infrastructure.Crud.Validation
             => _validationHandler.HandleAsync(request, () => _decorateeFactory().HandleAsync(request));
     }
 
-    public class CrudValidationDecorator<TRequest, TResult, TValidator> 
+    public class CrudValidateDecorator<TRequest, TResult, TValidator> 
         : IRequestHandler<TRequest, TResult> 
         where TRequest : IRequest<TResult>, ICrudRequest
         where TValidator : IValidator<TRequest>
     {
         private readonly Func<IRequestHandler<TRequest, TResult>> _decorateeFactory;
-        private readonly CrudValidationBaseDecorator<TRequest, Response<TResult>, TValidator> _validationHandler;
+        private readonly CrudValidateBaseDecorator<TRequest, Response<TResult>, TValidator> _validationHandler;
 
-        public CrudValidationDecorator(Func<IRequestHandler<TRequest, TResult>> decorateeFactory,
-            CrudValidationBaseDecorator<TRequest, Response<TResult>, TValidator> validationHandler)
+        public CrudValidateDecorator(Func<IRequestHandler<TRequest, TResult>> decorateeFactory,
+            CrudValidateBaseDecorator<TRequest, Response<TResult>, TValidator> validationHandler)
         {
             _decorateeFactory = decorateeFactory;
             _validationHandler = validationHandler;

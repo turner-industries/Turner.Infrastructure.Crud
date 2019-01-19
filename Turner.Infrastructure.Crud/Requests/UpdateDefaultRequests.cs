@@ -1,11 +1,12 @@
 ﻿using AutoMapper;
 using System;
 using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.Validation;
 using Turner.Infrastructure.Mediator.Decorators;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-    [DoNotValidate]
+    [DoNotValidate, MaybeValidate]
     public class UpdateRequest<TEntity, TIn> : IUpdateRequest<TEntity>
         where TEntity : class
     {
@@ -25,7 +26,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    [DoNotValidate]
+    [DoNotValidate, MaybeValidate]
     public class UpdateRequest<TEntity, TIn, TOut> : IUpdateRequest<TEntity, TOut>
         where TEntity : class
     {
@@ -45,7 +46,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    [DoNotValidate]
+    [DoNotValidate, MaybeValidate]
     public class UpdateRequest<TEntity, TKey, TIn, TOut>
         : IUpdateRequest<TEntity, TOut>
         where TEntity : class
@@ -72,7 +73,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    [DoNotValidate]
+    [DoNotValidate, MaybeValidate]
     public class UpdateByIdRequest<TEntity, TIn, TOut> : UpdateRequest<TEntity, int, TIn, TOut>
         where TEntity : class
     {
@@ -90,7 +91,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    [DoNotValidate]
+    [DoNotValidate, MaybeValidate]
     public class UpdateByGuidRequest<TEntity, TIn, TOut> : UpdateRequest<TEntity, Guid, TIn, TOut>
         where TEntity : class
     {

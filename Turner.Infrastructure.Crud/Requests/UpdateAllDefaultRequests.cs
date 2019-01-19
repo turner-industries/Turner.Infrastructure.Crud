@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.Validation;
 using Turner.Infrastructure.Mediator.Decorators;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-    [DoNotValidate]
+    [DoNotValidate, MaybeValidate]
     public class UpdateAllRequest<TEntity, TIn> : IUpdateAllRequest<TEntity>
         where TEntity : class
     {
@@ -13,7 +14,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public List<TIn> Items { get; }
     }
 
-    [DoNotValidate]
+    [DoNotValidate, MaybeValidate]
     public class UpdateAllByIdRequest<TEntity, TIn> : UpdateAllRequest<TEntity, TIn>
         where TEntity : class
     {
@@ -32,7 +33,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    [DoNotValidate]
+    [DoNotValidate, MaybeValidate]
     public class UpdateAllByGuidRequest<TEntity, TIn> : UpdateAllRequest<TEntity, TIn>
         where TEntity : class
     {
@@ -51,7 +52,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    [DoNotValidate]
+    [DoNotValidate, MaybeValidate]
     public class UpdateAllRequest<TEntity, TIn, TOut> : IUpdateAllRequest<TEntity, TOut>
         where TEntity : class
     {
@@ -60,7 +61,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public List<TIn> Items { get; }
     }
 
-    [DoNotValidate]
+    [DoNotValidate, MaybeValidate]
     public class UpdateAllByIdRequest<TEntity, TIn, TOut> : UpdateAllRequest<TEntity, TIn, TOut>
         where TEntity : class
     {
@@ -79,7 +80,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    [DoNotValidate]
+    [DoNotValidate, MaybeValidate]
     public class UpdateAllByGuidRequest<TEntity, TIn, TOut> : UpdateAllRequest<TEntity, TIn, TOut>
         where TEntity : class
     {
