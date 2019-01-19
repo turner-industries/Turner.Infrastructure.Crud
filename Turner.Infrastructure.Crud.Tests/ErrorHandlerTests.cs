@@ -42,7 +42,8 @@ namespace Turner.Infrastructure.Crud.Tests
             UnitTestSetUp.ConfigureDatabase(container);
             
             container.ConfigureMediator(assemblies);
-            container.ConfigureCrud(assemblies);
+
+            Crud.Configure(container, assemblies);
             
             container.Options.AllowOverridingRegistrations = true;
             container.Register<ICrudErrorHandler, TestErrorHandler>(Lifestyle.Singleton);

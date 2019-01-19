@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Tests.Fakes;
-using Turner.Infrastructure.Mediator.Decorators;
 
 namespace Turner.Infrastructure.Crud.Tests.RequestTests
 {
@@ -77,8 +76,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsFalse(Context.Set<User>().First(x => x.Name == "TestUser4").IsDeleted);
         }
     }
-
-    [DoNotValidate]
+    
     public class DeleteAllUsersByIdRequest
         : IDeleteAllRequest<User, UserGetDto>
     {

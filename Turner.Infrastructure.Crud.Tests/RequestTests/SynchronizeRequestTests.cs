@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Tests.Fakes;
-using Turner.Infrastructure.Mediator.Decorators;
 
 namespace Turner.Infrastructure.Crud.Tests.RequestTests
 {
@@ -98,8 +97,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.AreEqual(5, Context.Set<User>().Count(x => !x.IsDeleted));
         }
     }
-
-    [DoNotValidate]
+    
     public class SynchronizeUsersByIdRequest
         : ISynchronizeRequest<User, UserGetDto>
     {

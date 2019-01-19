@@ -1,13 +1,13 @@
 ﻿using System;
 using Turner.Infrastructure.Crud.Configuration;
-using Turner.Infrastructure.Mediator.Decorators;
+using Turner.Infrastructure.Crud.Validation;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
 #pragma warning disable 0618
 
     [Obsolete("Linq does not currently support positional queries. PagedFindRequest may cause a large result set to be created.")]
-    [DoNotValidate]
+    [MaybeValidate]
     public class PagedFindRequest<TEntity, TKey, TOut> : IPagedFindRequest<TEntity, TOut>
         where TEntity : class
     {
@@ -34,7 +34,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     [Obsolete("Linq does not currently support positional queries. PagedFindRequest may cause a large result set to be created.")]
-    [DoNotValidate]
+    [MaybeValidate]
     public class PagedFindByIdRequest<TEntity, TOut> : PagedFindRequest<TEntity, int, TOut>
         where TEntity : class
     {
@@ -55,7 +55,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     [Obsolete("Linq does not currently support positional queries. PagedFindRequest may cause a large result set to be created.")]
-    [DoNotValidate]
+    [MaybeValidate]
     public class PagedFindByGuidRequest<TEntity, TOut> : PagedFindRequest<TEntity, Guid, TOut>
         where TEntity : class
     {

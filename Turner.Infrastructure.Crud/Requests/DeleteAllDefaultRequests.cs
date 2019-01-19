@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using Turner.Infrastructure.Crud.Configuration;
-using Turner.Infrastructure.Mediator.Decorators;
+using Turner.Infrastructure.Crud.Validation;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-    [DoNotValidate]
+    [MaybeValidate]
     public class DeleteAllRequest<TEntity, TKey> : IDeleteAllRequest<TEntity>
         where TEntity : class
     {
@@ -14,7 +14,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public List<TKey> Keys { get; }
     }
 
-    [DoNotValidate]
+    [MaybeValidate]
     public class DeleteAllRequest<TEntity, TKey, TOut> : IDeleteAllRequest<TEntity, TOut>
         where TEntity : class
     {
@@ -23,7 +23,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public List<TKey> Keys { get; }
     }
 
-    [DoNotValidate]
+    [MaybeValidate]
     public class DeleteAllByIdRequest<TEntity> : DeleteAllRequest<TEntity, int>
         where TEntity : class
     {
@@ -41,7 +41,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    [DoNotValidate]
+    [MaybeValidate]
     public class DeleteAllByIdRequest<TEntity, TOut> : DeleteAllRequest<TEntity, int, TOut>
         where TEntity : class
     {
@@ -59,7 +59,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    [DoNotValidate]
+    [MaybeValidate]
     public class DeleteAllByGuidRequest<TEntity> : DeleteAllRequest<TEntity, Guid>
         where TEntity : class
     {
@@ -77,7 +77,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    [DoNotValidate]
+    [MaybeValidate]
     public class DeleteAllByGuidRequest<TEntity, TOut> : DeleteAllRequest<TEntity, Guid, TOut>
         where TEntity : class
     {

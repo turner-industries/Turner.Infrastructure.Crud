@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Tests.Fakes;
-using Turner.Infrastructure.Mediator.Decorators;
 
 namespace Turner.Infrastructure.Crud.Tests.RequestTests
 {
@@ -48,8 +47,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.AreEqual(3, response.Data.PageCount);
         }
     }
-
-    [DoNotValidate]
+    
     public class PagedFindUser : IPagedFindRequest<User, UserGetDto>
     {
         public string Name { get; set; }

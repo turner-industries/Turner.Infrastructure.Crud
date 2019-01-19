@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Tests.Fakes;
-using Turner.Infrastructure.Mediator.Decorators;
 
 namespace Turner.Infrastructure.Crud.Tests.RequestTests
 {
@@ -428,8 +427,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public const string Name = "Name";
         public const string IsDeleted = "IsDeleted";
     };
-
-    [DoNotValidate]
+    
     public class GetAllSimpleSortedUsers : IGetAllRequest<User, UserGetDto>
     {
     }
@@ -442,8 +440,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             ForEntity<User>().SortWith(builder => builder.SortBy(x => x.Name).Descending());
         }
     }
-
-    [DoNotValidate]
+    
     public class GetAllCustomSortedUsers : IGetAllRequest<User, UserGetDto>
     {
     }
@@ -458,7 +455,6 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         }
     }
     
-    [DoNotValidate]
     public class GetAllBasicSortedUsers : IGetAllRequest<User, UserGetDto>
     {
         public bool GroupDeleted { get; set; }
@@ -478,8 +474,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
                         .Otherwise());
         }
     }
-
-    [DoNotValidate]
+    
     public class GetAllSwitchSortedUsers : IGetAllRequest<User, UserGetDto>
     {
         public string Case { get; set; }
@@ -497,8 +492,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
                     .ForDefault().SortBy(user => user.IsDeleted).ThenBy("Name").Descending());
         }
     }
-
-    [DoNotValidate]
+    
     public class GetAllTableSortedUsers : IGetAllRequest<User, UserGetDto>
     {
         public string PrimaryColumn { get; set; }
@@ -521,8 +515,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
                     .WithColumn(UsersSortColumn.IsDeleted, user => user.IsDeleted));
         }
     }
-
-    [DoNotValidate]
+    
     public class GetAllCustomFilteredUsers
         : IGetAllRequest<User, UserGetDto>
     { }
@@ -540,8 +533,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
                 .FilterWith(builder => builder.FilterWith((request, users) => users.Where(x => x.Name != "AUser")));
         }
     }
-
-    [DoNotValidate]
+    
     public class GetAllBasicUnconditionalFilteredUsers
         : IGetAllRequest<User, UserGetDto>
     { }
@@ -555,8 +547,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
                 .FilterWith(builder => builder.FilterOn(x => !x.IsDeleted));
         }
     }
-
-    [DoNotValidate]
+    
     public class GetAllBasicConditionalFilteredUsers
         : IGetAllRequest<User, UserGetDto>
     {
@@ -574,23 +565,19 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
                     .When(r => r.DeletedFilter.HasValue));
         }
     }
-
-    [DoNotValidate]
+    
     public class GetUsersWithDefaultWithErrorRequest 
         : IGetAllRequest<User, UserGetDto>
     { }
-
-    [DoNotValidate]
+    
     public class GetUsersWithDefaultWithoutErrorRequest 
         : IGetAllRequest<User, UserGetDto>
     { }
-
-    [DoNotValidate]
+    
     public class GetUsersWithoutDefaultWithErrorRequest 
         : IGetAllRequest<User, UserGetDto>
     { }
-
-    [DoNotValidate]
+    
     public class GetUsersWithoutDefaultWithoutErrorRequest 
         : IGetAllRequest<User, UserGetDto>
     { }
@@ -632,8 +619,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             ConfigureErrors(config => config.FailedToFindInGetAllIsError = false);
         }
     }
-
-    [DoNotValidate]
+    
     public class GetUsersUnprojectedRequest : GetAllRequest<User, UserGetDto> { }
 
     public class GetUsersUnprojectedProfile : CrudRequestProfileCommon<GetUsersUnprojectedRequest>

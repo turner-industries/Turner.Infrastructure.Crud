@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using NUnit.Framework;
@@ -6,7 +7,6 @@ using SimpleInjector;
 using SimpleInjector.Lifestyles;
 using System;
 using System.Reflection;
-using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Tests.Fakes;
 using Turner.Infrastructure.Mediator.Configuration;
 
@@ -27,9 +27,18 @@ namespace Turner.Infrastructure.Crud.Tests
 
             ConfigureDatabase(container);
             ConfigureAutoMapper(container, assemblies);
+            ConfigureFluentValidation(container, assemblies);
 
             container.ConfigureMediator(assemblies);
-            container.ConfigureCrud(assemblies);
+
+            var crudOptions = new CrudOptions
+            {
+                UseFluentValidation = true,
+                UseEntityFramework = true,
+                ValidateAllRequests = false
+            };
+
+            Crud.Configure(container, assemblies, crudOptions);
             
             Container = container;
         }
@@ -55,6 +64,13 @@ namespace Turner.Infrastructure.Crud.Tests
             {
                 config.AddProfiles(assemblies);
             });
+        }
+
+        public static void ConfigureFluentValidation(Container container, Assembly[] assemblies)
+        {
+            container.Register(typeof(IValidator<>), assemblies);
+
+            ValidatorOptions.CascadeMode = CascadeMode.StopOnFirstFailure;
         }
     }
 }

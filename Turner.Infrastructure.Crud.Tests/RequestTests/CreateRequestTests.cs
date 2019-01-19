@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Tests.Fakes;
-using Turner.Infrastructure.Mediator.Decorators;
 
 namespace Turner.Infrastructure.Crud.Tests.RequestTests
 {
@@ -97,18 +96,15 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.AreEqual(response.Data.Id, Context.Set<User>().First().Id);
         }
     }
-
-    [DoNotValidate]
+    
     public class CreateUserWithResponseRequest : UserDto, ICreateRequest<User, UserGetDto>
     { }
-
-    [DoNotValidate]
+    
     public class CreateUserWithoutResponseRequest : ICreateRequest<User>
     {
         public UserDto User { get; set; }
     }
-
-    [DoNotValidate]
+    
     public class DerivedCreateUserWithoutResponseRequest : CreateUserWithoutResponseRequest
     {
         public object OtherStuff { get; set; }

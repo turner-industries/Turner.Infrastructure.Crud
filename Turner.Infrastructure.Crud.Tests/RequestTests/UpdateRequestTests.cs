@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using System;
 using System.Linq;
@@ -7,7 +6,6 @@ using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Tests.Fakes;
-using Turner.Infrastructure.Mediator.Decorators;
 
 namespace Turner.Infrastructure.Crud.Tests.RequestTests
 {
@@ -145,14 +143,12 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         }
     }
     
-    [DoNotValidate]
     public class UpdateUserByIdRequest 
         : UserDto, IUpdateRequest<User, UserGetDto>
     {
         public int Id { get; set; }
     }
-
-    [DoNotValidate]
+    
     public class UpdateUserByNameRequest
         : IUpdateRequest<User>
     {

@@ -1,11 +1,12 @@
 ﻿using AutoMapper;
 using Turner.Infrastructure.Crud.Configuration;
-using Turner.Infrastructure.Mediator.Decorators;
+using Turner.Infrastructure.Crud.Validation;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-    [DoNotValidate]
-    public class CreateRequest<TEntity, TIn> : ICreateRequest<TEntity>
+    [MaybeValidate]
+    public class CreateRequest<TEntity, TIn> 
+        : ICreateRequest<TEntity>
         where TEntity : class
     {
         public CreateRequest(TIn item) { Item = item; }
@@ -24,8 +25,9 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    [DoNotValidate]
-    public class CreateRequest<TEntity, TIn, TOut> : ICreateRequest<TEntity, TOut>
+    [MaybeValidate]
+    public class CreateRequest<TEntity, TIn, TOut> 
+        : ICreateRequest<TEntity, TOut>
         where TEntity : class
     {
         public CreateRequest(TIn item) { Item = item; }
