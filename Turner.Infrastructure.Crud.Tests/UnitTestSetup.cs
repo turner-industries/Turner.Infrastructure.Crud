@@ -35,7 +35,8 @@ namespace Turner.Infrastructure.Crud.Tests
 
             var crudOptions = new CrudOptions
             {
-                UseFluentValidation = true
+                UseFluentValidation = true,
+                UseEntityFramework = true
             };
 
             Crud.Configure(container, assemblies, crudOptions);
