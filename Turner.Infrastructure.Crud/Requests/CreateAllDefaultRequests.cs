@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Validation;
-using Turner.Infrastructure.Mediator.Decorators;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-    [DoNotValidate, MaybeValidate]
+    [MaybeValidate]
     public class CreateAllRequest<TEntity, TIn> : ICreateAllRequest<TEntity>
         where TEntity : class
     {
@@ -27,7 +26,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    [DoNotValidate, MaybeValidate]
+    [MaybeValidate]
     public class CreateAllRequest<TEntity, TIn, TOut> : ICreateAllRequest<TEntity, TOut>
         where TEntity : class
     {

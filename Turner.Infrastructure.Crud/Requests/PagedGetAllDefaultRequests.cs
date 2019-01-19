@@ -1,9 +1,8 @@
 ﻿using Turner.Infrastructure.Crud.Validation;
-using Turner.Infrastructure.Mediator.Decorators;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-    [DoNotValidate, MaybeValidate]
+    [MaybeValidate]
     public class PagedGetAllRequest<TEntity, TOut> : IPagedGetAllRequest<TEntity, TOut>
         where TEntity : class
     {

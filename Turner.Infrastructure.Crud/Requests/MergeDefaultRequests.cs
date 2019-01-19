@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Validation;
-using Turner.Infrastructure.Mediator.Decorators;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-    [DoNotValidate, MaybeValidate]
+    [MaybeValidate]
     public class MergeRequest<TEntity, TIn> : IMergeRequest<TEntity>
         where TEntity : class
     {
@@ -14,7 +13,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public List<TIn> Items { get; }
     }
 
-    [DoNotValidate, MaybeValidate]
+    [MaybeValidate]
     public class MergeByIdRequest<TEntity, TIn> : MergeRequest<TEntity, TIn>
         where TEntity : class
     {
@@ -33,7 +32,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    [DoNotValidate, MaybeValidate]
+    [MaybeValidate]
     public class MergeByGuidRequest<TEntity, TIn> : MergeRequest<TEntity, TIn>
         where TEntity : class
     {
@@ -52,7 +51,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    [DoNotValidate, MaybeValidate]
+    [MaybeValidate]
     public class MergeRequest<TEntity, TIn, TOut> : IMergeRequest<TEntity, TOut>
         where TEntity : class
     {
@@ -61,7 +60,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public List<TIn> Items { get; }
     }
 
-    [DoNotValidate, MaybeValidate]
+    [MaybeValidate]
     public class MergeByIdRequest<TEntity, TIn, TOut> : MergeRequest<TEntity, TIn, TOut>
         where TEntity : class
     {
@@ -80,7 +79,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    [DoNotValidate, MaybeValidate]
+    [MaybeValidate]
     public class MergeByGuidRequest<TEntity, TIn, TOut> : MergeRequest<TEntity, TIn, TOut>
         where TEntity : class
     {

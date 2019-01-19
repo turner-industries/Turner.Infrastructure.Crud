@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Validation;
-using Turner.Infrastructure.Mediator.Decorators;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-    [DoNotValidate, MaybeValidate]
+    [MaybeValidate]
     public class SynchronizeRequest<TEntity, TIn> : ISynchronizeRequest<TEntity>
         where TEntity : class
     {
@@ -14,7 +13,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public List<TIn> Items { get; }
     }
 
-    [DoNotValidate, MaybeValidate]
+    [MaybeValidate]
     public class SynchronizeByIdRequest<TEntity, TIn> : SynchronizeRequest<TEntity, TIn>
         where TEntity : class
     {
@@ -33,7 +32,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    [DoNotValidate, MaybeValidate]
+    [MaybeValidate]
     public class SynchronizeByGuidRequest<TEntity, TIn> : SynchronizeRequest<TEntity, TIn>
         where TEntity : class
     {
@@ -52,7 +51,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    [DoNotValidate, MaybeValidate]
+    [MaybeValidate]
     public class SynchronizeRequest<TEntity, TIn, TOut> : ISynchronizeRequest<TEntity, TOut>
         where TEntity : class
     {
@@ -61,7 +60,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public List<TIn> Items { get; }
     }
 
-    [DoNotValidate, MaybeValidate]
+    [MaybeValidate]
     public class SynchronizeByIdRequest<TEntity, TIn, TOut> : SynchronizeRequest<TEntity, TIn, TOut>
         where TEntity : class
     {
@@ -80,7 +79,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    [DoNotValidate, MaybeValidate]
+    [MaybeValidate]
     public class SynchronizeByGuidRequest<TEntity, TIn, TOut> : SynchronizeRequest<TEntity, TIn, TOut>
         where TEntity : class
     {

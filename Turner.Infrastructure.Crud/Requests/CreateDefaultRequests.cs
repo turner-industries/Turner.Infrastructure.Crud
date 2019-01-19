@@ -1,11 +1,10 @@
 ﻿using AutoMapper;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Validation;
-using Turner.Infrastructure.Mediator.Decorators;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-    [DoNotValidate, MaybeValidate]
+    [MaybeValidate]
     public class CreateRequest<TEntity, TIn> 
         : ICreateRequest<TEntity>
         where TEntity : class
@@ -26,7 +25,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-    [DoNotValidate, MaybeValidate]
+    [MaybeValidate]
     public class CreateRequest<TEntity, TIn, TOut> 
         : ICreateRequest<TEntity, TOut>
         where TEntity : class

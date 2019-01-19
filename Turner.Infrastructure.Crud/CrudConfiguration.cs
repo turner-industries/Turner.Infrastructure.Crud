@@ -44,6 +44,7 @@ namespace Turner.Infrastructure.Crud
         {
             return c =>
                 typeof(ICrudRequestHandler).IsAssignableFrom(c.ImplementationType) &&
+                !c.ImplementationType.RequestHasAttribute(typeof(DoNotValidateAttribute)) &&
                 (options.ValidateAllRequests || c.ImplementationType.RequestHasAttribute(typeof(ValidateAttribute)));
         }
 
@@ -52,6 +53,7 @@ namespace Turner.Infrastructure.Crud
             var shouldValidate = ShouldValidate(options);
 
             return c => typeof(ICrudRequestHandler).IsAssignableFrom(c.ImplementationType) &&
+                !c.ImplementationType.RequestHasAttribute(typeof(DoNotValidateAttribute)) &&
                 !shouldValidate(c) &&
                 c.ImplementationType.RequestHasAttribute(typeof(MaybeValidateAttribute));
         }
