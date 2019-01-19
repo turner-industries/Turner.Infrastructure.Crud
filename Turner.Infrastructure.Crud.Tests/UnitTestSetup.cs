@@ -7,9 +7,7 @@ using SimpleInjector;
 using SimpleInjector.Lifestyles;
 using System;
 using System.Reflection;
-using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Tests.Fakes;
-using Turner.Infrastructure.Crud.Validation;
 using Turner.Infrastructure.Mediator.Configuration;
 
 namespace Turner.Infrastructure.Crud.Tests
@@ -36,7 +34,8 @@ namespace Turner.Infrastructure.Crud.Tests
             var crudOptions = new CrudOptions
             {
                 UseFluentValidation = true,
-                UseEntityFramework = true
+                UseEntityFramework = true,
+                ValidateAllRequests = false
             };
 
             Crud.Configure(container, assemblies, crudOptions);
@@ -69,7 +68,7 @@ namespace Turner.Infrastructure.Crud.Tests
 
         public static void ConfigureFluentValidation(Container container, Assembly[] assemblies)
         {
-            container.Register(typeof(FluentValidation.IValidator<>), assemblies);
+            container.Register(typeof(IValidator<>), assemblies);
 
             ValidatorOptions.CascadeMode = CascadeMode.StopOnFirstFailure;
         }

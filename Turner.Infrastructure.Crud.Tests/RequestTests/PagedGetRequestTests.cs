@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Tests.Fakes;
-using Turner.Infrastructure.Mediator.Decorators;
 
 namespace Turner.Infrastructure.Crud.Tests.RequestTests
 {
@@ -73,8 +72,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.AreEqual("AUser", response.Data.Items[1].Name);
         }
     }
-
-    [DoNotValidate]
+    
     public class PagedGetUserRequest : IPagedGetRequest<User, UserGetDto>
     {
         public string Name { get; set; }

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Tests.Fakes;
-using Turner.Infrastructure.Mediator.Decorators;
 
 namespace Turner.Infrastructure.Crud.Tests.RequestTests
 {
@@ -118,20 +117,17 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.AreEqual(_user.Name, response.Data.Name);
         }
     }
-
-    [DoNotValidate]
+    
     public class GetUserByIdRequest : IGetRequest<User, UserGetDto>
     {
         public int Id { get; set; }
     }
     
-    [DoNotValidate]
     public class GetUserByNameRequest : IGetRequest<User, UserGetDto>
     {
         public string Name { get; set; }
     }
-
-    [DoNotValidate]
+    
     public class GetUserByKeyRequest : IGetRequest<User, UserGetDto>
     {
         public int Id { get; set; }

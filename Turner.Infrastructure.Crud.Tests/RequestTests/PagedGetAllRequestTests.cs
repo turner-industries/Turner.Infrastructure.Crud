@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Tests.Fakes;
-using Turner.Infrastructure.Mediator.Decorators;
 
 namespace Turner.Infrastructure.Crud.Tests.RequestTests
 {
@@ -191,8 +190,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.AreEqual("DUser", response.Data.Items[1].Name);
         }
     }
-
-    [DoNotValidate]
+    
     public class GetAllUsersPaged : IPagedGetAllRequest<User, UserGetDto>
     {
         public int PageNumber { get; set; }
@@ -208,8 +206,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             ForEntity<User>().SortWith(builder => builder.SortBy(x => x.Name).Descending());
         }
     }
-
-    [DoNotValidate]
+    
     public class GetAllFilteredUsersPaged
         : IPagedGetAllRequest<User, UserGetDto>
     {
