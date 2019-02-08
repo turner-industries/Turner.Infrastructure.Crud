@@ -162,8 +162,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         {
             ForEntity<User>()
                 .SelectWith(builder => builder.Single(r => r.Id, e => e.Id))
-                .CreateWith(request => Mapper.Map<User>(request.User))
-                .UpdateWith((request, entity) => Mapper.Map(request.User, entity))
+                .CreateEntityWith(request => Mapper.Map<User>(request.User))
+                .UpdateEntityWith((request, entity) => Mapper.Map(request.User, entity))
                 .ConfigureOptions(options => options.SuppressCreateActionsInSave = true);
         }
     }

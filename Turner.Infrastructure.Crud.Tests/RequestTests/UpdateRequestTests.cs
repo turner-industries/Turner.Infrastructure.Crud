@@ -198,7 +198,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
                     e => e.Name, 
                     r => r.Name,
                     (e, r) => string.Equals(e, r, StringComparison.InvariantCultureIgnoreCase)))
-                .UpdateWith((request, entity) =>
+                .UpdateEntityWith((request, entity) =>
                     Task.FromResult(Mapper.Map(request.Data, entity)));
 
             ConfigureErrors(config => config.FailedToFindInUpdateIsError = true);

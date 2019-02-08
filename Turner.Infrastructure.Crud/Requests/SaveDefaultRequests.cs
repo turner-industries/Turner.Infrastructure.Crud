@@ -21,8 +21,8 @@ namespace Turner.Infrastructure.Crud.Requests
         public SaveRequestProfile()
         {
             ForEntity<TEntity>()
-                .CreateWith((SaveRequest<TEntity, TIn> request) => Mapper.Map<TEntity>(request.Data))
-                .UpdateWith((SaveRequest<TEntity, TIn> request, TEntity entity) => Mapper.Map(request.Data, entity));
+                .CreateEntityWith((SaveRequest<TEntity, TIn> request) => Mapper.Map<TEntity>(request.Data))
+                .UpdateEntityWith((SaveRequest<TEntity, TIn> request, TEntity entity) => Mapper.Map(request.Data, entity));
         }
     }
 
@@ -42,8 +42,8 @@ namespace Turner.Infrastructure.Crud.Requests
         public SaveRequestProfile()
         {
             ForEntity<TEntity>()
-                .CreateWith((SaveRequest<TEntity, TIn, TOut> request) => Mapper.Map<TEntity>(request.Data))
-                .UpdateWith((SaveRequest<TEntity, TIn, TOut> request, TEntity entity) => Mapper.Map(request.Data, entity));
+                .CreateEntityWith((SaveRequest<TEntity, TIn, TOut> request) => Mapper.Map<TEntity>(request.Data))
+                .UpdateEntityWith((SaveRequest<TEntity, TIn, TOut> request, TEntity entity) => Mapper.Map(request.Data, entity));
         }
     }
 
@@ -71,8 +71,8 @@ namespace Turner.Infrastructure.Crud.Requests
         {
             ForEntity<TEntity>()
                 .WithRequestKey(request => request.Key)
-                .CreateWith(request => Mapper.Map<TEntity>(request.Data))
-                .UpdateWith((request, entity) => Mapper.Map(request.Data, entity));
+                .CreateEntityWith(request => Mapper.Map<TEntity>(request.Data))
+                .UpdateEntityWith((request, entity) => Mapper.Map(request.Data, entity));
         }
     }
 

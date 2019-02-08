@@ -116,7 +116,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public CreateUserWithoutResponseProfile()
         {
             ForEntity<User>()
-                .CreateWith(request => Mapper.Map<User>(request.User));
+                .CreateEntityWith(request => Mapper.Map<User>(request.User));
         }
     }
 }
