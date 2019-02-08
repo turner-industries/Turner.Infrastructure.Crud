@@ -119,7 +119,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public CreateUsersRequestProfile()
         {
             ForEntity<User>()
-                .CreateWith(user => Mapper.Map<User>(user))
+                .CreateEntityWith(user => Mapper.Map<User>(user))
                 .WithItems(request => request.Users);
         }
     }

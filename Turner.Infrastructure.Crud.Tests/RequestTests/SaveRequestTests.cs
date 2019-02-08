@@ -163,8 +163,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             ForEntity<User>()
                 .SelectWith(builder => builder.Single(r => r.Id, e => e.Id))
                 .CreateEntityWith(request => Mapper.Map<User>(request.User))
-                .UpdateEntityWith((request, entity) => Mapper.Map(request.User, entity))
-                .ConfigureOptions(options => options.SuppressCreateActionsInSave = true);
+                .UpdateEntityWith((request, entity) => Mapper.Map(request.User, entity));
         }
     }
 
@@ -174,8 +173,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public SaveUserWithResponseProfile()
         {
             ForEntity<User>()
-                .SelectWith(builder => builder.Single("Name"))
-                .ConfigureOptions(options => options.SuppressUpdateActionsInSave = true);
+                .SelectWith(builder => builder.Single("Name"));
         }
     }
 
