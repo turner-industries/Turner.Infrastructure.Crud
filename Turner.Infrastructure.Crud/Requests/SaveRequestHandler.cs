@@ -1,7 +1,6 @@
-﻿using AutoMapper;
-using System.Threading.Tasks;
-using Turner.Infrastructure.Crud.Context;
+﻿using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Exceptions;
 using Turner.Infrastructure.Mediator;
@@ -134,7 +133,9 @@ namespace Turner.Infrastructure.Crud.Requests
             }
 
             var newEntity = await SaveEntity(request, entity).Configure();
-            var result = Mapper.Map<TOut>(newEntity);
+
+            var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
+            var result = await transform(newEntity).Configure();
 
             return result.AsResponse();
         }

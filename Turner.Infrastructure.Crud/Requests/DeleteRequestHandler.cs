@@ -1,7 +1,6 @@
-﻿using AutoMapper;
-using System.Threading.Tasks;
-using Turner.Infrastructure.Crud.Context;
+﻿using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Exceptions;
 using Turner.Infrastructure.Mediator;
@@ -113,7 +112,9 @@ namespace Turner.Infrastructure.Crud.Requests
             if (entity != null)
             {
                 entity = await DeleteEntity(request, entity).Configure();
-                result = Mapper.Map<TOut>(entity);
+
+                var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
+                result = await transform(entity).Configure();
             }
 
             return result.AsResponse();

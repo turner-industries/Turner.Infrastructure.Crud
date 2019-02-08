@@ -6,6 +6,7 @@ using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Mediator;
+using AutoMapper.QueryableExtensions;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
@@ -25,6 +26,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public async Task<Response<GetAllResult<TOut>>> HandleAsync(TRequest request)
         {
             List<TOut> items;
+            var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
 
             var requestHooks = RequestConfig.GetRequestHooks(request);
             foreach (var hook in requestHooks)
@@ -38,13 +40,21 @@ namespace Turner.Infrastructure.Crud.Requests
             var sorter = RequestConfig.GetSorterFor<TEntity>();
             entities = sorter?.Sort(request, entities) ?? entities;
 
-            items = await entities.ProjectResults<TEntity, TOut>(Context, Options).Configure();
+            if (Options.UseProjection)
+            {
+                items = await Context.ToListAsync(entities.ProjectTo<TOut>()).Configure();
+            }
+            else
+            {
+                var resultEntities = await Context.ToListAsync(entities).Configure();
+                items = new List<TOut>(await Task.WhenAll(resultEntities.Select(transform)).Configure());
+            }
 
             if (items.Count == 0)
             {
                 var defaultValue = RequestConfig.GetDefaultFor<TEntity>();
                 if (defaultValue != null)
-                    items.Add(Mapper.Map<TOut>(defaultValue));
+                    items.Add(await transform(defaultValue).Configure());
 
                 if (RequestConfig.ErrorConfig.FailedToFindInGetAllIsError)
                 {

@@ -1,9 +1,8 @@
-﻿using AutoMapper;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -108,7 +107,11 @@ namespace Turner.Infrastructure.Crud.Requests
         public async Task<Response<UpdateAllResult<TOut>>> HandleAsync(TRequest request)
         {
             var entities = await UpdateEntities(request).Configure();
-            var result = new UpdateAllResult<TOut>(Mapper.Map<List<TOut>>(entities));
+
+            var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
+            var items = new List<TOut>(await Task.WhenAll(entities.Select(transform)));
+
+            var result = new UpdateAllResult<TOut>(items);
 
             return result.AsResponse();
         }

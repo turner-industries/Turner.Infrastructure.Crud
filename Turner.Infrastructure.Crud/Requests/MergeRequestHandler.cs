@@ -3,8 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -132,7 +132,11 @@ namespace Turner.Infrastructure.Crud.Requests
         public async Task<Response<MergeResult<TOut>>> HandleAsync(TRequest request)
         {
             var entities = await MergeEntities(request).Configure();
-            var result = new MergeResult<TOut>(Mapper.Map<List<TOut>>(entities));
+
+            var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
+            var items = new List<TOut>(await Task.WhenAll(entities.Select(transform)).Configure());
+
+            var result = new MergeResult<TOut>(items);
 
             return result.AsResponse();
         }

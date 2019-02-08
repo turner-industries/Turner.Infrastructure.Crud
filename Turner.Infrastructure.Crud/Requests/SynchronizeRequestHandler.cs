@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -146,7 +146,11 @@ namespace Turner.Infrastructure.Crud.Requests
         public async Task<Response<SynchronizeResult<TOut>>> HandleAsync(TRequest request)
         {
             var entities = await SynchronizeEntities(request).Configure();
-            var result = new SynchronizeResult<TOut>(Mapper.Map<List<TOut>>(entities));
+
+            var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
+            var items = new List<TOut>(await Task.WhenAll(entities.Select(transform)));
+
+            var result = new SynchronizeResult<TOut>(items);
 
             return result.AsResponse();
         }

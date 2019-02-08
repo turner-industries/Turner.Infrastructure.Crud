@@ -1,9 +1,8 @@
-﻿using AutoMapper;
-using AutoMapper.QueryableExtensions;
+﻿using AutoMapper.QueryableExtensions;
 using System.Linq;
 using System.Threading.Tasks;
-using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Exceptions;
 using Turner.Infrastructure.Mediator;
@@ -36,6 +35,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
                 var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
                 var entities = Context.EntitySet<TEntity>().AsQueryable();
+                var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
 
                 foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
                     entities = filter.Filter(request, entities);
@@ -49,7 +49,7 @@ namespace Turner.Infrastructure.Crud.Requests
                     if (result == null)
                     {
                         failedToFind = true;
-                        result = Mapper.Map<TOut>(RequestConfig.GetDefaultFor<TEntity>());
+                        result = await transform(RequestConfig.GetDefaultFor<TEntity>()).Configure();
                     }
                 }
                 else
@@ -64,7 +64,7 @@ namespace Turner.Infrastructure.Crud.Requests
                         entity = RequestConfig.GetDefaultFor<TEntity>();
                     }
 
-                    result = Mapper.Map<TOut>(entity);
+                    result = await transform(entity).Configure();
                 }
             }
             catch(CrudRequestFailedException e)
