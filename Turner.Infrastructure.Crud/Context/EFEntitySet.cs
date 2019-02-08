@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Turner.Infrastructure.Crud.Algorithms
+namespace Turner.Infrastructure.Crud.Context
 {
     public class EFEntitySet<TEntity> : IEntitySet<TEntity>, IAsyncEnumerable<TEntity>
         where TEntity : class

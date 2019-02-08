@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using System.Threading.Tasks;
-using Turner.Infrastructure.Crud.Algorithms;
+using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Exceptions;
