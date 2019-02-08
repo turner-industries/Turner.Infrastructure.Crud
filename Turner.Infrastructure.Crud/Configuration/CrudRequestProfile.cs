@@ -31,7 +31,7 @@ namespace Turner.Infrastructure.Crud.Configuration
         private Action<CrudRequestOptionsConfig> _optionsConfig;
         private Action<CrudRequestErrorConfig> _errorConfig;
  
-        protected readonly List<IRequestHookFactory> RequestHooks
+        protected internal readonly List<IRequestHookFactory> RequestHooks
             = new List<IRequestHookFactory>();
         
         public override Type RequestType => typeof(TRequest);
