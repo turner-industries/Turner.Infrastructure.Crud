@@ -74,6 +74,11 @@ namespace Turner.Infrastructure.Crud.Requests
                 }
             }
 
+            var resultHooks = RequestConfig.GetResultHooks(request);
+            foreach (var hook in resultHooks)
+                for (var i = 0; i < items.Count; ++i)
+                    items[i] = (TOut)await hook.Run(request, items[i]).Configure();
+
             var result = new PagedGetAllResult<TOut>(items, pageNumber, pageSize, totalPageCount, totalItemCount);
 
             return result.AsResponse();

@@ -115,6 +115,10 @@ namespace Turner.Infrastructure.Crud.Requests
 
                 var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
                 result = await transform(entity).Configure();
+
+                var resultHooks = RequestConfig.GetResultHooks(request);
+                foreach (var hook in resultHooks)
+                    result = (TOut)await hook.Run(request, result).Configure();
             }
 
             return result.AsResponse();

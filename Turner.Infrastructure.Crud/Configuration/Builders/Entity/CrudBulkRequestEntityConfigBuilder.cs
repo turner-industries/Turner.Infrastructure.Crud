@@ -45,7 +45,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         }
 
         public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItemHook(
-            Func<TRequest, TItem, Task> hook)
+            Func<TRequest, TItem, Task<TItem>> hook)
         {
             _itemHooks.Add(FunctionItemHookFactory.From(hook));
 
@@ -53,7 +53,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         }
 
         public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItemHook(
-            Action<TRequest, TItem> hook)
+            Func<TRequest, TItem, TItem> hook)
         {
             _itemHooks.Add(FunctionItemHookFactory.From(hook));
 

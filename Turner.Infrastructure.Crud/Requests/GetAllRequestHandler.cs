@@ -1,12 +1,11 @@
-﻿using AutoMapper;
+﻿using AutoMapper.QueryableExtensions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Mediator;
-using AutoMapper.QueryableExtensions;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
@@ -64,6 +63,11 @@ namespace Turner.Infrastructure.Crud.Requests
                     return ErrorDispatcher.Dispatch<GetAllResult<TOut>>(error);
                 }
             }
+
+            var resultHooks = RequestConfig.GetResultHooks(request);
+            foreach (var hook in resultHooks)
+                for (var i = 0; i < items.Count; ++i)
+                    items[i] = (TOut)await hook.Run(request, items[i]).Configure();
 
             var result = new GetAllResult<TOut>(items);
 

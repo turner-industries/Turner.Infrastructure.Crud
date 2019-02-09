@@ -41,6 +41,8 @@ namespace Turner.Infrastructure.Crud.Configuration
         List<IBoxedItemHook> GetItemHooksFor<TEntity>(object request)
             where TEntity : class;
 
+        List<IBoxedResultHook> GetResultHooks(object request);
+
         Func<object, Task<TEntity>> GetCreatorFor<TEntity>()
             where TEntity : class;
 
@@ -66,6 +68,8 @@ namespace Turner.Infrastructure.Crud.Configuration
         
         private readonly Dictionary<Type, ItemHookConfig<TRequest>> _itemHooks
             = new Dictionary<Type, ItemHookConfig<TRequest>>();
+
+        private readonly ResultHookConfig<TRequest> _resultHooks = new ResultHookConfig<TRequest>();
 
         private readonly RequestOptions _options = new RequestOptions();
 
@@ -180,7 +184,21 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             return hooks;
         }
-        
+
+        public List<IBoxedResultHook> GetResultHooks(object request)
+        {
+            if (!(request is TRequest))
+            {
+                var message =
+                    $"Unable to get result hooks for request of type '{request.GetType()}'. " +
+                    $"Configuration expected a request of type '{typeof(TRequest)}'.";
+
+                throw new BadCrudConfigurationException(message);
+            }
+
+            return _resultHooks.GetHooks((TRequest)request);
+        }
+
         public IRequestItemSource GetRequestItemSourceFor<TEntity>()
             where TEntity : class
         {
@@ -332,6 +350,11 @@ namespace Turner.Infrastructure.Crud.Configuration
             config.SetHooks(hooks);
 
             _itemHooks[typeof(TEntity)] = config;
+        }
+
+        internal void AddResultHooks(List<IResultHookFactory> hooks)
+        {
+            _resultHooks.AddHooks(hooks);
         }
 
         internal void SetEntityRequestItemSource<TEntity>(IRequestItemSource itemSource)

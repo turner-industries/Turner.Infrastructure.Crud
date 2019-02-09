@@ -79,6 +79,10 @@ namespace Turner.Infrastructure.Crud.Requests
                 return ErrorDispatcher.Dispatch<TOut>(error);
             }
 
+            var resultHooks = RequestConfig.GetResultHooks(request);
+            foreach (var hook in resultHooks)
+                result = (TOut)await hook.Run(request, result).Configure();
+
             return result.AsResponse();
         }
     }

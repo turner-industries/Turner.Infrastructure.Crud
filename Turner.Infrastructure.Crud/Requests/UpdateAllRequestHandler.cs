@@ -31,10 +31,10 @@ namespace Turner.Infrastructure.Crud.Requests
             var items = ((IEnumerable<object>)data.ItemSource(request)).ToArray();
 
             var itemHooks = RequestConfig.GetItemHooksFor<TEntity>(request);
-            foreach (var item in items)
-                foreach (var hook in itemHooks)
-                    await hook.Run(request, item).Configure();
-
+            foreach (var hook in itemHooks)
+                for (var i = 0; i < items.Length; ++i)
+                    items[i] = await hook.Run(request, items[i]).Configure();
+            
             var updator = RequestConfig.GetUpdatorFor<TEntity>();
 
             var updatedEntities = new List<TEntity>(entities.Length);
@@ -110,6 +110,11 @@ namespace Turner.Infrastructure.Crud.Requests
 
             var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
             var items = new List<TOut>(await Task.WhenAll(entities.Select(transform)));
+
+            var resultHooks = RequestConfig.GetResultHooks(request);
+            foreach (var hook in resultHooks)
+                for (var i = 0; i < items.Count; ++i)
+                    items[i] = (TOut)await hook.Run(request, items[i]).Configure();
 
             var result = new UpdateAllResult<TOut>(items);
 

@@ -2,8 +2,8 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Validation;
@@ -111,6 +111,7 @@ namespace Turner.Infrastructure.Crud
             TypeRequestHookFactory.BindContainer(container.GetInstance);
             TypeEntityHookFactory.BindContainer(container.GetInstance);
             TypeItemHookFactory.BindContainer(container.GetInstance);
+            TypeResultHookFactory.BindContainer(container.GetInstance);
 
             if (options.UseEntityFramework)
                 container.Register(typeof(IEntityContext), typeof(EFContext));

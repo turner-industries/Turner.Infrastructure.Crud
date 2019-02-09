@@ -52,4 +52,12 @@ namespace Turner.Infrastructure.Crud.Configuration
         {
         }
     }
+
+    public class ResultHookConfig<TRequest>
+        : HookConfig<TRequest, IResultHookFactory, IBoxedResultHook>
+    {
+        public ResultHookConfig() : base(factory => factory.Create())
+        {
+        }
+    }
 }

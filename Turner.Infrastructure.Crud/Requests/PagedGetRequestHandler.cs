@@ -9,7 +9,7 @@ using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-#pragma warning disable 0618
+    #pragma warning disable 0618
 
     internal class PagedGetRequestHandler<TRequest, TEntity, TOut>
         : CrudRequestHandler<TRequest, TEntity>, IRequestHandler<TRequest, PagedGetResult<TOut>>
@@ -76,6 +76,11 @@ namespace Turner.Infrastructure.Crud.Requests
 
                     pageNumber = 0;
                 }
+
+                var resultHooks = RequestConfig.GetResultHooks(request);
+                foreach (var hook in resultHooks)
+                    for (var i = 0; i < resultItems.Count; ++i)
+                        resultItems[i] = (TOut)await hook.Run(request, resultItems[i]).Configure();
 
                 result = new PagedGetResult<TOut>
                 {

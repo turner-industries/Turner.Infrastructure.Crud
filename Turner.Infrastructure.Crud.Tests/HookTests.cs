@@ -34,6 +34,7 @@ namespace Turner.Infrastructure.Crud.Tests
             Assert.AreEqual("r1/r2/r3/r4", entity.RequestHookMessage);
             Assert.AreEqual("e1/e2/e3/e4", entity.EntityHookMessage);
             Assert.AreEqual("i1/i2/i3/i4", entity.ItemHookMessage);
+            Assert.AreEqual("t1/t2/t3/t4", response.Data.Items[0]);
         }
     }
     
@@ -48,7 +49,7 @@ namespace Turner.Infrastructure.Crud.Tests
         public string ItemHookMessage { get; set; }
     }
     
-    public interface ITestHooksRequest : ICreateAllRequest<HookEntity>
+    public interface ITestHooksRequest : ICreateAllRequest<HookEntity, string>
     {
         List<HookDto> Items { get; set; }
     }
@@ -79,10 +80,18 @@ namespace Turner.Infrastructure.Crud.Tests
 
     public class TestInstanceItemHook : IItemHook<TestHooksRequest, HookDto>
     {
-        public Task Run(TestHooksRequest request, HookDto item)
+        public Task<HookDto> Run(TestHooksRequest request, HookDto item)
         {
             item.ItemHookMessage += "i3/";
-            return Task.CompletedTask;
+            return Task.FromResult(item);
+        }
+    }
+
+    public class TestInstanceResultHook : IResultHook<TestHooksRequest, string>
+    {
+        public Task<string> Run(TestHooksRequest request, string result)
+        {
+            return Task.FromResult(result + "t3/");
         }
     }
 
@@ -124,10 +133,24 @@ namespace Turner.Infrastructure.Crud.Tests
                 throw new System.Exception("Injection Failed");
         }
 
-        public Task Run(TestHooksRequest request, HookDto item)
+        public Task<HookDto> Run(TestHooksRequest request, HookDto item)
         {
             item.ItemHookMessage += "i4";
-            return Task.CompletedTask;
+            return Task.FromResult(item);
+        }
+    }
+
+    public class TestTypeResultHook : IResultHook<TestHooksRequest, string>
+    {
+        public TestTypeResultHook(DbContext context)
+        {
+            if (context == null)
+                throw new System.Exception("Injection Failed");
+        }
+
+        public Task<string> Run(TestHooksRequest request, string result)
+        {
+            return Task.FromResult(result + "t4");
         }
     }
 
@@ -143,6 +166,9 @@ namespace Turner.Infrastructure.Crud.Tests
                 return Task.CompletedTask;
             });
 
+            WithResultHook<string>((r, t) => "t1/");
+            WithResultHook<string>((r, t) => Task.FromResult(t + "t2/"));
+
             ForEntity<IHookEntity>()
                 .WithEntityHook((r, e) => e.EntityHookMessage = "e1/")
                 .WithEntityHook((r, e) =>
@@ -150,11 +176,15 @@ namespace Turner.Infrastructure.Crud.Tests
                     e.EntityHookMessage += "e2/";
                     return Task.CompletedTask;
                 })
-                .WithItemHook((r, i) => i.ItemHookMessage = "i1/")
+                .WithItemHook((r, i) =>
+                {
+                    i.ItemHookMessage += "i1/";
+                    return i;
+                })
                 .WithItemHook((r, i) =>
                 {
                     i.ItemHookMessage += "i2/";
-                    return Task.CompletedTask;
+                    return Task.FromResult(i);
                 });
         }
     }
@@ -167,7 +197,11 @@ namespace Turner.Infrastructure.Crud.Tests
             WithRequestHook(new TestInstanceRequestHook());
             WithRequestHook<TestTypeRequestHook>();
 
+            WithResultHook(new TestInstanceResultHook());
+            WithResultHook<TestTypeResultHook, string>();
+
             ForEntity<HookEntity>()
+                .CreateResultWith(x => string.Empty)
                 .WithEntityHook(new TestInstanceEntityHook())
                 .WithEntityHook<TestTypeEntityHook>()
                 .WithItemHook(new TestInstanceItemHook())
