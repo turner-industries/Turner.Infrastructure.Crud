@@ -33,7 +33,7 @@ namespace Turner.Infrastructure.Crud.Requests
             foreach (var hook in requestHooks)
                 await hook.Run(request).Configure();
 
-            entity = await updator(data, entity).Configure();
+            entity = await updator(request, data, entity).Configure();
             entity = await Context.EntitySet<TEntity>().UpdateAsync(entity).Configure();
             
             var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>(request);

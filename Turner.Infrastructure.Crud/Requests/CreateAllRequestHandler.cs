@@ -34,7 +34,7 @@ namespace Turner.Infrastructure.Crud.Requests
             
             var newEntities = new List<TEntity>();
             foreach (var item in items)
-                newEntities.Add(await creator(item).Configure());
+                newEntities.Add(await creator(request, item).Configure());
             
             var entities = await Context.EntitySet<TEntity>().CreateAsync(newEntities).Configure();
 

@@ -43,7 +43,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 if (item.Item1 == null || item.Item2 == null)
                     continue;
 
-                updatedEntities.Add(await updator(item.Item1, item.Item2).Configure());
+                updatedEntities.Add(await updator(request, item.Item1, item.Item2).Configure());
             }
 
             entities = await Context.EntitySet<TEntity>().UpdateAsync(updatedEntities).Configure();
