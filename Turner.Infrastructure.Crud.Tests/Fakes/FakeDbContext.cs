@@ -10,9 +10,14 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
     public class FakeDbContext : DbContext
     {
         public DbSet<User> Users { get; set; }
+
         public DbSet<Site> Sites { get; set; }
+
         public DbSet<NonEntity> NonEntities { get; set; }
+
         public DbSet<HookEntity> Hooks { get; set; }
+
+        public DbSet<UserClaim> UserClaims { get; set; }
 
         public FakeDbContext(DbContextOptions options)
             : base(options)
@@ -33,6 +38,7 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
             modelBuilder.Entity<Site>();
             modelBuilder.Entity<NonEntity>();
             modelBuilder.Entity<HookEntity>();
+            modelBuilder.Entity<UserClaim>();
         }
 
         public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default(CancellationToken))
