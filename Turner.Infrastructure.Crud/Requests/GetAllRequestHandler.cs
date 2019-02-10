@@ -1,6 +1,7 @@
 ﻿using AutoMapper.QueryableExtensions;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
@@ -24,52 +25,70 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response<GetAllResult<TOut>>> HandleAsync(TRequest request)
         {
-            List<TOut> items;
-            var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
+            GetAllResult<TOut> result;
 
-            var requestHooks = RequestConfig.GetRequestHooks(request);
-            foreach (var hook in requestHooks)
-                await hook.Run(request).Configure();
-
-            var entities = Context.EntitySet<TEntity>().AsQueryable();
-
-            foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
-                entities = filter.Filter(request, entities);
-
-            var sorter = RequestConfig.GetSorterFor<TEntity>();
-            entities = sorter?.Sort(request, entities) ?? entities;
-
-            if (Options.UseProjection)
+            using (var cts = new CancellationTokenSource())
             {
-                items = await Context.ToListAsync(entities.ProjectTo<TOut>()).Configure();
-            }
-            else
-            {
-                var resultEntities = await Context.ToListAsync(entities).Configure();
-                items = new List<TOut>(await Task.WhenAll(resultEntities.Select(transform)).Configure());
-            }
+                var ct = cts.Token;
+                List<TOut> items;
 
-            if (items.Count == 0)
-            {
-                var defaultValue = RequestConfig.GetDefaultFor<TEntity>();
-                if (defaultValue != null)
-                    items.Add(await transform(defaultValue).Configure());
+                var requestHooks = RequestConfig.GetRequestHooks(request);
+                foreach (var hook in requestHooks)
+                    await hook.Run(request, ct).Configure();
 
-                if (RequestConfig.ErrorConfig.FailedToFindInGetAllIsError)
+                ct.ThrowIfCancellationRequested();
+
+                var entities = Context.EntitySet<TEntity>().AsQueryable();
+
+                foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
+                    entities = filter.Filter(request, entities);
+
+                var sorter = RequestConfig.GetSorterFor<TEntity>();
+                entities = sorter?.Sort(request, entities) ?? entities;
+
+                var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
+
+                if (Options.UseProjection)
                 {
-                    var errorResult = new GetAllResult<TOut>(items);
-                    var error = new FailedToFindError(request, typeof(TEntity), errorResult);
-
-                    return ErrorDispatcher.Dispatch<GetAllResult<TOut>>(error);
+                    items = await Context.ToListAsync(entities.ProjectTo<TOut>(), ct).Configure();
+                    ct.ThrowIfCancellationRequested();
                 }
+                else
+                {
+                    var resultEntities = await Context.ToListAsync(entities, ct).Configure();
+                    ct.ThrowIfCancellationRequested();
+
+                    items = new List<TOut>(await Task.WhenAll(resultEntities.Select(x => transform(x, ct))).Configure());
+                    ct.ThrowIfCancellationRequested();
+                }
+
+                if (items.Count == 0)
+                {
+                    var defaultValue = RequestConfig.GetDefaultFor<TEntity>();
+                    if (defaultValue != null)
+                    {
+                        items.Add(await transform(defaultValue, ct).Configure());
+                        ct.ThrowIfCancellationRequested();
+                    }
+
+                    if (RequestConfig.ErrorConfig.FailedToFindInGetAllIsError)
+                    {
+                        var errorResult = new GetAllResult<TOut>(items);
+                        var error = new FailedToFindError(request, typeof(TEntity), errorResult);
+
+                        return ErrorDispatcher.Dispatch<GetAllResult<TOut>>(error);
+                    }
+                }
+
+                var resultHooks = RequestConfig.GetResultHooks(request);
+                foreach (var hook in resultHooks)
+                    for (var i = 0; i < items.Count; ++i)
+                        items[i] = (TOut)await hook.Run(request, items[i], ct).Configure();
+
+                ct.ThrowIfCancellationRequested();
+
+                result = new GetAllResult<TOut>(items);
             }
-
-            var resultHooks = RequestConfig.GetResultHooks(request);
-            foreach (var hook in resultHooks)
-                for (var i = 0; i < items.Count; ++i)
-                    items[i] = (TOut)await hook.Run(request, items[i]).Configure();
-
-            var result = new GetAllResult<TOut>(items);
 
             return result.AsResponse();
         }

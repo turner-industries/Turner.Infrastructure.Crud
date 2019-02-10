@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Requests;
@@ -62,7 +63,7 @@ namespace Turner.Infrastructure.Crud.Tests
 
     public class TestInstanceRequestHook : IRequestHook<TestHooksRequest>
     {
-        public Task Run(TestHooksRequest request)
+        public Task Run(TestHooksRequest request, CancellationToken token)
         {
             request.Items.ForEach(i => i.RequestHookMessage += "r3/");
             return Task.CompletedTask;
@@ -71,7 +72,7 @@ namespace Turner.Infrastructure.Crud.Tests
 
     public class TestInstanceEntityHook : IEntityHook<TestHooksRequest, HookEntity>
     {
-        public Task Run(TestHooksRequest request, HookEntity entity)
+        public Task Run(TestHooksRequest request, HookEntity entity, CancellationToken token)
         {
             entity.EntityHookMessage += "e3/";
             return Task.CompletedTask;
@@ -80,7 +81,7 @@ namespace Turner.Infrastructure.Crud.Tests
 
     public class TestInstanceItemHook : IItemHook<TestHooksRequest, HookDto>
     {
-        public Task<HookDto> Run(TestHooksRequest request, HookDto item)
+        public Task<HookDto> Run(TestHooksRequest request, HookDto item, CancellationToken token)
         {
             item.ItemHookMessage += "i3/";
             return Task.FromResult(item);
@@ -89,7 +90,7 @@ namespace Turner.Infrastructure.Crud.Tests
 
     public class TestInstanceResultHook : IResultHook<TestHooksRequest, string>
     {
-        public Task<string> Run(TestHooksRequest request, string result)
+        public Task<string> Run(TestHooksRequest request, string result, CancellationToken token)
         {
             return Task.FromResult(result + "t3/");
         }
@@ -103,7 +104,7 @@ namespace Turner.Infrastructure.Crud.Tests
                 throw new System.Exception("Injection Failed");
         }
 
-        public Task Run(TestHooksRequest request)
+        public Task Run(TestHooksRequest request, CancellationToken token)
         {
             request.Items.ForEach(i => i.RequestHookMessage += "r4");
             return Task.CompletedTask;
@@ -118,7 +119,7 @@ namespace Turner.Infrastructure.Crud.Tests
                 throw new System.Exception("Injection Failed");
         }
 
-        public Task Run(TestHooksRequest request, HookEntity entity)
+        public Task Run(TestHooksRequest request, HookEntity entity, CancellationToken token)
         {
             entity.EntityHookMessage += "e4";
             return Task.CompletedTask;
@@ -133,7 +134,7 @@ namespace Turner.Infrastructure.Crud.Tests
                 throw new System.Exception("Injection Failed");
         }
 
-        public Task<HookDto> Run(TestHooksRequest request, HookDto item)
+        public Task<HookDto> Run(TestHooksRequest request, HookDto item, CancellationToken token)
         {
             item.ItemHookMessage += "i4";
             return Task.FromResult(item);
@@ -148,7 +149,7 @@ namespace Turner.Infrastructure.Crud.Tests
                 throw new System.Exception("Injection Failed");
         }
 
-        public Task<string> Run(TestHooksRequest request, string result)
+        public Task<string> Run(TestHooksRequest request, string result, CancellationToken token)
         {
             return Task.FromResult(result + "t4");
         }

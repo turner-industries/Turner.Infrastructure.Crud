@@ -11,8 +11,6 @@ namespace Turner.Infrastructure.Crud.Context
     {
         IEntitySet<TEntity> EntitySet<TEntity>() where TEntity : class;
 
-        int ApplyChanges();
-
         Task<int> ApplyChangesAsync(CancellationToken token = default(CancellationToken));
 
         Task<T> SingleOrDefaultAsync<T>(IQueryable<T> entities,

@@ -23,11 +23,8 @@ namespace Turner.Infrastructure.Crud.Context
             return EFEntitySet<TEntity>.From(_context.Set<TEntity>());
         }
 
-        public virtual int ApplyChanges() => _context.SaveChanges();
-
         public virtual async Task<int> ApplyChangesAsync(CancellationToken token = default(CancellationToken))
         {
-            token.ThrowIfCancellationRequested();
             var result = await _context.SaveChangesAsync(token).Configure();
 
             token.ThrowIfCancellationRequested();

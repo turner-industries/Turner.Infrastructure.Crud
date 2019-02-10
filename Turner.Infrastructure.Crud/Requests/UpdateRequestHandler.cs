@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Errors;
@@ -16,31 +17,39 @@ namespace Turner.Infrastructure.Crud.Requests
         {
         }
 
-        protected Task<TEntity> GetEntity(TRequest request)
+        protected Task<TEntity> GetEntity(TRequest request, CancellationToken ct)
         {
             var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
             var set = Context.EntitySet<TEntity>();
             
-            return Context.SingleOrDefaultAsync(set, selector(request));
+            return Context.SingleOrDefaultAsync(set, selector(request), ct);
         }
 
-        protected async Task<TEntity> UpdateEntity(TRequest request, TEntity entity)
+        protected async Task<TEntity> UpdateEntity(TRequest request, TEntity entity, CancellationToken ct)
         {
             var updator = RequestConfig.GetUpdatorFor<TEntity>();
             var data = RequestConfig.GetRequestItemSourceFor<TEntity>().ItemSource(request);
 
             var requestHooks = RequestConfig.GetRequestHooks(request);
             foreach (var hook in requestHooks)
-                await hook.Run(request).Configure();
+                await hook.Run(request, ct).Configure();
 
-            entity = await updator(request, data, entity).Configure();
-            entity = await Context.EntitySet<TEntity>().UpdateAsync(entity).Configure();
-            
+            ct.ThrowIfCancellationRequested();
+
+            entity = await updator(request, data, entity, ct).Configure();
+            ct.ThrowIfCancellationRequested();
+
+            entity = await Context.EntitySet<TEntity>().UpdateAsync(entity, ct).Configure();
+            ct.ThrowIfCancellationRequested();
+
             var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>(request);
             foreach (var hook in entityHooks)
-                await hook.Run(request, entity).Configure();
+                await hook.Run(request, entity, ct).Configure();
 
-            await Context.ApplyChangesAsync().Configure();
+            ct.ThrowIfCancellationRequested();
+
+            await Context.ApplyChangesAsync(ct).Configure();
+            ct.ThrowIfCancellationRequested();
 
             return entity;
         }
@@ -59,23 +68,32 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response> HandleAsync(TRequest request)
         {
-            TEntity entity;
-
-            try
+            using (var cts = new CancellationTokenSource())
             {
-                entity = await GetEntity(request).Configure();
-            }
-            catch (CrudRequestFailedException e)
-            {
-                var error = new RequestFailedError(request, e);
-                return ErrorDispatcher.Dispatch(error);
-            }
+                var ct = cts.Token;
+                TEntity entity;
 
-            if (entity == null && RequestConfig.ErrorConfig.FailedToFindInUpdateIsError)
-                return ErrorDispatcher.Dispatch(new FailedToFindError(request, typeof(TEntity)));
+                try
+                {
+                    entity = await GetEntity(request, ct).Configure();
+                }
+                catch (CrudRequestFailedException e)
+                {
+                    var error = new RequestFailedError(request, e);
+                    return ErrorDispatcher.Dispatch(error);
+                }
 
-            if (entity != null)
-                await UpdateEntity(request, entity).Configure();
+                ct.ThrowIfCancellationRequested();
+
+                if (entity == null && RequestConfig.ErrorConfig.FailedToFindInUpdateIsError)
+                    return ErrorDispatcher.Dispatch(new FailedToFindError(request, typeof(TEntity)));
+
+                if (entity != null)
+                {
+                    await UpdateEntity(request, entity, ct).Configure();
+                    ct.ThrowIfCancellationRequested();
+                }
+            }
 
             return Response.Success();
         }
@@ -94,35 +112,46 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response<TOut>> HandleAsync(TRequest request)
         {
-            TEntity entity;
             var result = default(TOut);
 
-            try
+            using (var cts = new CancellationTokenSource())
             {
-                entity = await GetEntity(request).Configure();
-            }
-            catch (CrudRequestFailedException e)
-            {
-                var error = new RequestFailedError(request, e);
-                return ErrorDispatcher.Dispatch<TOut>(error);
-            }
-            
-            if (entity == null && RequestConfig.ErrorConfig.FailedToFindInUpdateIsError)
-            {
-                var error = new FailedToFindError(request, typeof(TEntity));
-                return ErrorDispatcher.Dispatch<TOut>(error);
-            }
+                var ct = cts.Token;
+                TEntity entity;
 
-            if (entity != null)
-            {
-                entity = await UpdateEntity(request, entity).Configure();
+                try
+                {
+                    entity = await GetEntity(request, ct).Configure();
+                }
+                catch (CrudRequestFailedException e)
+                {
+                    var error = new RequestFailedError(request, e);
+                    return ErrorDispatcher.Dispatch<TOut>(error);
+                }
 
-                var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
-                result = await transform(entity).Configure();
+                ct.ThrowIfCancellationRequested();
 
-                var resultHooks = RequestConfig.GetResultHooks(request);
-                foreach (var hook in resultHooks)
-                    result = (TOut)await hook.Run(request, result).Configure();
+                if (entity == null && RequestConfig.ErrorConfig.FailedToFindInUpdateIsError)
+                {
+                    var error = new FailedToFindError(request, typeof(TEntity));
+                    return ErrorDispatcher.Dispatch<TOut>(error);
+                }
+
+                if (entity != null)
+                {
+                    entity = await UpdateEntity(request, entity, ct).Configure();
+                    ct.ThrowIfCancellationRequested();
+
+                    var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
+                    result = await transform(entity, ct).Configure();
+                    ct.ThrowIfCancellationRequested();
+
+                    var resultHooks = RequestConfig.GetResultHooks(request);
+                    foreach (var hook in resultHooks)
+                        result = (TOut)await hook.Run(request, result, ct).Configure();
+
+                    ct.ThrowIfCancellationRequested();
+                }
             }
 
             return result.AsResponse();
