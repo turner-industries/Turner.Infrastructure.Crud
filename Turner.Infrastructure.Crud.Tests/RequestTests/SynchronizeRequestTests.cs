@@ -20,8 +20,9 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             {
                 new User { Name = "TestUser1" },
                 new User { Name = "TestUser2" },
-                new User { Name = "TestUser3" },
-                new User { Name = "TestUser4" }
+                new User { Name = "TestUser3Filtered" },
+                new User { Name = "TestUser4" },
+                new User { Name = "TestUser5Filtered" }
             };
 
             Context.AddRange(_users.Cast<object>());
@@ -60,7 +61,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.AreEqual("NewUser2", response.Data.Items[3].Name);
             Assert.AreNotEqual(0, response.Data.Items[4].Id);
             Assert.AreEqual("NewUser3", response.Data.Items[4].Name);
-            Assert.AreEqual(2, Context.Set<User>().Count(x => x.IsDeleted));
+            Assert.AreEqual(3, Context.Set<User>().Count(x => x.IsDeleted));
             Assert.AreEqual(5, Context.Set<User>().Count(x => !x.IsDeleted));
         }
 
@@ -93,8 +94,53 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.AreEqual("NewUser2", response.Data.Items[3].Name);
             Assert.AreNotEqual(0, response.Data.Items[4].Id);
             Assert.AreEqual("NewUser3", response.Data.Items[4].Name);
-            Assert.AreEqual(2, Context.Set<User>().Count(x => x.IsDeleted));
+            Assert.AreEqual(3, Context.Set<User>().Count(x => x.IsDeleted));
             Assert.AreEqual(5, Context.Set<User>().Count(x => !x.IsDeleted));
+        }
+
+        [Test]
+        public async Task Handle_SynchronizeUserClaimsRequest_SynchronizesWithoutDeletingOtherUsersClaims()
+        {
+            var user1Claims = new[]
+            {
+                new UserClaim { UserId = _users[0].Id, Claim = "TestClaim1" },
+                new UserClaim { UserId = _users[0].Id, Claim = "TestClaim2" }
+            };
+
+            Context.AddRange(user1Claims.Cast<object>());
+
+            var user2Claims = new[]
+            {
+                new UserClaim { UserId = _users[1].Id, Claim = "TestClaim3" },
+                new UserClaim { UserId = _users[1].Id, Claim = "TestClaim4" }
+            };
+
+            Context.AddRange(user2Claims.Cast<object>());
+            Context.SaveChanges();
+
+            var request = new SynchronizeUserClaimsRequest
+            {
+                UserId = _users[1].Id,
+                Claims = new List<string>
+                {
+                    "TestClaim3",
+                    "TestClaim5"
+                }
+            };
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.IsNotNull(response.Data.Items);
+            Assert.AreEqual(2, response.Data.Items.Count);
+            Assert.AreEqual("TestClaim3", response.Data.Items[0]);
+            Assert.AreEqual("TestClaim5", response.Data.Items[1]);
+            Assert.AreEqual(1, Context.Set<UserClaim>().Count(x => x.IsDeleted));
+            Assert.AreEqual(4, Context.Set<UserClaim>().Count(x => !x.IsDeleted));
+            Assert.AreEqual(2, Context.Set<UserClaim>().Count(x => x.UserId == _users[0].Id && !x.IsDeleted));
+            Assert.AreEqual(1, Context.Set<UserClaim>().Count(x => x.UserId == _users[1].Id && x.IsDeleted));
+            Assert.AreEqual(2, Context.Set<UserClaim>().Count(x => x.UserId == _users[1].Id && !x.IsDeleted));
         }
     }
     
@@ -110,6 +156,32 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public SynchronizeUsersByIdProfile() : base(request => request.Items)
         {
             ForEntity<User>().WithKeys("Id");
+        }
+    }
+
+    public class SynchronizeUserClaimsRequest
+        : ISynchronizeRequest<UserClaim, string>
+    {
+        public int UserId { get; set; }
+
+        public List<string> Claims { get; set; }
+    }
+
+    public class SynchronizeUserClaimsProfile
+        : CrudBulkRequestProfile<SynchronizeUserClaimsRequest, string>
+    {
+        public SynchronizeUserClaimsProfile() : base(request => request.Claims)
+        {
+            ForEntity<UserClaim>()
+                .WithKeys(x => x, x => x.Claim)
+                .CreateResultWith(x => x.Claim)
+                .FilterOn((request, claim) => request.UserId == claim.UserId)
+                .UpdateEntityWith((claim, entity) => entity)
+                .CreateEntityWith((request, claim) => new UserClaim
+                {
+                    UserId = request.UserId,
+                    Claim = claim
+                });
         }
     }
 }

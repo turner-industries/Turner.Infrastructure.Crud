@@ -29,8 +29,8 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         protected IRequestItemSource RequestItemSource;
         protected Key EntityKey;
         protected Key RequestItemKey;
-        protected Func<object, Task<TEntity>> CreateEntity;
-        protected Func<object, TEntity, Task<TEntity>> UpdateEntity;
+        protected Func<object, object, Task<TEntity>> CreateEntity;
+        protected Func<object, object, TEntity, Task<TEntity>> UpdateEntity;
         protected Func<TEntity, Task<object>> CreateResult;
         protected Func<ICrudErrorHandler> ErrorHandlerFactory;
         

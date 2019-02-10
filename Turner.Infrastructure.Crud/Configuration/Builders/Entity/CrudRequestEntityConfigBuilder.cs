@@ -34,7 +34,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> CreateEntityWith(
             Func<TRequest, Task<TEntity>> creator)
         {
-            CreateEntity = request => creator((TRequest)request);
+            CreateEntity = (request, item) => creator((TRequest)item);
 
             return this;
         }
@@ -42,7 +42,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> CreateEntityWith(
             Func<TRequest, TEntity> creator)
         {
-            CreateEntity = request => Task.FromResult(creator((TRequest)request));
+            CreateEntity = (request, item) => Task.FromResult(creator((TRequest)item));
 
             return this;
         }
@@ -50,7 +50,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> UpdateEntityWith(
             Func<TRequest, TEntity, Task<TEntity>> updator)
         {
-            UpdateEntity = (request, entity) => updator((TRequest)request, entity);
+            UpdateEntity = (request, item, entity) => updator((TRequest)item, entity);
 
             return this;
         }
@@ -58,9 +58,9 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         public CrudRequestEntityConfigBuilder<TRequest, TEntity> UpdateEntityWith(
             Func<TRequest, TEntity, TEntity> updator)
         {
-            UpdateEntity = (request, entity) =>
+            UpdateEntity = (request, item, entity) =>
             {
-                updator((TRequest)request, entity);
+                updator((TRequest)item, entity);
                 return Task.FromResult(entity);
             };
 

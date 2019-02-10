@@ -60,7 +60,7 @@ namespace Turner.Infrastructure.Crud.Requests
         private async Task<TEntity> CreateEntity(TRequest request, object data)
         {
             var creator = RequestConfig.GetCreatorFor<TEntity>();
-            var entity = await creator(data).Configure();
+            var entity = await creator(request, data).Configure();
             entity = await Context.EntitySet<TEntity>().CreateAsync(entity).Configure();
 
             return entity;
@@ -69,7 +69,7 @@ namespace Turner.Infrastructure.Crud.Requests
         private async Task<TEntity> UpdateEntity(TRequest request, object data, TEntity entity)
         {
             var updator = RequestConfig.GetUpdatorFor<TEntity>();
-            await updator(data, entity).Configure();
+            await updator(request, data, entity).Configure();
             entity = await Context.EntitySet<TEntity>().UpdateAsync(entity).Configure();
 
             return entity;

@@ -42,10 +42,10 @@ namespace Turner.Infrastructure.Crud.Requests
                 .ToArray();
 
             var createdEntities = await CreateEntities(
-                joinedItems.Length, joinedItems.Where(x => x.Item2 == null));
+                request, joinedItems.Length, joinedItems.Where(x => x.Item2 == null));
 
             var updatedEntities = await UpdateEntities(
-                joinedItems.Length, joinedItems.Where(x => x.Item2 != null));
+                request, joinedItems.Length, joinedItems.Where(x => x.Item2 != null));
 
             var changedEntities = updatedEntities.Concat(createdEntities).ToArray();
 
@@ -72,26 +72,26 @@ namespace Turner.Infrastructure.Crud.Requests
             return await Context.ToArrayAsync(entities).Configure();
         }
 
-        private async Task<TEntity[]> CreateEntities(int estimatedCount, IEnumerable<Tuple<object, TEntity>> items)
+        private async Task<TEntity[]> CreateEntities(TRequest request, int estimatedCount, IEnumerable<Tuple<object, TEntity>> items)
         {
             var creator = RequestConfig.GetCreatorFor<TEntity>();
 
             var createdEntities = new List<TEntity>(estimatedCount);
             foreach (var item in items)
-                createdEntities.Add(await creator(item.Item1).Configure());
+                createdEntities.Add(await creator(request, item.Item1).Configure());
             
             var entities = await Context.EntitySet<TEntity>().CreateAsync(createdEntities).Configure();
             
             return entities;
         }
 
-        private async Task<TEntity[]> UpdateEntities(int estimatedCount, IEnumerable<Tuple<object, TEntity>> items)
+        private async Task<TEntity[]> UpdateEntities(TRequest request, int estimatedCount, IEnumerable<Tuple<object, TEntity>> items)
         {
             var updator = RequestConfig.GetUpdatorFor<TEntity>();
 
             var updatedEntities = new List<TEntity>(estimatedCount);
             foreach (var item in items)
-                updatedEntities.Add(await updator(item.Item1, item.Item2).Configure());
+                updatedEntities.Add(await updator(request, item.Item1, item.Item2).Configure());
             
             var entities = await Context.EntitySet<TEntity>().UpdateAsync(updatedEntities).Configure();
             

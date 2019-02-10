@@ -43,10 +43,10 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         List<IBoxedResultHook> GetResultHooks(object request);
 
-        Func<object, Task<TEntity>> GetCreatorFor<TEntity>()
+        Func<object, object, Task<TEntity>> GetCreatorFor<TEntity>()
             where TEntity : class;
 
-        Func<object, TEntity, Task<TEntity>> GetUpdatorFor<TEntity>()
+        Func<object, object, TEntity, Task<TEntity>> GetUpdatorFor<TEntity>()
             where TEntity : class;
 
         Func<TEntity, Task<TResult>> GetResultCreatorFor<TEntity, TResult>()
@@ -94,11 +94,11 @@ namespace Turner.Infrastructure.Crud.Configuration
         private readonly Dictionary<Type, ISelector> _entitySelectors
             = new Dictionary<Type, ISelector>();
 
-        private readonly Dictionary<Type, Func<object, Task<object>>> _entityCreators
-            = new Dictionary<Type, Func<object, Task<object>>>();
-        
-        private readonly Dictionary<Type, Func<object, object, Task<object>>> _entityUpdators
+        private readonly Dictionary<Type, Func<object, object, Task<object>>> _entityCreators
             = new Dictionary<Type, Func<object, object, Task<object>>>();
+        
+        private readonly Dictionary<Type, Func<object, object, object, Task<object>>> _entityUpdators
+            = new Dictionary<Type, Func<object, object, object, Task<object>>>();
 
         private readonly Dictionary<Type, Func<object, Task<object>>> _entityResultCreators
             = new Dictionary<Type, Func<object, Task<object>>>();
@@ -266,22 +266,22 @@ namespace Turner.Infrastructure.Crud.Configuration
             }
         }
 
-        public Func<object, Task<TEntity>> GetCreatorFor<TEntity>()
+        public Func<object, object, Task<TEntity>> GetCreatorFor<TEntity>()
             where TEntity : class
         {
             if (_entityCreators.TryGetValue(typeof(TEntity), out var creator))
-                return item => creator(item).ContinueWith(t => (TEntity) t.Result);
+                return (request, item) => creator(request, item).ContinueWith(t => (TEntity) t.Result);
             
-            return item => Task.FromResult(Mapper.Map<TEntity>(item));
+            return (request, item) => Task.FromResult(Mapper.Map<TEntity>(item));
         }
 
-        public Func<object, TEntity, Task<TEntity>> GetUpdatorFor<TEntity>()
+        public Func<object, object, TEntity, Task<TEntity>> GetUpdatorFor<TEntity>()
             where TEntity : class
         {
             if (_entityUpdators.TryGetValue(typeof(TEntity), out var updator))
-                return (item, entity) => updator(item, entity).ContinueWith(t => (TEntity)t.Result);
+                return (request, item, entity) => updator(request, item, entity).ContinueWith(t => (TEntity)t.Result);
 
-            return (item, entity) => Task.FromResult(Mapper.Map(item, entity));
+            return (request, item, entity) => Task.FromResult(Mapper.Map(item, entity));
         }
 
         public Func<TEntity, Task<TResult>> GetResultCreatorFor<TEntity, TResult>()
@@ -392,17 +392,19 @@ namespace Turner.Infrastructure.Crud.Configuration
         }
 
         internal void SetEntityCreator<TEntity>(
-            Func<object, Task<TEntity>> creator)
+            Func<object, object, Task<TEntity>> creator)
             where TEntity : class
         {
-            _entityCreators[typeof(TEntity)] = item => creator(item).ContinueWith(t => (object)t.Result);
+            _entityCreators[typeof(TEntity)] = (request, item) 
+                => creator(request, item).ContinueWith(t => (object)t.Result);
         }
 
         internal void SetEntityUpdator<TEntity>(
-            Func<object, TEntity, Task<TEntity>> updator)
+            Func<object, object, TEntity, Task<TEntity>> updator)
             where TEntity : class
         {
-            _entityUpdators[typeof(TEntity)] = (item, entity) => updator(item, (TEntity)entity).ContinueWith(t => (object)t.Result);
+            _entityUpdators[typeof(TEntity)] = (request, item, entity) 
+                => updator(request, item, (TEntity)entity).ContinueWith(t => (object)t.Result);
         }
 
         internal void SetEntityResultCreator<TEntity>(

@@ -22,7 +22,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
             var data = RequestConfig.GetRequestItemSourceFor<TEntity>().ItemSource(request);
             var creator = RequestConfig.GetCreatorFor<TEntity>();
-            var entity = await creator(data).Configure();
+            var entity = await creator(request, data).Configure();
 
             entity = await Context.EntitySet<TEntity>().CreateAsync(entity).Configure();
 

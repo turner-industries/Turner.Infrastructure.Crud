@@ -45,6 +45,13 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         }
     }
 
+    public class UserClaim : Entity
+    {
+        public int UserId { get; set; }
+
+        public string Claim { get; set; }
+    }
+
     public class Site : Entity
     {
         [Required]
