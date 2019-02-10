@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
@@ -26,81 +27,98 @@ namespace Turner.Infrastructure.Crud.Requests
         public async Task<Response<PagedFindResult<TOut>>> HandleAsync(TRequest request)
         {
             PagedFindResult<TOut> result;
-            var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
-            var failedToFind = false;
 
-            try
+            using (var cts = new CancellationTokenSource())
             {
-                var requestHooks = RequestConfig.GetRequestHooks(request);
-                foreach (var hook in requestHooks)
-                    await hook.Run(request).Configure();
+                var ct = cts.Token;
+                var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
+                var failedToFind = false;
 
-                var selector = RequestConfig.GetSelectorFor<TEntity>();
-                var entities = Context
-                    .EntitySet<TEntity>()
-                    .AsQueryable();
-
-                foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
-                    entities = filter.Filter(request, entities);
-
-                var sorter = RequestConfig.GetSorterFor<TEntity>();
-                entities = sorter?.Sort(request, entities) ?? entities;
-
-                var totalItemCount = await Context.CountAsync(entities).Configure();
-                var pageSize = request.PageSize < 1 ? totalItemCount : request.PageSize;
-                var totalPageCount = totalItemCount == 0 ? 1 : (totalItemCount + pageSize - 1) / pageSize;
-                
-                var item = (await Context.ToArrayAsync(entities).Configure())
-                    .Select((e, i) => new { Item = e, Index = i })
-                    .SingleOrDefault(x => selector.Get<TEntity>()(request).Compile()(x.Item));
-                
-                if (item != null)
+                try
                 {
-                    var resultItem = await transform(item.Item).Configure();
+                    var requestHooks = RequestConfig.GetRequestHooks(request);
+                    foreach (var hook in requestHooks)
+                        await hook.Run(request, ct).Configure();
 
-                    var resultHooks = RequestConfig.GetResultHooks(request);
-                    foreach (var hook in resultHooks)
-                        resultItem = (TOut)await hook.Run(request, resultItem).Configure();
+                    ct.ThrowIfCancellationRequested();
 
-                    result = new PagedFindResult<TOut>
+                    var selector = RequestConfig.GetSelectorFor<TEntity>();
+                    var entities = Context
+                        .EntitySet<TEntity>()
+                        .AsQueryable();
+
+                    foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
+                        entities = filter.Filter(request, entities);
+
+                    var sorter = RequestConfig.GetSorterFor<TEntity>();
+                    entities = sorter?.Sort(request, entities) ?? entities;
+
+                    var totalItemCount = await Context.CountAsync(entities, ct).Configure();
+                    ct.ThrowIfCancellationRequested();
+
+                    var pageSize = request.PageSize < 1 ? totalItemCount : request.PageSize;
+                    var totalPageCount = totalItemCount == 0 ? 1 : (totalItemCount + pageSize - 1) / pageSize;
+
+                    var item = (await Context.ToArrayAsync(entities, ct).Configure())
+                        .Select((e, i) => new { Item = e, Index = i })
+                        .SingleOrDefault(x => selector.Get<TEntity>()(request).Compile()(x.Item));
+
+                    ct.ThrowIfCancellationRequested();
+
+                    if (item != null)
                     {
-                        Item = resultItem,
-                        PageNumber = 1 + (item.Index / pageSize),
-                        PageSize = pageSize,
-                        PageCount = totalPageCount,
-                        TotalItemCount = totalItemCount
-                    };
-                }
-                else
-                { 
-                    failedToFind = true;
+                        var resultItem = await transform(item.Item, ct).Configure();
+                        ct.ThrowIfCancellationRequested();
 
-                    var resultItem = await transform(RequestConfig.GetDefaultFor<TEntity>()).Configure();
+                        var resultHooks = RequestConfig.GetResultHooks(request);
+                        foreach (var hook in resultHooks)
+                            resultItem = (TOut)await hook.Run(request, resultItem, ct).Configure();
 
-                    var resultHooks = RequestConfig.GetResultHooks(request);
-                    foreach (var hook in resultHooks)
-                        resultItem = (TOut)await hook.Run(request, resultItem).Configure();
+                        ct.ThrowIfCancellationRequested();
 
-                    result = new PagedFindResult<TOut>
+                        result = new PagedFindResult<TOut>
+                        {
+                            Item = resultItem,
+                            PageNumber = 1 + (item.Index / pageSize),
+                            PageSize = pageSize,
+                            PageCount = totalPageCount,
+                            TotalItemCount = totalItemCount
+                        };
+                    }
+                    else
                     {
-                        Item = resultItem,
-                        PageNumber = 0,
-                        PageSize = pageSize,
-                        PageCount = totalPageCount,
-                        TotalItemCount = totalItemCount
-                    };
-                }
-            }
-            catch (CrudRequestFailedException e)
-            {
-                var error = new RequestFailedError(request, e);
-                return ErrorDispatcher.Dispatch<PagedFindResult<TOut>>(error);
-            }
+                        failedToFind = true;
 
-            if (failedToFind && RequestConfig.ErrorConfig.FailedToFindInFindIsError)
-            {
-                var error = new FailedToFindError(request, typeof(TEntity), result);
-                return ErrorDispatcher.Dispatch<PagedFindResult<TOut>>(error);
+                        var resultItem = await transform(RequestConfig.GetDefaultFor<TEntity>(), ct).Configure();
+                        ct.ThrowIfCancellationRequested();
+
+                        var resultHooks = RequestConfig.GetResultHooks(request);
+                        foreach (var hook in resultHooks)
+                            resultItem = (TOut)await hook.Run(request, resultItem, ct).Configure();
+
+                        ct.ThrowIfCancellationRequested();
+
+                        result = new PagedFindResult<TOut>
+                        {
+                            Item = resultItem,
+                            PageNumber = 0,
+                            PageSize = pageSize,
+                            PageCount = totalPageCount,
+                            TotalItemCount = totalItemCount
+                        };
+                    }
+                }
+                catch (CrudRequestFailedException e)
+                {
+                    var error = new RequestFailedError(request, e);
+                    return ErrorDispatcher.Dispatch<PagedFindResult<TOut>>(error);
+                }
+
+                if (failedToFind && RequestConfig.ErrorConfig.FailedToFindInFindIsError)
+                {
+                    var error = new FailedToFindError(request, typeof(TEntity), result);
+                    return ErrorDispatcher.Dispatch<PagedFindResult<TOut>>(error);
+                }
             }
 
             return result.AsResponse();

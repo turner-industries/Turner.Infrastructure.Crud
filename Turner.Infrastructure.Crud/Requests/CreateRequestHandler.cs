@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Mediator;
@@ -14,23 +15,34 @@ namespace Turner.Infrastructure.Crud.Requests
         {
         }
 
-        protected async Task<TEntity> CreateEntity(TRequest request)
+        protected async Task<TEntity> CreateEntity(TRequest request, CancellationToken ct)
         {
             var requestHooks = RequestConfig.GetRequestHooks(request);
             foreach (var hook in requestHooks)
-                await hook.Run(request).Configure();
+                await hook.Run(request, ct).Configure();
+
+            ct.ThrowIfCancellationRequested();
 
             var data = RequestConfig.GetRequestItemSourceFor<TEntity>().ItemSource(request);
             var creator = RequestConfig.GetCreatorFor<TEntity>();
-            var entity = await creator(request, data).Configure();
+            var entity = await creator(request, data, ct).Configure();
 
-            entity = await Context.EntitySet<TEntity>().CreateAsync(entity).Configure();
+            ct.ThrowIfCancellationRequested();
+
+            entity = await Context.EntitySet<TEntity>().CreateAsync(entity, ct).Configure();
+
+            ct.ThrowIfCancellationRequested();
 
             var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>(request);
             foreach (var hook in entityHooks)
-                await hook.Run(request, entity).Configure();
+            {
+                await hook.Run(request, entity, ct).Configure();
+                ct.ThrowIfCancellationRequested();
+            }
 
-            await Context.ApplyChangesAsync().Configure();
+            await Context.ApplyChangesAsync(ct).Configure();
+
+            ct.ThrowIfCancellationRequested();
 
             return entity;
         }
@@ -50,7 +62,8 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response> HandleAsync(TRequest request)
         {
-            await CreateEntity(request).Configure();
+            using (var cts = new CancellationTokenSource())
+                await CreateEntity(request, cts.Token).Configure();
 
             return Response.Success();
         }
@@ -70,16 +83,25 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response<TOut>> HandleAsync(TRequest request)
         {
-            var entity = await CreateEntity(request).Configure();
+            using (var cts = new CancellationTokenSource())
+            {
+                var ct = cts.Token;
+                var resultHooks = RequestConfig.GetResultHooks(request);
+                var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
 
-            var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
-            var result = await transform(entity).Configure();
+                var entity = await CreateEntity(request, ct).Configure();
+                ct.ThrowIfCancellationRequested();
 
-            var resultHooks = RequestConfig.GetResultHooks(request);
-            foreach (var hook in resultHooks)
-                result = (TOut)await hook.Run(request, result).Configure();
+                var result = await transform(entity, ct).Configure();
+                ct.ThrowIfCancellationRequested();
 
-            return result.AsResponse();
+                foreach (var hook in resultHooks)
+                    result = (TOut)await hook.Run(request, result, ct).Configure();
+
+                ct.ThrowIfCancellationRequested();
+                
+                return result.AsResponse();
+            }
         }
     }
 }

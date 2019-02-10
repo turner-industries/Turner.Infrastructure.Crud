@@ -162,7 +162,13 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         public TBuilder CreateResultWith<TResult>(
             Func<TEntity, TResult> creator)
         {
-            CreateResult = entity => Task.FromResult((object)creator(entity));
+            CreateResult = (entity, ct) =>
+            {
+                if (ct.IsCancellationRequested)
+                    return Task.FromCanceled<object>(ct);
+
+                return Task.FromResult((object)creator(entity));
+            };
 
             return (TBuilder)this;
         }
