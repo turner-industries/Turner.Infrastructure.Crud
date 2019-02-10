@@ -22,7 +22,7 @@ namespace Turner.Infrastructure.Crud.Requests
             : base(request => request.Items)
         {
             ForEntity<TEntity>()
-                .CreateWith(item => Mapper.Map<TEntity>(item));
+                .CreateEntityWith(item => Mapper.Map<TEntity>(item));
         }
     }
 
@@ -43,7 +43,7 @@ namespace Turner.Infrastructure.Crud.Requests
             : base(request => request.Items)
         {
             ForEntity<TEntity>()
-                .CreateWith(item => Mapper.Map<TEntity>(item));
+                .CreateEntityWith(item => Mapper.Map<TEntity>(item));
         }
     }
 }

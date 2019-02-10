@@ -31,9 +31,12 @@ namespace Turner.Infrastructure.Crud.Configuration
         private Action<CrudRequestOptionsConfig> _optionsConfig;
         private Action<CrudRequestErrorConfig> _errorConfig;
  
-        protected readonly List<IRequestHookFactory> RequestHooks
+        protected internal readonly List<IRequestHookFactory> RequestHooks
             = new List<IRequestHookFactory>();
-        
+
+        protected internal readonly List<IResultHookFactory> ResultHooks
+            = new List<IResultHookFactory>();
+
         public override Type RequestType => typeof(TRequest);
 
         internal override void Inherit(IEnumerable<CrudRequestProfile> profiles)
@@ -74,6 +77,8 @@ namespace Turner.Infrastructure.Crud.Configuration
             }
             
             config.AddRequestHooks(RequestHooks);
+
+            config.AddResultHooks(ResultHooks);
             
             ApplyErrorConfig(config);
 
@@ -100,6 +105,27 @@ namespace Turner.Infrastructure.Crud.Configuration
         protected void WithRequestHook(Action<TRequest> hook)
         {
             RequestHooks.Add(FunctionRequestHookFactory.From(hook));
+        }
+
+        protected void WithResultHook<THook, TResult>()
+            where THook : IResultHook<TRequest, TResult>
+        {
+            ResultHooks.Add(TypeResultHookFactory.From<THook, TRequest, TResult>());
+        }
+
+        protected void WithResultHook<TResult>(IResultHook<TRequest, TResult> hook)
+        {
+            ResultHooks.Add(InstanceResultHookFactory.From(hook));
+        }
+
+        protected void WithResultHook<TResult>(Func<TRequest, TResult, Task<TResult>> hook)
+        {
+            ResultHooks.Add(FunctionResultHookFactory.From(hook));
+        }
+
+        protected void WithResultHook<TResult>(Func<TRequest, TResult, TResult> hook)
+        {
+            ResultHooks.Add(FunctionResultHookFactory.From(hook));
         }
 
         protected void ConfigureOptions(Action<CrudRequestOptionsConfig> config)

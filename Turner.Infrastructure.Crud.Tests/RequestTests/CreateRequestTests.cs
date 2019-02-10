@@ -61,7 +61,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsFalse(response.HasErrors);
             Assert.AreEqual(1, Context.Set<User>().Count());
             Assert.IsNotNull(response.Data);
-            Assert.AreEqual("TestUser", response.Data.Name);
+            Assert.AreEqual("TestUser_Modified", response.Data.Name);
             Assert.AreEqual(response.Data.Id, Context.Set<User>().First().Id);
         }
 
@@ -110,13 +110,28 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public object OtherStuff { get; set; }
     }
 
+    public class CreateUserWithResponseProfile
+        : CrudRequestProfile<CreateUserWithResponseRequest>
+    {
+        public CreateUserWithResponseProfile()
+        {
+            ForEntity<User>()
+                .CreateResultWith(user =>
+                {
+                    var result = Mapper.Map<UserGetDto>(user);
+                    result.Name += "_Modified";
+                    return result;
+                });
+        }
+    }
+
     public class CreateUserWithoutResponseProfile 
         : CrudRequestProfile<CreateUserWithoutResponseRequest>
     {
         public CreateUserWithoutResponseProfile()
         {
             ForEntity<User>()
-                .CreateWith(request => Mapper.Map<User>(request.User));
+                .CreateEntityWith(request => Mapper.Map<User>(request.User));
         }
     }
 }

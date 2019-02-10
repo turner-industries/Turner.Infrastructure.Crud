@@ -1,7 +1,6 @@
-﻿using AutoMapper;
-using System.Threading.Tasks;
-using Turner.Infrastructure.Crud.Algorithms;
+﻿using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -72,7 +71,13 @@ namespace Turner.Infrastructure.Crud.Requests
         public async Task<Response<TOut>> HandleAsync(TRequest request)
         {
             var entity = await CreateEntity(request).Configure();
-            var result = Mapper.Map<TOut>(entity);
+
+            var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
+            var result = await transform(entity).Configure();
+
+            var resultHooks = RequestConfig.GetResultHooks(request);
+            foreach (var hook in resultHooks)
+                result = (TOut)await hook.Run(request, result).Configure();
 
             return result.AsResponse();
         }

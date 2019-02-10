@@ -1,9 +1,8 @@
-﻿using AutoMapper;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -83,7 +82,16 @@ namespace Turner.Infrastructure.Crud.Requests
         public async Task<Response<DeleteAllResult<TOut>>> HandleAsync(TRequest request)
         {
             var entities = await DeleteEntities(request).Configure();
-            var result = new DeleteAllResult<TOut>(Mapper.Map<List<TOut>>(entities));
+
+            var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
+            var items = new List<TOut>(await Task.WhenAll(entities.Select(transform)).Configure());
+
+            var resultHooks = RequestConfig.GetResultHooks(request);
+            foreach (var hook in resultHooks)
+                for (var i = 0; i < items.Count; ++i)
+                    items[i] = (TOut)await hook.Run(request, items[i]).Configure();
+
+            var result = new DeleteAllResult<TOut>(items);
 
             return result.AsResponse();
         }

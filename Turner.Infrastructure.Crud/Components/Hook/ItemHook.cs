@@ -5,7 +5,7 @@ namespace Turner.Infrastructure.Crud
 {
     public interface IBoxedItemHook
     {
-        Task Run(object request, object item);
+        Task<object> Run(object request, object item);
     }
 
     public interface IItemHookFactory
@@ -16,41 +16,38 @@ namespace Turner.Infrastructure.Crud
     public class FunctionItemHook
        : IBoxedItemHook
     {
-        private readonly Func<object, object, Task> _hookFunc;
+        private readonly Func<object, object, Task<object>> _hookFunc;
 
-        public FunctionItemHook(Func<object, object, Task> hookFunc)
+        public FunctionItemHook(Func<object, object, Task<object>> hookFunc)
         {
             _hookFunc = hookFunc;
         }
 
-        public Task Run(object request, object item) => _hookFunc(request, item);
+        public Task<object> Run(object request, object item) => _hookFunc(request, item);
     }
     
     public class FunctionItemHookFactory : IItemHookFactory
     {
         private readonly IBoxedItemHook _hook;
 
-        private FunctionItemHookFactory(Func<object, object, Task> hook)
+        private FunctionItemHookFactory(Func<object, object, Task<object>> hook)
         {
             _hook = new FunctionItemHook(hook);
         }
 
         internal static FunctionItemHookFactory From<TRequest, TItem>(
-            Func<TRequest, TItem, Task> hook)
+            Func<TRequest, TItem, Task<TItem>> hook)
         {
             return new FunctionItemHookFactory(
-                (request, item) => hook((TRequest)request, (TItem)item));
+                (request, item) => hook((TRequest)request, (TItem)item)
+                    .ContinueWith(t => (object)t.Result));
         }
 
         internal static FunctionItemHookFactory From<TRequest, TItem>(
-            Action<TRequest, TItem> hook)
+            Func<TRequest, TItem, TItem> hook)
         {
             return new FunctionItemHookFactory(
-                (request, item) =>
-                {
-                    hook((TRequest)request, (TItem)item);
-                    return Task.CompletedTask;
-                });
+                (request, item) => Task.FromResult((object)hook((TRequest)request, (TItem)item)));
         }
 
         public IBoxedItemHook Create() => _hook;
@@ -72,7 +69,8 @@ namespace Turner.Infrastructure.Crud
         {
             return new InstanceItemHookFactory(
                 hook,
-                new FunctionItemHook((request, item) => hook.Run((TRequest)request, (TItem)item)));
+                new FunctionItemHook((request, item) => hook.Run((TRequest)request, (TItem)item)
+                    .ContinueWith(t => (object)t.Result)));
         }
 
         public IBoxedItemHook Create() => _adaptedInstance;
@@ -101,7 +99,8 @@ namespace Turner.Infrastructure.Crud
                 () =>
                 {
                     var instance = (IItemHook<TRequest, TItem>)s_serviceFactory(typeof(THook));
-                    return new FunctionItemHook((request, item) => instance.Run((TRequest)request, (TItem)item));
+                    return new FunctionItemHook((request, item) 
+                        => instance.Run((TRequest)request, (TItem)item).ContinueWith(t => (object)t.Result));
                 });
         }
 

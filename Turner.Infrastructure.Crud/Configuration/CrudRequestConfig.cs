@@ -41,10 +41,15 @@ namespace Turner.Infrastructure.Crud.Configuration
         List<IBoxedItemHook> GetItemHooksFor<TEntity>(object request)
             where TEntity : class;
 
+        List<IBoxedResultHook> GetResultHooks(object request);
+
         Func<object, Task<TEntity>> GetCreatorFor<TEntity>()
             where TEntity : class;
 
         Func<object, TEntity, Task<TEntity>> GetUpdatorFor<TEntity>()
+            where TEntity : class;
+
+        Func<TEntity, Task<TResult>> GetResultCreatorFor<TEntity, TResult>()
             where TEntity : class;
 
         IEnumerable<Tuple<object, TEntity>> Join<TEntity>(IEnumerable<object> items, IEnumerable<TEntity> entities)
@@ -63,6 +68,8 @@ namespace Turner.Infrastructure.Crud.Configuration
         
         private readonly Dictionary<Type, ItemHookConfig<TRequest>> _itemHooks
             = new Dictionary<Type, ItemHookConfig<TRequest>>();
+
+        private readonly ResultHookConfig<TRequest> _resultHooks = new ResultHookConfig<TRequest>();
 
         private readonly RequestOptions _options = new RequestOptions();
 
@@ -93,8 +100,8 @@ namespace Turner.Infrastructure.Crud.Configuration
         private readonly Dictionary<Type, Func<object, object, Task<object>>> _entityUpdators
             = new Dictionary<Type, Func<object, object, Task<object>>>();
 
-        private readonly Dictionary<Type, Func<object, object[], Task<object[]>>> _entitiesUpdators
-            = new Dictionary<Type, Func<object, object[], Task<object[]>>>();
+        private readonly Dictionary<Type, Func<object, Task<object>>> _entityResultCreators
+            = new Dictionary<Type, Func<object, Task<object>>>();
 
         private readonly Dictionary<Type, object> _defaultValues
             = new Dictionary<Type, object>();
@@ -177,7 +184,21 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             return hooks;
         }
-        
+
+        public List<IBoxedResultHook> GetResultHooks(object request)
+        {
+            if (!(request is TRequest))
+            {
+                var message =
+                    $"Unable to get result hooks for request of type '{request.GetType()}'. " +
+                    $"Configuration expected a request of type '{typeof(TRequest)}'.";
+
+                throw new BadCrudConfigurationException(message);
+            }
+
+            return _resultHooks.GetHooks((TRequest)request);
+        }
+
         public IRequestItemSource GetRequestItemSourceFor<TEntity>()
             where TEntity : class
         {
@@ -249,7 +270,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             where TEntity : class
         {
             if (_entityCreators.TryGetValue(typeof(TEntity), out var creator))
-                return async item => (TEntity) await creator(item).Configure();
+                return item => creator(item).ContinueWith(t => (TEntity) t.Result);
             
             return item => Task.FromResult(Mapper.Map<TEntity>(item));
         }
@@ -258,9 +279,18 @@ namespace Turner.Infrastructure.Crud.Configuration
             where TEntity : class
         {
             if (_entityUpdators.TryGetValue(typeof(TEntity), out var updator))
-                return async (item, entity) => (TEntity) await updator(item, entity).Configure();
+                return (item, entity) => updator(item, entity).ContinueWith(t => (TEntity)t.Result);
 
             return (item, entity) => Task.FromResult(Mapper.Map(item, entity));
+        }
+
+        public Func<TEntity, Task<TResult>> GetResultCreatorFor<TEntity, TResult>()
+            where TEntity : class
+        {
+            if (_entityResultCreators.TryGetValue(typeof(TEntity), out var creator))
+                return entity => creator(entity).ContinueWith(t => (TResult)t.Result);
+
+            return entity => Task.FromResult(Mapper.Map<TResult>(entity));
         }
         
         public IEnumerable<Tuple<object, TEntity>> Join<TEntity>(
@@ -322,6 +352,11 @@ namespace Turner.Infrastructure.Crud.Configuration
             _itemHooks[typeof(TEntity)] = config;
         }
 
+        internal void AddResultHooks(List<IResultHookFactory> hooks)
+        {
+            _resultHooks.AddHooks(hooks);
+        }
+
         internal void SetEntityRequestItemSource<TEntity>(IRequestItemSource itemSource)
             where TEntity : class
         {
@@ -360,21 +395,21 @@ namespace Turner.Infrastructure.Crud.Configuration
             Func<object, Task<TEntity>> creator)
             where TEntity : class
         {
-            _entityCreators[typeof(TEntity)] = async item => await creator(item).Configure();
+            _entityCreators[typeof(TEntity)] = item => creator(item).ContinueWith(t => (object)t.Result);
         }
 
         internal void SetEntityUpdator<TEntity>(
             Func<object, TEntity, Task<TEntity>> updator)
             where TEntity : class
         {
-            _entityUpdators[typeof(TEntity)] = async (item, entity) => await updator(item, (TEntity) entity);
+            _entityUpdators[typeof(TEntity)] = (item, entity) => updator(item, (TEntity)entity).ContinueWith(t => (object)t.Result);
         }
 
-        internal void SetEntitiesUpdator<TEntity>(
-            Func<object, TEntity[], Task<TEntity[]>> updator)
+        internal void SetEntityResultCreator<TEntity>(
+            Func<TEntity, Task<object>> creator)
             where TEntity : class
         {
-            _entitiesUpdators[typeof(TEntity)] = async (request, entities) => await updator(request, (TEntity[]) entities).Configure();
+            _entityResultCreators[typeof(TEntity)] = entity => creator((TEntity)entity);
         }
 
         internal void SetEntityJoiner<TEntity>(

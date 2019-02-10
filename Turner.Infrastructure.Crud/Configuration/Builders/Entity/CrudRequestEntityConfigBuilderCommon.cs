@@ -31,6 +31,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         protected Key RequestItemKey;
         protected Func<object, Task<TEntity>> CreateEntity;
         protected Func<object, TEntity, Task<TEntity>> UpdateEntity;
+        protected Func<TEntity, Task<object>> CreateResult;
         protected Func<ICrudErrorHandler> ErrorHandlerFactory;
         
         public TBuilder ConfigureOptions(Action<CrudRequestOptionsConfig> config)
@@ -141,7 +142,23 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         public TBuilder SortWith(
             Func<TRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
             => SortWith(builder => builder.Custom(sortFunc));
-        
+
+        public TBuilder CreateResultWith<TResult>(
+            Func<TEntity, Task<TResult>> creator)
+        {
+            CreateResult = entity => creator(entity).ContinueWith(t => (object)t.Result);
+
+            return (TBuilder)this;
+        }
+
+        public TBuilder CreateResultWith<TResult>(
+            Func<TEntity, TResult> creator)
+        {
+            CreateResult = entity => Task.FromResult((object)creator(entity));
+
+            return (TBuilder)this;
+        }
+
         public virtual void Build<TCompatibleRequest>(CrudRequestConfig<TCompatibleRequest> config)
         {
             if (OptionsConfig != null)
@@ -169,6 +186,9 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             
             if (UpdateEntity != null)
                 config.SetEntityUpdator(UpdateEntity);
+
+            if (CreateResult != null)
+                config.SetEntityResultCreator(CreateResult);
             
             if (Sorter != null)
                 config.SetEntitySorter<TEntity>(Sorter);

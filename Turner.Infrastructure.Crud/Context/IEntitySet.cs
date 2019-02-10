@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Turner.Infrastructure.Crud.Algorithms
+namespace Turner.Infrastructure.Crud.Context
 {
     public interface IEntitySet<TEntity> : IQueryable<TEntity>
     {

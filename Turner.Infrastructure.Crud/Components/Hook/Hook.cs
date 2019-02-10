@@ -15,6 +15,11 @@ namespace Turner.Infrastructure.Crud
 
     public interface IItemHook<TRequest, TItem>
     {
-        Task Run(TRequest request, TItem item);
+        Task<TItem> Run(TRequest request, TItem item);
+    }
+
+    public interface IResultHook<TRequest, TResult>
+    {
+        Task<TResult> Run(TRequest request, TResult result);
     }
 }

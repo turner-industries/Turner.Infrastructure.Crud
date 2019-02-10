@@ -1,8 +1,7 @@
-﻿using AutoMapper;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
-using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Exceptions;
 using Turner.Infrastructure.Mediator;
@@ -27,6 +26,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public async Task<Response<PagedFindResult<TOut>>> HandleAsync(TRequest request)
         {
             PagedFindResult<TOut> result;
+            var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
             var failedToFind = false;
 
             try
@@ -56,9 +56,15 @@ namespace Turner.Infrastructure.Crud.Requests
                 
                 if (item != null)
                 {
+                    var resultItem = await transform(item.Item).Configure();
+
+                    var resultHooks = RequestConfig.GetResultHooks(request);
+                    foreach (var hook in resultHooks)
+                        resultItem = (TOut)await hook.Run(request, resultItem).Configure();
+
                     result = new PagedFindResult<TOut>
                     {
-                        Item = Mapper.Map<TOut>(item.Item),
+                        Item = resultItem,
                         PageNumber = 1 + (item.Index / pageSize),
                         PageSize = pageSize,
                         PageCount = totalPageCount,
@@ -69,9 +75,15 @@ namespace Turner.Infrastructure.Crud.Requests
                 { 
                     failedToFind = true;
 
+                    var resultItem = await transform(RequestConfig.GetDefaultFor<TEntity>()).Configure();
+
+                    var resultHooks = RequestConfig.GetResultHooks(request);
+                    foreach (var hook in resultHooks)
+                        resultItem = (TOut)await hook.Run(request, resultItem).Configure();
+
                     result = new PagedFindResult<TOut>
                     {
-                        Item = Mapper.Map<TOut>(RequestConfig.GetDefaultFor<TEntity>()),
+                        Item = resultItem,
                         PageNumber = 0,
                         PageSize = pageSize,
                         PageCount = totalPageCount,

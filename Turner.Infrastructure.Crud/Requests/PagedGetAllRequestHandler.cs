@@ -1,10 +1,10 @@
-﻿using AutoMapper;
+﻿using AutoMapper.QueryableExtensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Turner.Infrastructure.Crud.Algorithms;
 using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Mediator;
 
@@ -26,6 +26,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public async Task<Response<PagedGetAllResult<TOut>>> HandleAsync(TRequest request)
         {
             List<TOut> items;
+            var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
 
             var entities = Context
                 .EntitySet<TEntity>()
@@ -48,13 +49,21 @@ namespace Turner.Infrastructure.Crud.Requests
                 .Skip(startIndex)
                 .Take(pageSize);
 
-            items = await entities.ProjectResults<TEntity, TOut>(Context, Options).Configure();
+            if (Options.UseProjection)
+            {
+                items = await Context.ToListAsync(entities.ProjectTo<TOut>()).Configure();
+            }
+            else
+            {
+                var resultEntities = await Context.ToListAsync(entities).Configure();
+                items = new List<TOut>(await Task.WhenAll(resultEntities.Select(transform)).Configure());
+            }
 
             if (items.Count == 0)
             {
                 var defaultValue = RequestConfig.GetDefaultFor<TEntity>();
                 if (defaultValue != null)
-                    items.Add(Mapper.Map<TOut>(defaultValue));
+                    items.Add(await transform(defaultValue).Configure());
 
                 if (RequestConfig.ErrorConfig.FailedToFindInGetAllIsError)
                 {
@@ -64,6 +73,11 @@ namespace Turner.Infrastructure.Crud.Requests
                     return ErrorDispatcher.Dispatch<PagedGetAllResult<TOut>>(error);
                 }
             }
+
+            var resultHooks = RequestConfig.GetResultHooks(request);
+            foreach (var hook in resultHooks)
+                for (var i = 0; i < items.Count; ++i)
+                    items[i] = (TOut)await hook.Run(request, items[i]).Configure();
 
             var result = new PagedGetAllResult<TOut>(items, pageNumber, pageSize, totalPageCount, totalItemCount);
 
