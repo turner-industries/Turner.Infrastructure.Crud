@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration.Builders.Select;
 using Turner.Infrastructure.Crud.Exceptions;
@@ -45,12 +46,16 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         }
 
         public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItemHook(
-            Func<TRequest, TItem, Task<TItem>> hook)
+            Func<TRequest, TItem, CancellationToken, Task<TItem>> hook)
         {
             _itemHooks.Add(FunctionItemHookFactory.From(hook));
 
             return this;
         }
+
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItemHook(
+            Func<TRequest, TItem, Task<TItem>> hook)
+            => WithItemHook((request, item, ct) => hook(request, item));
 
         public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItemHook(
             Func<TRequest, TItem, TItem> hook)
@@ -82,72 +87,104 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         }
 
         public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
-            Func<TRequest, TItem, Task<TEntity>> creator)
+            Func<TRequest, TItem, CancellationToken, Task<TEntity>> creator)
         {
-            CreateEntity = (request, item) => creator((TRequest)request, (TItem)item);
+            CreateEntity = (request, item, ct) => creator((TRequest)request, (TItem)item, ct);
 
             return this;
         }
 
         public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
+            Func<TRequest, TItem, Task<TEntity>> creator)
+            => CreateEntityWith((request, item, ct) => creator(request, item));
+
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<TRequest, TItem, TEntity> creator)
         {
-            CreateEntity = (request, item) => Task.FromResult(creator((TRequest)request, (TItem)item));
+            CreateEntity = (request, item, ct) =>
+            {
+                if (ct.IsCancellationRequested)
+                    return Task.FromCanceled<TEntity>(ct);
+
+                return Task.FromResult(creator((TRequest)request, (TItem)item));
+            };
+
+            return this;
+        }
+
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
+            Func<TItem, CancellationToken, Task<TEntity>> creator)
+        {
+            CreateEntity = (request, item, ct) => creator((TItem)item, ct);
 
             return this;
         }
 
         public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<TItem, Task<TEntity>> creator)
-        {
-            CreateEntity = (request, item) => creator((TItem)item);
-
-            return this;
-        }
+            => CreateEntityWith((item, ct) => creator(item));
 
         public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<TItem, TEntity> creator)
         {
-            CreateEntity = (request, item) => Task.FromResult(creator((TItem)item));
-
-            return this;
-        }
-
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
-            Func<TRequest, TItem, TEntity, Task<TEntity>> updator)
-        {
-            UpdateEntity = (request, item, entity) => updator((TRequest)request, (TItem)item, entity);
-
-            return this;
-        }
-
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
-            Func<TRequest, TItem, TEntity, TEntity> updator)
-        {
-            UpdateEntity = (request, item, entity) =>
+            CreateEntity = (request, item, ct) =>
             {
-                updator((TRequest)request, (TItem)item, entity);
-                return Task.FromResult(entity);
+                if (ct.IsCancellationRequested)
+                    return Task.FromCanceled<TEntity>(ct);
+
+                return Task.FromResult(creator((TItem)item));
             };
 
             return this;
         }
 
         public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
-            Func<TItem, TEntity, Task<TEntity>> updator)
+            Func<TRequest, TItem, TEntity, CancellationToken, Task<TEntity>> updator)
         {
-            UpdateEntity = (request, item, entity) => updator((TItem)item, entity);
+            UpdateEntity = (request, item, entity, ct) => updator((TRequest)request, (TItem)item, entity, ct);
 
             return this;
         }
 
         public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
+            Func<TRequest, TItem, TEntity, Task<TEntity>> updator)
+            => UpdateEntityWith((request, item, entity, ct) => updator(request, item, entity));
+
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
+            Func<TRequest, TItem, TEntity, TEntity> updator)
+        {
+            UpdateEntity = (request, item, entity, ct) =>
+            {
+                if (ct.IsCancellationRequested)
+                    return Task.FromCanceled<TEntity>(ct);
+
+                return Task.FromResult(updator((TRequest)request, (TItem)item, entity));
+            };
+
+            return this;
+        }
+
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
+            Func<TItem, TEntity, CancellationToken, Task<TEntity>> updator)
+        {
+            UpdateEntity = (request, item, entity, ct) => updator((TItem)item, entity, ct);
+
+            return this;
+        }
+
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
+            Func<TItem, TEntity, Task<TEntity>> updator)
+            => UpdateEntityWith((item, entity, ct) => updator(item, entity));
+
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<TItem, TEntity, TEntity> updator)
         {
-            UpdateEntity = (request, item, entity) =>
+            UpdateEntity = (request, item, entity, ct) =>
             {
-                updator((TItem)item, entity);
-                return Task.FromResult(entity);
+                if (ct.IsCancellationRequested)
+                    return Task.FromCanceled<TEntity>(ct);
+
+                return Task.FromResult(updator((TItem)item, entity));
             };
 
             return this;

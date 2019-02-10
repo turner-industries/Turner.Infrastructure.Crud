@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Exceptions;
 
@@ -43,13 +44,13 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         List<IBoxedResultHook> GetResultHooks(object request);
 
-        Func<object, object, Task<TEntity>> GetCreatorFor<TEntity>()
+        Func<object, object, CancellationToken, Task<TEntity>> GetCreatorFor<TEntity>()
             where TEntity : class;
 
-        Func<object, object, TEntity, Task<TEntity>> GetUpdatorFor<TEntity>()
+        Func<object, object, TEntity, CancellationToken, Task<TEntity>> GetUpdatorFor<TEntity>()
             where TEntity : class;
 
-        Func<TEntity, Task<TResult>> GetResultCreatorFor<TEntity, TResult>()
+        Func<TEntity, CancellationToken, Task<TResult>> GetResultCreatorFor<TEntity, TResult>()
             where TEntity : class;
 
         IEnumerable<Tuple<object, TEntity>> Join<TEntity>(IEnumerable<object> items, IEnumerable<TEntity> entities)
@@ -94,14 +95,14 @@ namespace Turner.Infrastructure.Crud.Configuration
         private readonly Dictionary<Type, ISelector> _entitySelectors
             = new Dictionary<Type, ISelector>();
 
-        private readonly Dictionary<Type, Func<object, object, Task<object>>> _entityCreators
-            = new Dictionary<Type, Func<object, object, Task<object>>>();
+        private readonly Dictionary<Type, Func<object, object, CancellationToken, Task<object>>> _entityCreators
+            = new Dictionary<Type, Func<object, object, CancellationToken, Task<object>>>();
         
-        private readonly Dictionary<Type, Func<object, object, object, Task<object>>> _entityUpdators
-            = new Dictionary<Type, Func<object, object, object, Task<object>>>();
+        private readonly Dictionary<Type, Func<object, object, object, CancellationToken, Task<object>>> _entityUpdators
+            = new Dictionary<Type, Func<object, object, object, CancellationToken, Task<object>>>();
 
-        private readonly Dictionary<Type, Func<object, Task<object>>> _entityResultCreators
-            = new Dictionary<Type, Func<object, Task<object>>>();
+        private readonly Dictionary<Type, Func<object, CancellationToken, Task<object>>> _entityResultCreators
+            = new Dictionary<Type, Func<object, CancellationToken, Task<object>>>();
 
         private readonly Dictionary<Type, object> _defaultValues
             = new Dictionary<Type, object>();
@@ -266,31 +267,33 @@ namespace Turner.Infrastructure.Crud.Configuration
             }
         }
 
-        public Func<object, object, Task<TEntity>> GetCreatorFor<TEntity>()
+        public Func<object, object, CancellationToken, Task<TEntity>> GetCreatorFor<TEntity>()
             where TEntity : class
         {
             if (_entityCreators.TryGetValue(typeof(TEntity), out var creator))
-                return (request, item) => creator(request, item).ContinueWith(t => (TEntity) t.Result);
+                return (request, item, ct) 
+                    => creator(request, item, ct).ContinueWith(t => (TEntity) t.Result);
             
-            return (request, item) => Task.FromResult(Mapper.Map<TEntity>(item));
+            return (request, item, ct) => Task.FromResult(Mapper.Map<TEntity>(item));
         }
 
-        public Func<object, object, TEntity, Task<TEntity>> GetUpdatorFor<TEntity>()
+        public Func<object, object, TEntity, CancellationToken, Task<TEntity>> GetUpdatorFor<TEntity>()
             where TEntity : class
         {
             if (_entityUpdators.TryGetValue(typeof(TEntity), out var updator))
-                return (request, item, entity) => updator(request, item, entity).ContinueWith(t => (TEntity)t.Result);
+                return (request, item, entity, ct) 
+                    => updator(request, item, entity, ct).ContinueWith(t => (TEntity)t.Result);
 
-            return (request, item, entity) => Task.FromResult(Mapper.Map(item, entity));
+            return (request, item, entity, ct) => Task.FromResult(Mapper.Map(item, entity));
         }
 
-        public Func<TEntity, Task<TResult>> GetResultCreatorFor<TEntity, TResult>()
+        public Func<TEntity, CancellationToken, Task<TResult>> GetResultCreatorFor<TEntity, TResult>()
             where TEntity : class
         {
             if (_entityResultCreators.TryGetValue(typeof(TEntity), out var creator))
-                return entity => creator(entity).ContinueWith(t => (TResult)t.Result);
+                return (entity, ct) => creator(entity, ct).ContinueWith(t => (TResult)t.Result);
 
-            return entity => Task.FromResult(Mapper.Map<TResult>(entity));
+            return (entity, ct) => Task.FromResult(Mapper.Map<TResult>(entity));
         }
         
         public IEnumerable<Tuple<object, TEntity>> Join<TEntity>(
@@ -392,26 +395,26 @@ namespace Turner.Infrastructure.Crud.Configuration
         }
 
         internal void SetEntityCreator<TEntity>(
-            Func<object, object, Task<TEntity>> creator)
+            Func<object, object, CancellationToken, Task<TEntity>> creator)
             where TEntity : class
         {
-            _entityCreators[typeof(TEntity)] = (request, item) 
-                => creator(request, item).ContinueWith(t => (object)t.Result);
+            _entityCreators[typeof(TEntity)] = (request, item, ct) 
+                => creator(request, item, ct).ContinueWith(t => (object)t.Result);
         }
 
         internal void SetEntityUpdator<TEntity>(
-            Func<object, object, TEntity, Task<TEntity>> updator)
+            Func<object, object, TEntity, CancellationToken, Task<TEntity>> updator)
             where TEntity : class
         {
-            _entityUpdators[typeof(TEntity)] = (request, item, entity) 
-                => updator(request, item, (TEntity)entity).ContinueWith(t => (object)t.Result);
+            _entityUpdators[typeof(TEntity)] = (request, item, entity, ct) 
+                => updator(request, item, (TEntity)entity, ct).ContinueWith(t => (object)t.Result);
         }
 
         internal void SetEntityResultCreator<TEntity>(
-            Func<TEntity, Task<object>> creator)
+            Func<TEntity, CancellationToken, Task<object>> creator)
             where TEntity : class
         {
-            _entityResultCreators[typeof(TEntity)] = entity => creator((TEntity)entity);
+            _entityResultCreators[typeof(TEntity)] = (entity, ct) => creator((TEntity)entity, ct);
         }
 
         internal void SetEntityJoiner<TEntity>(

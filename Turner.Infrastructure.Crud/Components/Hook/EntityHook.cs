@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Turner.Infrastructure.Crud
 {
     public interface IBoxedEntityHook
     {
-        Task Run(object request, object entity);
+        Task Run(object request, object entity, CancellationToken ct = default(CancellationToken));
     }
 
     public interface IEntityHookFactory
@@ -16,31 +17,32 @@ namespace Turner.Infrastructure.Crud
     public class FunctionEntityHook
        : IBoxedEntityHook
     {
-        private readonly Func<object, object, Task> _hookFunc;
+        private readonly Func<object, object, CancellationToken, Task> _hookFunc;
 
-        public FunctionEntityHook(Func<object, object, Task> hookFunc)
+        public FunctionEntityHook(Func<object, object, CancellationToken, Task> hookFunc)
         {
             _hookFunc = hookFunc;
         }
 
-        public Task Run(object request, object entity) => _hookFunc(request, entity);
+        public Task Run(object request, object entity, CancellationToken ct = default(CancellationToken)) 
+            => _hookFunc(request, entity, ct);
     }
 
     public class FunctionEntityHookFactory : IEntityHookFactory
     {
         private readonly IBoxedEntityHook _hook;
 
-        private FunctionEntityHookFactory(Func<object, object, Task> hook)
+        private FunctionEntityHookFactory(Func<object, object, CancellationToken, Task> hook)
         {
             _hook = new FunctionEntityHook(hook);
         }
 
         internal static FunctionEntityHookFactory From<TRequest, TEntity>(
-            Func<TRequest, TEntity, Task> hook)
+            Func<TRequest, TEntity, CancellationToken, Task> hook)
             where TEntity : class
         {
             return new FunctionEntityHookFactory(
-                (request, entity) => hook((TRequest)request, (TEntity)entity));
+                (request, entity, ct) => hook((TRequest)request, (TEntity)entity, ct));
         }
 
         internal static FunctionEntityHookFactory From<TRequest, TEntity>(
@@ -48,9 +50,13 @@ namespace Turner.Infrastructure.Crud
             where TEntity : class
         {
             return new FunctionEntityHookFactory(
-                (request, entity) =>
+                (request, entity, ct) =>
                 {
+                    if (ct.IsCancellationRequested)
+                        return Task.FromCanceled(ct);
+
                     hook((TRequest)request, (TEntity)entity);
+
                     return Task.CompletedTask;
                 });
         }
@@ -75,7 +81,8 @@ namespace Turner.Infrastructure.Crud
         {
             return new InstanceEntityHookFactory(
                 hook,
-                new FunctionEntityHook((request, entity) => hook.Run((TRequest)request, (TEntity)entity)));
+                new FunctionEntityHook((request, entity, ct) 
+                    => hook.Run((TRequest)request, (TEntity)entity, ct)));
         }
 
         public IBoxedEntityHook Create() => _adaptedInstance;
@@ -105,7 +112,8 @@ namespace Turner.Infrastructure.Crud
                 () =>
                 {
                     var instance = (IEntityHook<TRequest, TEntity>)s_serviceFactory(typeof(THook));
-                    return new FunctionEntityHook((request, entity) => instance.Run((TRequest)request, (TEntity)entity));
+                    return new FunctionEntityHook((request, entity, ct) 
+                        => instance.Run((TRequest)request, (TEntity)entity, ct));
                 });
         }
         

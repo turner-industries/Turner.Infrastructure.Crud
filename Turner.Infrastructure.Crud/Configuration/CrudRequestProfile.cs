@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration.Builders;
 using Turner.Infrastructure.Crud.Exceptions;
@@ -97,10 +98,13 @@ namespace Turner.Infrastructure.Crud.Configuration
             RequestHooks.Add(InstanceRequestHookFactory.From(hook));
         }
 
-        protected void WithRequestHook(Func<TRequest, Task> hook)
+        protected void WithRequestHook(Func<TRequest, CancellationToken, Task> hook)
         {
             RequestHooks.Add(FunctionRequestHookFactory.From(hook));
         }
+
+        protected void WithRequestHook(Func<TRequest, Task> hook)
+            => WithRequestHook((request, ct) => hook(request));
 
         protected void WithRequestHook(Action<TRequest> hook)
         {
@@ -118,10 +122,13 @@ namespace Turner.Infrastructure.Crud.Configuration
             ResultHooks.Add(InstanceResultHookFactory.From(hook));
         }
 
-        protected void WithResultHook<TResult>(Func<TRequest, TResult, Task<TResult>> hook)
+        protected void WithResultHook<TResult>(Func<TRequest, TResult, CancellationToken, Task<TResult>> hook)
         {
             ResultHooks.Add(FunctionResultHookFactory.From(hook));
         }
+
+        protected void WithResultHook<TResult>(Func<TRequest, TResult, Task<TResult>> hook)
+            => WithResultHook<TResult>((request, result, ct) => hook(request, result));
 
         protected void WithResultHook<TResult>(Func<TRequest, TResult, TResult> hook)
         {

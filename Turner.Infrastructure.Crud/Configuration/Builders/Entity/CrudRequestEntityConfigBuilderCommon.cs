@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration.Builders.Filter;
 using Turner.Infrastructure.Crud.Configuration.Builders.Select;
@@ -29,9 +30,9 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         protected IRequestItemSource RequestItemSource;
         protected Key EntityKey;
         protected Key RequestItemKey;
-        protected Func<object, object, Task<TEntity>> CreateEntity;
-        protected Func<object, object, TEntity, Task<TEntity>> UpdateEntity;
-        protected Func<TEntity, Task<object>> CreateResult;
+        protected Func<object, object, CancellationToken, Task<TEntity>> CreateEntity;
+        protected Func<object, object, TEntity, CancellationToken, Task<TEntity>> UpdateEntity;
+        protected Func<TEntity, CancellationToken, Task<object>> CreateResult;
         protected Func<ICrudErrorHandler> ErrorHandlerFactory;
         
         public TBuilder ConfigureOptions(Action<CrudRequestOptionsConfig> config)
@@ -71,12 +72,15 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return (TBuilder)this;
         }
 
-        public TBuilder WithEntityHook(Func<TRequest, TEntity, Task> hook)
+        public TBuilder WithEntityHook(Func<TRequest, TEntity, CancellationToken, Task> hook)
         {
             EntityHooks.Add(FunctionEntityHookFactory.From(hook));
 
             return (TBuilder)this;
         }
+
+        public TBuilder WithEntityHook(Func<TRequest, TEntity, Task> hook)
+            => WithEntityHook((request, entity, ct) => hook(request, entity));
 
         public TBuilder WithEntityHook(Action<TRequest, TEntity> hook)
         {
@@ -144,12 +148,16 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             => SortWith(builder => builder.Custom(sortFunc));
 
         public TBuilder CreateResultWith<TResult>(
-            Func<TEntity, Task<TResult>> creator)
+            Func<TEntity, CancellationToken, Task<TResult>> creator)
         {
-            CreateResult = entity => creator(entity).ContinueWith(t => (object)t.Result);
+            CreateResult = (entity, ct) => creator(entity, ct).ContinueWith(t => (object)t.Result);
 
             return (TBuilder)this;
         }
+
+        public TBuilder CreateResultWith<TResult>(
+            Func<TEntity, Task<TResult>> creator)
+            => CreateResultWith<TResult>((entity, ct) => creator(entity));
 
         public TBuilder CreateResultWith<TResult>(
             Func<TEntity, TResult> creator)
