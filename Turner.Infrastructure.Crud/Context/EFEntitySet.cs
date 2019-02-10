@@ -33,20 +33,14 @@ namespace Turner.Infrastructure.Crud.Context
                 _set = set
             };
         }
-        
-        public virtual TEntity Create(TEntity entity) => _set.Add(entity).Entity;
-
-        public virtual TEntity[] Create(IEnumerable<TEntity> entities) => 
-            entities.Select(Create).ToArray();
-
-        public virtual async Task<TEntity> CreateAsync(TEntity entity,
+ 
+        public virtual Task<TEntity> CreateAsync(TEntity entity,
             CancellationToken token = default(CancellationToken))
         {
-            token.ThrowIfCancellationRequested();
-            var trackedEntity = await _set.AddAsync(entity, token).Configure();
+            var trackedEntity = _set.Add(entity);
 
             token.ThrowIfCancellationRequested();
-            return trackedEntity.Entity;
+            return Task.FromResult(trackedEntity.Entity);
         }
 
         public virtual async Task<TEntity[]> CreateAsync(IEnumerable<TEntity> entities,
@@ -56,17 +50,12 @@ namespace Turner.Infrastructure.Crud.Context
 
             foreach (var entity in entities)
             {
+                result.Add(await CreateAsync(entity, token));
                 token.ThrowIfCancellationRequested();
-                result.Add(await CreateAsync(entity));
             }
 
             return result.ToArray();
         }
-
-        public virtual TEntity Update(TEntity entity) => entity;
-
-        public virtual TEntity[] Update(IEnumerable<TEntity> entities) =>
-            entities.Select(Update).ToArray();
 
         public virtual Task<TEntity> UpdateAsync(TEntity entity,
             CancellationToken token = default(CancellationToken))
@@ -83,17 +72,12 @@ namespace Turner.Infrastructure.Crud.Context
 
             return Task.FromResult(entities.ToArray());
         }
-
-        public virtual TEntity Delete(TEntity entity) => _set.Remove(entity).Entity;
-
-        public virtual TEntity[] Delete(IEnumerable<TEntity> entities) =>
-            entities.Select(Delete).ToArray();
-
+        
         public virtual Task<TEntity> DeleteAsync(TEntity entity,
             CancellationToken token = default(CancellationToken))
         {
-            token.ThrowIfCancellationRequested();
             var trackedEntity = _set.Remove(entity);
+            token.ThrowIfCancellationRequested();
             
             return Task.FromResult(trackedEntity.Entity);
         }
@@ -105,8 +89,8 @@ namespace Turner.Infrastructure.Crud.Context
 
             foreach (var entity in entities)
             {
+                result.Add(await DeleteAsync(entity, token));
                 token.ThrowIfCancellationRequested();
-                result.Add(await DeleteAsync(entity));
             }
 
             return result.ToArray();
