@@ -58,16 +58,38 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return (TBuilder)this;
         }
 
-        public TBuilder WithEntityHook<THook>()
-            where THook : IEntityHook<TRequest, TEntity>
+        public TBuilder WithEntityHook<THook, TBaseRequest, TBaseEntity>()
+            where TBaseEntity : class
+            where THook : IEntityHook<TBaseRequest, TBaseEntity>
         {
-            EntityHooks.Add(TypeEntityHookFactory.From<THook, TRequest, TEntity>());
+            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(WithEntityHook), typeof(TBaseRequest), typeof(TRequest));
+
+            if (!typeof(TBaseEntity).IsAssignableFrom(typeof(TEntity)))
+                throw new ContravarianceException(nameof(WithEntityHook), typeof(TBaseEntity), typeof(TEntity));
+
+            EntityHooks.Add(TypeEntityHookFactory.From<THook, TBaseRequest, TBaseEntity>());
 
             return (TBuilder)this;
         }
-        
-        public TBuilder WithEntityHook(IEntityHook<TRequest, TEntity> hook)
+
+        public TBuilder WithEntityHook<THook, TBaseRequest>()
+            where THook : IEntityHook<TBaseRequest, TEntity>
+            => WithEntityHook<THook, TBaseRequest, TEntity>();
+
+        public TBuilder WithEntityHook<THook>()
+            where THook : IEntityHook<TRequest, TEntity>
+            => WithEntityHook<THook, TRequest, TEntity>();
+
+        public TBuilder WithEntityHook<TBaseRequest, TBaseEntity>(IEntityHook<TBaseRequest, TBaseEntity> hook)
+            where TBaseEntity : class
         {
+            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(FilterWith), typeof(TBaseRequest), typeof(TRequest));
+
+            if (!typeof(TBaseEntity).IsAssignableFrom(typeof(TEntity)))
+                throw new ContravarianceException(nameof(FilterWith), typeof(TBaseEntity), typeof(TEntity));
+
             EntityHooks.Add(InstanceEntityHookFactory.From(hook));
 
             return (TBuilder)this;
@@ -138,10 +160,10 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             where TFilter : IFilter<TBaseRequest, TBaseEntity>
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new BadCrudConfigurationException("");
+                throw new ContravarianceException(nameof(FilterWith), typeof(TBaseRequest), typeof(TRequest));
 
             if (!typeof(TBaseEntity).IsAssignableFrom(typeof(TEntity)))
-                throw new BadCrudConfigurationException("");
+                throw new ContravarianceException(nameof(FilterWith), typeof(TBaseEntity), typeof(TEntity));
 
             return AddRequestFilter(TypeFilterFactory.From<TFilter, TBaseRequest, TBaseEntity>());
         }
@@ -149,21 +171,19 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         public TBuilder FilterWith<TFilter, TBaseRequest>()
             where TFilter : IFilter<TBaseRequest, TEntity>
             => FilterWith<TFilter, TBaseRequest, TEntity>();
-        
+
         public TBuilder FilterWith<TFilter>()
             where TFilter : IFilter<TRequest, TEntity>
-        {
-            return AddRequestFilter(TypeFilterFactory.From<TFilter, TRequest, TEntity>());
-        }
+            => FilterWith<TFilter, TRequest, TEntity>();
 
-        public TBuilder FilterWith<TFilterRequest, TFilterEntity>(IFilter<TFilterRequest, TFilterEntity> filter)
-            where TFilterEntity : class
+        public TBuilder FilterWith<TBaseRequest, TBaseEntity>(IFilter<TBaseRequest, TBaseEntity> filter)
+            where TBaseEntity : class
         {
-            if (!typeof(TFilterRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new BadCrudConfigurationException("");
+            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(FilterWith), typeof(TBaseRequest), typeof(TRequest));
 
-            if (!typeof(TFilterEntity).IsAssignableFrom(typeof(TEntity)))
-                throw new BadCrudConfigurationException("");
+            if (!typeof(TBaseEntity).IsAssignableFrom(typeof(TEntity)))
+                throw new ContravarianceException(nameof(FilterWith), typeof(TBaseEntity), typeof(TEntity));
 
             return AddRequestFilter(InstanceFilterFactory.From(filter));
         }

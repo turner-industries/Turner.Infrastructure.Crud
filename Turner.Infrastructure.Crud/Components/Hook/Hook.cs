@@ -3,25 +3,24 @@ using System.Threading.Tasks;
 
 namespace Turner.Infrastructure.Crud
 {
-    // TODO: Add defaults to the cts
-    public interface IRequestHook<TRequest>
+    public interface IRequestHook<in TRequest>
     {
-        Task Run(TRequest request, CancellationToken token);
+        Task Run(TRequest request, CancellationToken token = default(CancellationToken));
     }
 
-    public interface IEntityHook<TRequest, TEntity>
+    public interface IEntityHook<in TRequest, in TEntity>
         where TEntity : class
     {
-        Task Run(TRequest request, TEntity entity, CancellationToken token);
+        Task Run(TRequest request, TEntity entity, CancellationToken token = default(CancellationToken));
     }
 
-    public interface IItemHook<TRequest, TItem>
+    public interface IItemHook<in TRequest, TItem>
     {
-        Task<TItem> Run(TRequest request, TItem item, CancellationToken token);
+        Task<TItem> Run(TRequest request, TItem item, CancellationToken token = default(CancellationToken));
     }
 
-    public interface IResultHook<TRequest, TResult>
+    public interface IResultHook<in TRequest, TResult>
     {
-        Task<TResult> Run(TRequest request, TResult result, CancellationToken token);
+        Task<TResult> Run(TRequest request, TResult result, CancellationToken token = default(CancellationToken));
     }
 }

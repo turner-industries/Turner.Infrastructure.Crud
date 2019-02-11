@@ -29,17 +29,27 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItemHook<THook>()
-            where THook : IItemHook<TRequest, TItem>
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItemHook<THook, TBaseRequest>()
+            where THook : IItemHook<TBaseRequest, TItem>
         {
-            _itemHooks.Add(TypeItemHookFactory.From<THook, TRequest, TItem>());
+            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(WithItemHook), typeof(TBaseRequest), typeof(TRequest));
+            
+            _itemHooks.Add(TypeItemHookFactory.From<THook, TBaseRequest, TItem>());
 
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItemHook(
-            IItemHook<TRequest, TItem> hook)
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItemHook<THook>()
+            where THook : IItemHook<TRequest, TItem>
+            => WithItemHook<THook, TRequest>();
+
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItemHook<TBaseRequest>(
+            IItemHook<TBaseRequest, TItem> hook)
         {
+            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(WithItemHook), typeof(TBaseRequest), typeof(TRequest));
+
             _itemHooks.Add(InstanceItemHookFactory.From(hook));
 
             return this;

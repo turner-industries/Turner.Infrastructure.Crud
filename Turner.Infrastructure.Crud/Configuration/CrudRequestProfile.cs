@@ -87,14 +87,24 @@ namespace Turner.Infrastructure.Crud.Configuration
                 builder.Build(config);
         }
 
-        protected void WithRequestHook<THook>()
-            where THook : IRequestHook<TRequest>
+        protected void WithRequestHook<THook, TBaseRequest>()
+            where THook : IRequestHook<TBaseRequest>
         {
-            RequestHooks.Add(TypeRequestHookFactory.From<THook, TRequest>());
+            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(WithRequestHook), typeof(TBaseRequest), typeof(TRequest));
+
+            RequestHooks.Add(TypeRequestHookFactory.From<THook, TBaseRequest>());
         }
 
-        protected void WithRequestHook(IRequestHook<TRequest> hook)
+        protected void WithRequestHook<THook>()
+            where THook : IRequestHook<TRequest>
+            => WithRequestHook<THook, TRequest>();
+
+        protected void WithRequestHook<TBaseRequest>(IRequestHook<TBaseRequest> hook)
         {
+            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(WithRequestHook), typeof(TBaseRequest), typeof(TRequest));
+
             RequestHooks.Add(InstanceRequestHookFactory.From(hook));
         }
 
@@ -111,14 +121,24 @@ namespace Turner.Infrastructure.Crud.Configuration
             RequestHooks.Add(FunctionRequestHookFactory.From(hook));
         }
 
-        protected void WithResultHook<THook, TResult>()
-            where THook : IResultHook<TRequest, TResult>
+        protected void WithResultHook<THook, TBaseRequest, TResult>()
+            where THook : IResultHook<TBaseRequest, TResult>
         {
-            ResultHooks.Add(TypeResultHookFactory.From<THook, TRequest, TResult>());
+            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(WithResultHook), typeof(TBaseRequest), typeof(TRequest));
+
+            ResultHooks.Add(TypeResultHookFactory.From<THook, TBaseRequest, TResult>());
         }
 
-        protected void WithResultHook<TResult>(IResultHook<TRequest, TResult> hook)
+        protected void WithResultHook<THook, TResult>()
+            where THook : IResultHook<TRequest, TResult>
+            => WithResultHook<THook, TRequest, TResult>();
+
+        protected void WithResultHook<TBaseRequest, TResult>(IResultHook<TBaseRequest, TResult> hook)
         {
+            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(WithResultHook), typeof(TBaseRequest), typeof(TRequest));
+
             ResultHooks.Add(InstanceResultHookFactory.From(hook));
         }
 
