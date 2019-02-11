@@ -32,7 +32,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 var ct = cts.Token;
                 List<TOut> items;
 
-                var requestHooks = RequestConfig.GetRequestHooks(request);
+                var requestHooks = RequestConfig.GetRequestHooks();
                 foreach (var hook in requestHooks)
                     await hook.Run(request, ct).Configure();
 
@@ -41,7 +41,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 var entities = Context.EntitySet<TEntity>().AsQueryable();
 
                 foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
-                    entities = filter.Filter(request, entities);
+                    entities = filter.Filter(request, entities).Cast<TEntity>();
 
                 var sorter = RequestConfig.GetSorterFor<TEntity>();
                 entities = sorter?.Sort(request, entities) ?? entities;
@@ -80,7 +80,7 @@ namespace Turner.Infrastructure.Crud.Requests
                     }
                 }
 
-                var resultHooks = RequestConfig.GetResultHooks(request);
+                var resultHooks = RequestConfig.GetResultHooks();
                 foreach (var hook in resultHooks)
                     for (var i = 0; i < items.Count; ++i)
                         items[i] = (TOut)await hook.Run(request, items[i], ct).Configure();

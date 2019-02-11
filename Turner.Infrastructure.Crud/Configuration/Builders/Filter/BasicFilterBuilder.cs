@@ -22,12 +22,13 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
             return this;
         }
 
-        internal override IFilter Build()
+        internal override IFilterFactory Build()
         {
-            var filter = new BasicFilter();
-            filter.SetFilter(_filterFunc, _predicateFunc);
+            Func<TRequest, IQueryable<TEntity>, IQueryable<TEntity>> filter = _predicateFunc == null
+                ? _filterFunc
+                : (request, queryable) => _predicateFunc(request) ? _filterFunc(request, queryable) : queryable;
 
-            return filter;
+            return FunctionFilterFactory.From(filter);
         }
     }
 }

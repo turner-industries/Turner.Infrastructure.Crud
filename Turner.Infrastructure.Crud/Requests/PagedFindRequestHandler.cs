@@ -9,7 +9,7 @@ using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-#pragma warning disable 0618
+    #pragma warning disable 0618
 
     internal class PagedFindRequestHandler<TRequest, TEntity, TOut>
         : CrudRequestHandler<TRequest, TEntity>, IRequestHandler<TRequest, PagedFindResult<TOut>>
@@ -36,7 +36,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
                 try
                 {
-                    var requestHooks = RequestConfig.GetRequestHooks(request);
+                    var requestHooks = RequestConfig.GetRequestHooks();
                     foreach (var hook in requestHooks)
                         await hook.Run(request, ct).Configure();
 
@@ -48,7 +48,7 @@ namespace Turner.Infrastructure.Crud.Requests
                         .AsQueryable();
 
                     foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
-                        entities = filter.Filter(request, entities);
+                        entities = filter.Filter(request, entities).Cast<TEntity>();
 
                     var sorter = RequestConfig.GetSorterFor<TEntity>();
                     entities = sorter?.Sort(request, entities) ?? entities;
@@ -70,7 +70,7 @@ namespace Turner.Infrastructure.Crud.Requests
                         var resultItem = await transform(item.Item, ct).Configure();
                         ct.ThrowIfCancellationRequested();
 
-                        var resultHooks = RequestConfig.GetResultHooks(request);
+                        var resultHooks = RequestConfig.GetResultHooks();
                         foreach (var hook in resultHooks)
                             resultItem = (TOut)await hook.Run(request, resultItem, ct).Configure();
 
@@ -92,7 +92,7 @@ namespace Turner.Infrastructure.Crud.Requests
                         var resultItem = await transform(RequestConfig.GetDefaultFor<TEntity>(), ct).Configure();
                         ct.ThrowIfCancellationRequested();
 
-                        var resultHooks = RequestConfig.GetResultHooks(request);
+                        var resultHooks = RequestConfig.GetResultHooks();
                         foreach (var hook in resultHooks)
                             resultItem = (TOut)await hook.Run(request, resultItem, ct).Configure();
 

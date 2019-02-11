@@ -9,6 +9,7 @@ using Turner.Infrastructure.Crud.Configuration.Builders.Filter;
 using Turner.Infrastructure.Crud.Configuration.Builders.Select;
 using Turner.Infrastructure.Crud.Configuration.Builders.Sort;
 using Turner.Infrastructure.Crud.Errors;
+using Turner.Infrastructure.Crud.Exceptions;
 
 // ReSharper disable once CheckNamespace
 namespace Turner.Infrastructure.Crud.Configuration.Builders
@@ -18,7 +19,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         where TEntity : class
         where TBuilder : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
     {
-        private readonly List<IFilter> _filters = new List<IFilter>();
+        private readonly List<IFilterFactory> _filters = new List<IFilterFactory>();
 
         protected readonly List<IEntityHookFactory> EntityHooks
             = new List<IEntityHookFactory>();
@@ -114,6 +115,14 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
 
             return (TBuilder)this;
         }
+
+        public TBuilder SelectWith(
+            Func<SelectorBuilder<TRequest, TEntity>, ISelector> build)
+        {
+            Selector = build(new SelectorBuilder<TRequest, TEntity>());
+
+            return (TBuilder)this;
+        }
         
         public TBuilder FilterWith(
             Action<FilterBuilder<TRequest, TEntity>> build)
@@ -124,12 +133,39 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return AddRequestFilter(builder.Build());
         }
 
-        public TBuilder SelectWith(
-            Func<SelectorBuilder<TRequest, TEntity>, ISelector> build)
+        public TBuilder FilterWith<TFilter, TBaseRequest, TBaseEntity>()
+            where TBaseEntity : class
+            where TFilter : IFilter<TBaseRequest, TBaseEntity>
         {
-            Selector = build(new SelectorBuilder<TRequest, TEntity>());
-            
-            return (TBuilder)this;
+            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
+                throw new BadCrudConfigurationException("");
+
+            if (!typeof(TBaseEntity).IsAssignableFrom(typeof(TEntity)))
+                throw new BadCrudConfigurationException("");
+
+            return AddRequestFilter(TypeFilterFactory.From<TFilter, TBaseRequest, TBaseEntity>());
+        }
+
+        public TBuilder FilterWith<TFilter, TBaseRequest>()
+            where TFilter : IFilter<TBaseRequest, TEntity>
+            => FilterWith<TFilter, TBaseRequest, TEntity>();
+        
+        public TBuilder FilterWith<TFilter>()
+            where TFilter : IFilter<TRequest, TEntity>
+        {
+            return AddRequestFilter(TypeFilterFactory.From<TFilter, TRequest, TEntity>());
+        }
+
+        public TBuilder FilterWith<TFilterRequest, TFilterEntity>(IFilter<TFilterRequest, TFilterEntity> filter)
+            where TFilterEntity : class
+        {
+            if (!typeof(TFilterRequest).IsAssignableFrom(typeof(TRequest)))
+                throw new BadCrudConfigurationException("");
+
+            if (!typeof(TFilterEntity).IsAssignableFrom(typeof(TEntity)))
+                throw new BadCrudConfigurationException("");
+
+            return AddRequestFilter(InstanceFilterFactory.From(filter));
         }
         
         public TBuilder SortWith(
@@ -213,7 +249,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             config.SetEntityHooksFor<TEntity>(EntityHooks);
         }
 
-        private TBuilder AddRequestFilter(IFilter filter)
+        private TBuilder AddRequestFilter(IFilterFactory filter)
         {
             if (filter != null)
                 _filters.Add(filter);

@@ -30,7 +30,7 @@ namespace Turner.Infrastructure.Crud.Requests
             var updator = RequestConfig.GetUpdatorFor<TEntity>();
             var data = RequestConfig.GetRequestItemSourceFor<TEntity>().ItemSource(request);
 
-            var requestHooks = RequestConfig.GetRequestHooks(request);
+            var requestHooks = RequestConfig.GetRequestHooks();
             foreach (var hook in requestHooks)
                 await hook.Run(request, ct).Configure();
 
@@ -42,7 +42,7 @@ namespace Turner.Infrastructure.Crud.Requests
             entity = await Context.EntitySet<TEntity>().UpdateAsync(entity, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
-            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>(request);
+            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>();
             foreach (var hook in entityHooks)
                 await hook.Run(request, entity, ct).Configure();
 
@@ -146,7 +146,7 @@ namespace Turner.Infrastructure.Crud.Requests
                     result = await transform(entity, ct).Configure();
                     ct.ThrowIfCancellationRequested();
 
-                    var resultHooks = RequestConfig.GetResultHooks(request);
+                    var resultHooks = RequestConfig.GetResultHooks();
                     foreach (var hook in resultHooks)
                         result = (TOut)await hook.Run(request, result, ct).Configure();
 

@@ -17,7 +17,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity> CreateEntity(TRequest request, CancellationToken ct)
         {
-            var requestHooks = RequestConfig.GetRequestHooks(request);
+            var requestHooks = RequestConfig.GetRequestHooks();
             foreach (var hook in requestHooks)
                 await hook.Run(request, ct).Configure();
 
@@ -33,7 +33,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
             ct.ThrowIfCancellationRequested();
 
-            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>(request);
+            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>();
             foreach (var hook in entityHooks)
             {
                 await hook.Run(request, entity, ct).Configure();
@@ -86,7 +86,7 @@ namespace Turner.Infrastructure.Crud.Requests
             using (var cts = new CancellationTokenSource())
             {
                 var ct = cts.Token;
-                var resultHooks = RequestConfig.GetResultHooks(request);
+                var resultHooks = RequestConfig.GetResultHooks();
                 var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
 
                 var entity = await CreateEntity(request, ct).Configure();

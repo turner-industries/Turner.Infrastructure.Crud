@@ -19,7 +19,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity[]> CreateEntities(TRequest request, CancellationToken ct)
         {
-            var requestHooks = RequestConfig.GetRequestHooks(request);
+            var requestHooks = RequestConfig.GetRequestHooks();
             foreach (var hook in requestHooks)
                 await hook.Run(request, ct).Configure();
 
@@ -28,7 +28,7 @@ namespace Turner.Infrastructure.Crud.Requests
             var itemSource = RequestConfig.GetRequestItemSourceFor<TEntity>();
             var items = ((IEnumerable<object>)itemSource.ItemSource(request)).ToArray();
 
-            var itemHooks = RequestConfig.GetItemHooksFor<TEntity>(request);
+            var itemHooks = RequestConfig.GetItemHooksFor<TEntity>();
             foreach (var hook in itemHooks)
                 for (var i = 0; i < items.Length; ++i)
                     items[i] = await hook.Run(request, items[i], ct).Configure();
@@ -47,7 +47,7 @@ namespace Turner.Infrastructure.Crud.Requests
             var entities = await Context.EntitySet<TEntity>().CreateAsync(newEntities, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
-            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>(request);
+            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>();
             foreach (var entity in entities)
                 foreach (var hook in entityHooks)
                     await hook.Run(request, entity, ct).Configure();
@@ -103,7 +103,7 @@ namespace Turner.Infrastructure.Crud.Requests
             {
                 var ct = cts.Token;
                 var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
-                var resultHooks = RequestConfig.GetResultHooks(request);
+                var resultHooks = RequestConfig.GetResultHooks();
 
                 var entities = await CreateEntities(request, ct).Configure();
                 ct.ThrowIfCancellationRequested();

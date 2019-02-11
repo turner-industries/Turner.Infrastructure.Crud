@@ -113,6 +113,8 @@ namespace Turner.Infrastructure.Crud
             TypeItemHookFactory.BindContainer(container.GetInstance);
             TypeResultHookFactory.BindContainer(container.GetInstance);
 
+            TypeFilterFactory.BindContainer(container.GetInstance);
+
             if (options.UseEntityFramework)
                 container.Register(typeof(IEntityContext), typeof(EFContext));
         }

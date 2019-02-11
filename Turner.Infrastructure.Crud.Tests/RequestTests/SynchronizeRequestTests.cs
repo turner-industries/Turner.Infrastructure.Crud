@@ -167,6 +167,14 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public List<string> Claims { get; set; }
     }
 
+    public class NotDeletedFilter : IFilter<ICrudRequest, IEntity>
+    {
+        public IQueryable<IEntity> Filter(ICrudRequest request, IQueryable<IEntity> queryable)
+        {
+            return queryable.Where(x => !x.IsDeleted);
+        }
+    }
+
     public class SynchronizeUserClaimsProfile
         : CrudBulkRequestProfile<SynchronizeUserClaimsRequest, string>
     {
@@ -174,8 +182,9 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         {
             ForEntity<UserClaim>()
                 .WithKeys(x => x, x => x.Claim)
-                .CreateResultWith(x => x.Claim)
+                .FilterWith(new NotDeletedFilter())
                 .FilterOn((request, claim) => request.UserId == claim.UserId)
+                .CreateResultWith(x => x.Claim)
                 .UpdateEntityWith((claim, entity) => entity)
                 .CreateEntityWith((request, claim) => new UserClaim
                 {

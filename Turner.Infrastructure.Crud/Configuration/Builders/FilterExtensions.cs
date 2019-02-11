@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using Turner.Infrastructure.Crud.Configuration.Builders;
 
@@ -7,6 +8,14 @@ namespace Turner.Infrastructure.Crud.Configuration
 {
     public static class FilterExtensions
     {
+        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> FilterWith<TRequest, TEntity>(
+            this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
+            Func<TRequest, IQueryable<TEntity>, IQueryable<TEntity>> filterFunc)
+            where TEntity : class
+        {
+            return config.FilterWith(builder => builder.FilterWith(filterFunc));
+        }
+
         public static CrudRequestEntityConfigBuilder<TRequest, TEntity> FilterOn<TRequest, TEntity>(
             this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
             Func<TRequest, Expression<Func<TEntity, bool>>> filterFunc)

@@ -8,13 +8,23 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
     public abstract class FilterBuilderBase<TRequest, TEntity>
         where TEntity : class
     {
-        internal abstract IFilter Build();
+        internal abstract IFilterFactory Build();
     }
 
     public class FilterBuilder<TRequest, TEntity>
         where TEntity : class
     {
         private FilterBuilderBase<TRequest, TEntity> _builder;
+
+        public BasicFilterBuilder<TRequest, TEntity> FilterWith(
+            Func<TRequest, IQueryable<TEntity>, IQueryable<TEntity>> filterFunc)
+        {
+            var builder = new BasicFilterBuilder<TRequest, TEntity>(filterFunc);
+
+            _builder = builder;
+
+            return builder;
+        }
 
         public BasicFilterBuilder<TRequest, TEntity> FilterOn(
             Func<TRequest, Expression<Func<TEntity, bool>>> filterFunc)
@@ -186,16 +196,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
             return builder;
         }
 
-        public CustomFilterBuilder<TRequest, TEntity> FilterWith(
-            Func<TRequest, IQueryable<TEntity>, IQueryable<TEntity>> customFilterFunc)
-        {
-            var builder = new CustomFilterBuilder<TRequest, TEntity>(customFilterFunc);
-            _builder = builder;
-
-            return builder;
-        }
-
-        internal IFilter Build()
+        internal IFilterFactory Build()
         {
             return _builder?.Build();
         }

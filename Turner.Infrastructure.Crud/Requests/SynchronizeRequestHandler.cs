@@ -25,7 +25,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity[]> SynchronizeEntities(TRequest request, CancellationToken ct)
         {
-            var requestHooks = RequestConfig.GetRequestHooks(request);
+            var requestHooks = RequestConfig.GetRequestHooks();
             foreach (var hook in requestHooks)
                 await hook.Run(request, ct).Configure();
 
@@ -40,7 +40,7 @@ namespace Turner.Infrastructure.Crud.Requests
             var data = RequestConfig.GetRequestItemSourceFor<TEntity>();
             var items = ((IEnumerable<object>)data.ItemSource(request)).ToArray();
 
-            var itemHooks = RequestConfig.GetItemHooksFor<TEntity>(request);
+            var itemHooks = RequestConfig.GetItemHooksFor<TEntity>();
             foreach (var hook in itemHooks)
                 for (var i = 0; i < items.Length; ++i)
                     items[i] = await hook.Run(request, items[i], ct).Configure();
@@ -61,7 +61,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
             var changedEntities = updatedEntities.Concat(createdEntities).ToArray();
 
-            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>(request);
+            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>();
             foreach (var entity in changedEntities)
                 foreach (var hook in entityHooks)
                     await hook.Run(request, entity, ct).Configure();
@@ -80,7 +80,7 @@ namespace Turner.Infrastructure.Crud.Requests
             var entities = Context.EntitySet<TEntity>().AsQueryable();
 
             foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
-                entities = filter.Filter(request, entities);
+                entities = filter.Filter(request, entities).Cast<TEntity>();
 
             var where = selector(request);
             var notWhere = where.Update(
@@ -189,7 +189,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 var items = new List<TOut>(await Task.WhenAll(entities.Select(x => transform(x, ct))));
                 ct.ThrowIfCancellationRequested();
 
-                var resultHooks = RequestConfig.GetResultHooks(request);
+                var resultHooks = RequestConfig.GetResultHooks();
                 foreach (var hook in resultHooks)
                     for (var i = 0; i < items.Count; ++i)
                         items[i] = (TOut)await hook.Run(request, items[i], ct).Configure();
