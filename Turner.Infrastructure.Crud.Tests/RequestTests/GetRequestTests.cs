@@ -96,7 +96,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         [Test]
         public async Task Handle_DefaultGetRequest_GetsUser()
         {
-            var request = new GetRequest<User, int, UserGetDto>(_user.Id);
+            var request = new GetByIdRequest<User, UserGetDto>(_user.Id);
             var response = await Mediator.HandleAsync(request);
 
             Assert.IsFalse(response.HasErrors);
