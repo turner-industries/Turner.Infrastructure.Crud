@@ -6,20 +6,20 @@ using System.Reflection;
 
 namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
 {
-    internal abstract class BasicSortClause<TEntity>
+    internal abstract class BasicSortClause<TRequest, TEntity>
         where TEntity : class
     {
         public SortDirection Direction { get; set; }
 
-        internal abstract void Build(BasicSortOperation operation);
+        internal abstract void Build(BasicSortOperation<TRequest, TEntity> operation);
     }
 
-    internal class BasicSortClause<TEntity, TProp> : BasicSortClause<TEntity>
+    internal class BasicSortClause<TRequest, TEntity, TProp> : BasicSortClause<TRequest, TEntity>
         where TEntity : class
     {
         public Expression<Func<TEntity, TProp>> Clause { get; set; }
 
-        internal override void Build(BasicSortOperation operation)
+        internal override void Build(BasicSortOperation<TRequest, TEntity> operation)
         {
             operation.AddSort(Clause, Direction);
         }
@@ -32,9 +32,11 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
         private readonly List<BasicSortOperationBuilder<TRequest, TEntity>> _operations
             = new List<BasicSortOperationBuilder<TRequest, TEntity>>();
 
-        internal override ISorter Build()
+        internal override ISorterFactory Build()
         {
-            return new BasicSorter(_operations.Select(builder => builder.Build()).ToList());
+            var instance = new BasicSorter<TRequest, TEntity>(_operations.Select(builder => builder.Build()).ToList());
+
+            return InstanceSorterFactory.From(instance);
         }
         
         public ConfigurableBasicSortClauseBuilder<TRequest, TEntity> SortBy<TProp>(
@@ -71,11 +73,9 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             _parentBuilder = parent ?? throw new ArgumentNullException(nameof(parent));
         }
         
-        internal BasicSortOperation Build()
+        internal BasicSortOperation<TRequest, TEntity> Build()
         {
-            var operation = new BasicSortOperation(_predicate == null
-                ? (Func<object, bool>)null
-                : o => _predicate((TRequest)o));
+            var operation = new BasicSortOperation<TRequest, TEntity>(_predicate);
 
             _clauses.ForEach(builder => builder.Clause.Build(operation));
 
@@ -142,7 +142,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
     {
         private BasicSortOperationBuilder<TRequest, TEntity> _parentBuilder;
 
-        internal BasicSortClause<TEntity> Clause { get; set; }
+        internal BasicSortClause<TRequest, TEntity> Clause { get; set; }
 
         public BasicSortClauseBuilder(BasicSortOperationBuilder<TRequest, TEntity> parent)
         {
@@ -178,7 +178,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
         {
             var clauseBuilder = new ConfigurableBasicSortClauseBuilder<TRequest, TEntity>(parent)
             {
-                Clause = new BasicSortClause<TEntity, TProp>
+                Clause = new BasicSortClause<TRequest, TEntity, TProp>
                 {
                     Direction = SortDirection.Default,
                     Clause = entityProperty

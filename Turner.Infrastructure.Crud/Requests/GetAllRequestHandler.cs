@@ -44,7 +44,7 @@ namespace Turner.Infrastructure.Crud.Requests
                     entities = filter.Filter(request, entities).Cast<TEntity>();
 
                 var sorter = RequestConfig.GetSorterFor<TEntity>();
-                entities = sorter?.Sort(request, entities) ?? entities;
+                entities = sorter?.Sort(request, entities).Cast<TEntity>() ?? entities;
 
                 var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
 

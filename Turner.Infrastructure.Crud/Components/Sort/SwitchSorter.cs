@@ -4,7 +4,8 @@ using System.Linq;
 
 namespace Turner.Infrastructure.Crud
 {
-    public class SwitchSortOperation : BasicSortOperation
+    public class SwitchSortOperation<TRequest, TEntity> : BasicSortOperation<TRequest, TEntity>
+        where TEntity : class
     {
         public SwitchSortOperation()
             : base(null)
@@ -12,31 +13,32 @@ namespace Turner.Infrastructure.Crud
         }
     }
 
-    public class SwitchSorter<TValue> : ISorter
+    public class SwitchSorter<TRequest, TEntity, TValue> : ISorter<TRequest, TEntity>
+        where TEntity : class
     {
-        private readonly Dictionary<TValue, SwitchSortOperation> _cases
-            = new Dictionary<TValue, SwitchSortOperation>();
+        private readonly Dictionary<TValue, SwitchSortOperation<TRequest, TEntity>> _cases
+            = new Dictionary<TValue, SwitchSortOperation<TRequest, TEntity>>();
 
-        private readonly Func<object, TValue> _getSwitchValue;
+        private readonly Func<TRequest, TValue> _getSwitchValue;
 
-        private SwitchSortOperation _default;
+        private SwitchSortOperation<TRequest, TEntity> _default;
 
-        public SwitchSorter(Func<object, TValue> getSwitchValue)
+        public SwitchSorter(Func<TRequest, TValue> getSwitchValue)
         {
             _getSwitchValue = getSwitchValue;
         }
 
-        internal void Case(TValue value, SwitchSortOperation operation)
+        internal void Case(TValue value, SwitchSortOperation<TRequest, TEntity> operation)
         {
             _cases[value] = operation;
         }
 
-        internal void Default(SwitchSortOperation operation)
+        internal void Default(SwitchSortOperation<TRequest, TEntity> operation)
         {
             _default = operation;
         }
 
-        public IOrderedQueryable<T> Sort<TRequest, T>(TRequest request, IQueryable<T> queryable)
+        public IOrderedQueryable<TEntity> Sort(TRequest request, IQueryable<TEntity> queryable)
         {
             var switchValue = _getSwitchValue(request);
             

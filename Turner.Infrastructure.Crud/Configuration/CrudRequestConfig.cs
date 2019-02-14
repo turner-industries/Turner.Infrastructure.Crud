@@ -23,7 +23,7 @@ namespace Turner.Infrastructure.Crud.Configuration
         ISelector GetSelectorFor<TEntity>()
             where TEntity : class;
 
-        ISorter GetSorterFor<TEntity>()
+        IBoxedSorter GetSorterFor<TEntity>()
             where TEntity : class;
 
         IRequestItemSource GetRequestItemSourceFor<TEntity>()
@@ -90,8 +90,8 @@ namespace Turner.Infrastructure.Crud.Configuration
         private readonly Dictionary<Type, IKey> _entityKeys
             = new Dictionary<Type, IKey>();
 
-        private readonly Dictionary<Type, ISorter> _entitySorters
-            = new Dictionary<Type, ISorter>();
+        private readonly Dictionary<Type, ISorterFactory> _entitySorters
+            = new Dictionary<Type, ISorterFactory>();
 
         private readonly Dictionary<Type, ISelector> _entitySelectors
             = new Dictionary<Type, ISelector>();
@@ -208,13 +208,13 @@ namespace Turner.Infrastructure.Crud.Configuration
                 $"for request '{typeof(TRequest)}'.");
         }
         
-        public ISorter GetSorterFor<TEntity>()
+        public IBoxedSorter GetSorterFor<TEntity>()
             where TEntity : class
         {
             foreach (var type in typeof(TEntity).BuildTypeHierarchyUp())
             {
                 if (_entitySorters.TryGetValue(type, out var sorter))
-                    return sorter;
+                    return sorter.Create();
             }
 
             return null;
@@ -350,7 +350,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             _entitySelectors[typeof(TEntity)] = selector;
         }
 
-        internal void SetEntitySorter<TEntity>(ISorter sorter)
+        internal void SetEntitySorter<TEntity>(ISorterFactory sorter)
             where TEntity : class
         {
             _entitySorters[typeof(TEntity)] = sorter;

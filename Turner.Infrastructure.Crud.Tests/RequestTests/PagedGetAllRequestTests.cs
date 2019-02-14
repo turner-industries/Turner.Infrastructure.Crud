@@ -226,7 +226,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
 
             ForEntity<User>()
                 .FilterWith(builder => builder
-                    .FilterOn(request => entity => entity.IsDeleted == request.DeletedFilter.Value)
+                    .Using(request => entity => entity.IsDeleted == request.DeletedFilter.Value)
                     .When(r => r.DeletedFilter.HasValue))
                 .SortWith(builder => builder.SortBy("Name"));
         }

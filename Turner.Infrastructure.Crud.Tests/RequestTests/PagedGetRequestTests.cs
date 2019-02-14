@@ -88,7 +88,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             ForEntity<User>()
                 .SelectWith(builder => builder.Single("Name"))
                 .SortWith(builder => builder.SortBy("Name").Descending())
-                .FilterWith(builder => builder.FilterOn(x => !x.IsDeleted))
+                .FilterWith(builder => builder.Using(x => !x.IsDeleted))
                 .ConfigureOptions(config => config.UseProjection = false);
         }
     }

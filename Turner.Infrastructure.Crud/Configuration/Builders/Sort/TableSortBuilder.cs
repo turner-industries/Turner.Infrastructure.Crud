@@ -127,9 +127,9 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             return WithColumn(controlValue, readPropExpr);
         }
 
-        internal override ISorter Build()
+        internal override ISorterFactory Build()
         {
-            var sorter = new TableSorter<TControl>();
+            var sorter = new TableSorter<TRequest, TEntity, TControl>();
 
             _controls
                 .Zip(_directions, (c, d) => new { Control = c, Direction = d })
@@ -139,12 +139,12 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             foreach (var (k, v) in _columns)
                 v.Build(sorter, k);
 
-            return sorter;
+            return InstanceSorterFactory.From(sorter);
         }
 
         private interface IEntityExpressionHolder
         {
-            void Build(TableSorter<TControl> sorter, TControl controlValue);
+            void Build(TableSorter<TRequest, TEntity, TControl> sorter, TControl controlValue);
         }
 
         private class EntityExpressionHolder<TKey> : IEntityExpressionHolder
@@ -156,7 +156,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
                 Expression = expr;
             }
 
-            public void Build(TableSorter<TControl> sorter, TControl controlValue)
+            public void Build(TableSorter<TRequest, TEntity, TControl> sorter, TControl controlValue)
             {
                 sorter.AddColumn(controlValue, Expression);
             }

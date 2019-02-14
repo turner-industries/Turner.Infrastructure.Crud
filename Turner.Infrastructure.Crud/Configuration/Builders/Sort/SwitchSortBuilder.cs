@@ -5,20 +5,20 @@ using System.Reflection;
 
 namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
 {
-    internal abstract class SwitchSortClause<TEntity>
+    internal abstract class SwitchSortClause<TRequest, TEntity>
         where TEntity : class
     {
         public SortDirection Direction { get; set; }
 
-        internal abstract void Build(SwitchSortOperation operation);
+        internal abstract void Build(SwitchSortOperation<TRequest, TEntity> operation);
     }
 
-    internal class SwitchSortClause<TEntity, TProp> : SwitchSortClause<TEntity>
+    internal class SwitchSortClause<TRequest, TEntity, TProp> : SwitchSortClause<TRequest, TEntity>
         where TEntity : class
     {
         public Expression<Func<TEntity, TProp>> Clause { get; set; }
 
-        internal override void Build(SwitchSortOperation operation)
+        internal override void Build(SwitchSortOperation<TRequest, TEntity> operation)
         {
             operation.AddSort(Clause, Direction);
         }
@@ -41,9 +41,9 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             _getSwitchValue = getSwitchValue;
         }
 
-        internal override ISorter Build()
+        internal override ISorterFactory Build()
         {
-            var sorter = new SwitchSorter<TValue>(o => _getSwitchValue((TRequest) o));
+            var sorter = new SwitchSorter<TRequest, TEntity, TValue>(o => _getSwitchValue((TRequest) o));
 
             foreach (var (k, v) in _cases)
                 sorter.Case(k, v.Build());
@@ -51,7 +51,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             if (_default != null)
                 sorter.Default(_default.Build());
 
-            return sorter;
+            return InstanceSorterFactory.From(sorter);
         }
         
         public SwitchSortOperationBuilder<TRequest, TEntity, TValue> ForCase(TValue value)
@@ -85,9 +85,9 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             ParentBuilder = parent ?? throw new ArgumentException(nameof(parent));
         }
 
-        internal SwitchSortOperation Build()
+        internal SwitchSortOperation<TRequest, TEntity> Build()
         {
-            var operation = new SwitchSortOperation();
+            var operation = new SwitchSortOperation<TRequest, TEntity>();
             Clauses.ForEach(builder => builder.Clause.Build(operation));
 
             return operation;
@@ -159,7 +159,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
     {
         private SwitchSortContinuationOperationBuilder<TRequest, TEntity, TValue> _parentBuilder;
 
-        internal SwitchSortClause<TEntity> Clause { get; set; }
+        internal SwitchSortClause<TRequest, TEntity> Clause { get; set; }
 
         public SwitchSortClauseBuilder(SwitchSortContinuationOperationBuilder<TRequest, TEntity, TValue> parent)
         {
@@ -197,7 +197,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
         {
             var clauseBuilder = new ConfigurableSwitchSortClauseBuilder<TRequest, TEntity, TValue>(parent)
             {
-                Clause = new SwitchSortClause<TEntity, TProp>
+                Clause = new SwitchSortClause<TRequest, TEntity, TProp>
                 {
                     Direction = SortDirection.Default,
                     Clause = entityProperty

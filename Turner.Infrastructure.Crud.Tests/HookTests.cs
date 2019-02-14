@@ -98,9 +98,9 @@ namespace Turner.Infrastructure.Crud.Tests
 
     public class TestTypeRequestHook : IRequestHook<TestHooksRequest>
     {
-        public TestTypeRequestHook(DbContext context)
+        public TestTypeRequestHook(FakeInjectable injectable)
         {
-            if (context == null)
+            if (injectable.Value == 0)
                 throw new System.Exception("Injection Failed");
         }
 
@@ -113,9 +113,9 @@ namespace Turner.Infrastructure.Crud.Tests
 
     public class TestTypeEntityHook : IEntityHook<TestHooksRequest, HookEntity>
     {
-        public TestTypeEntityHook(DbContext context)
+        public TestTypeEntityHook(FakeInjectable injectable)
         {
-            if (context == null)
+            if (injectable.Value == 0)
                 throw new System.Exception("Injection Failed");
         }
 
@@ -128,9 +128,9 @@ namespace Turner.Infrastructure.Crud.Tests
 
     public class TestTypeItemHook : IItemHook<TestHooksRequest, HookDto>
     {
-        public TestTypeItemHook(DbContext context)
+        public TestTypeItemHook(FakeInjectable injectable)
         {
-            if (context == null)
+            if (injectable.Value == 0)
                 throw new System.Exception("Injection Failed");
         }
 
@@ -143,9 +143,9 @@ namespace Turner.Infrastructure.Crud.Tests
 
     public class TestTypeResultHook : IResultHook<TestHooksRequest, string>
     {
-        public TestTypeResultHook(DbContext context)
+        public TestTypeResultHook(FakeInjectable injectable)
         {
-            if (context == null)
+            if (injectable.Value == 0)
                 throw new System.Exception("Injection Failed");
         }
 

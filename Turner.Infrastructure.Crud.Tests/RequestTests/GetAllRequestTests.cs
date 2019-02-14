@@ -487,7 +487,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         {
             ForEntity<User>()
                 .SortWith(builder => builder
-                    .AsSwitchSort<string>("Case")
+                    .AsSwitch<string>("Case")
                     .ForCase(UsersSortColumn.Name).SortBy("Name").Descending()
                     .ForDefault().SortBy(user => user.IsDeleted).ThenBy("Name").Descending());
         }
@@ -508,7 +508,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         {
             ForEntity<User>()
                 .SortWith(builder => builder
-                    .AsTableSort<string>()
+                    .AsTable<string>()
                     .WithControl(r => r.PrimaryColumn, SortDirection.Ascending)
                     .WithControl("SecondaryColumn", "SecondaryDirection")
                     .WithColumn(UsersSortColumn.Name, "Name")
@@ -526,11 +526,11 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public GetAllCustomFilteredUsersProfile()
         {
             ForEntity<IEntity>()
-                .FilterWith(builder => builder.FilterWith((request, users) => users.Where(x => !x.IsDeleted)));
+                .FilterWith(builder => builder.Using((request, users) => users.Where(x => !x.IsDeleted)));
 
             ForEntity<User>()
                 .SortWith((q, users) => users.OrderByDescending(user => user.Name))
-                .FilterWith(builder => builder.FilterWith((request, users) => users.Where(x => x.Name != "AUser")));
+                .FilterWith(builder => builder.Using((request, users) => users.Where(x => x.Name != "AUser")));
         }
     }
     
@@ -544,7 +544,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public GetAllBasicUnconditionalFilteredUsersProfile()
         {
             ForEntity<IEntity>()
-                .FilterWith(builder => builder.FilterOn(x => !x.IsDeleted));
+                .FilterWith(builder => builder.Using(x => !x.IsDeleted));
         }
     }
     
@@ -561,7 +561,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         {
             ForEntity<IEntity>()
                 .FilterWith(builder => builder
-                    .FilterOn((request, entity) => entity.IsDeleted == request.DeletedFilter.Value)
+                    .Using((request, entity) => entity.IsDeleted == request.DeletedFilter.Value)
                     .When(r => r.DeletedFilter.HasValue));
         }
     }

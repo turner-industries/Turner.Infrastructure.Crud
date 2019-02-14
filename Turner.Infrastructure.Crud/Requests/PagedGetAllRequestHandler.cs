@@ -45,7 +45,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 ct.ThrowIfCancellationRequested();
 
                 var sorter = RequestConfig.GetSorterFor<TEntity>();
-                entities = sorter?.Sort(request, entities) ?? entities;
+                entities = sorter?.Sort(request, entities).Cast<TEntity>() ?? entities;
 
                 var pageSize = request.PageSize < 1 ? totalItemCount : request.PageSize;
                 var totalPageCount = totalItemCount == 0 ? 1 : (totalItemCount + pageSize - 1) / pageSize;

@@ -51,7 +51,7 @@ namespace Turner.Infrastructure.Crud.Requests
                         entities = filter.Filter(request, entities).Cast<TEntity>();
 
                     var sorter = RequestConfig.GetSorterFor<TEntity>();
-                    entities = sorter?.Sort(request, entities) ?? entities;
+                    entities = sorter?.Sort(request, entities).Cast<TEntity>() ?? entities;
 
                     var totalItemCount = await Context.CountAsync(entities, ct).Configure();
                     ct.ThrowIfCancellationRequested();
