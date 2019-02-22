@@ -107,14 +107,18 @@ namespace Turner.Infrastructure.Crud.Configuration
             bool ignoreTime = false)
             where TEntity : class
         {
-            var requestParam = Expression.Parameter(typeof(DateTime));
+            var requestParam = Expression.Parameter(typeof(TRequest));
             var entityParam = Expression.Parameter(typeof(TEntity));
+
+            var requestProp = ignoreTime
+                ? Expression.Property(Expression.Invoke(requestDateExpr, requestParam), "Date")
+                : (Expression)Expression.Invoke(requestDateExpr, requestParam);
 
             var entityProp = ignoreTime
                 ? Expression.Property(Expression.Invoke(entityDateExpr, entityParam), "Date")
                 : (Expression)Expression.Invoke(entityDateExpr, entityParam);
 
-            var compareExpr = Expression.LessThan(entityProp, requestParam);
+            var compareExpr = Expression.LessThan(entityProp, requestProp);
 
             var filterExpr = Expression.Lambda<Func<TRequest, TEntity, bool>>(compareExpr, requestParam, entityParam);
 
@@ -128,14 +132,18 @@ namespace Turner.Infrastructure.Crud.Configuration
             bool ignoreTime = false)
             where TEntity : class
         {
-            var requestParam = Expression.Parameter(typeof(DateTime));
+            var requestParam = Expression.Parameter(typeof(TRequest));
             var entityParam = Expression.Parameter(typeof(TEntity));
+
+            var requestProp = ignoreTime
+                ? Expression.Property(Expression.Invoke(requestDateExpr, requestParam), "Date")
+                : (Expression)Expression.Invoke(requestDateExpr, requestParam);
 
             var entityProp = ignoreTime
                 ? Expression.Property(Expression.Invoke(entityDateExpr, entityParam), "Date")
                 : (Expression)Expression.Invoke(entityDateExpr, entityParam);
 
-            var compareExpr = Expression.LessThanOrEqual(entityProp, requestParam);
+            var compareExpr = Expression.LessThanOrEqual(entityProp, requestProp);
 
             var filterExpr = Expression.Lambda<Func<TRequest, TEntity, bool>>(compareExpr, requestParam, entityParam);
 
