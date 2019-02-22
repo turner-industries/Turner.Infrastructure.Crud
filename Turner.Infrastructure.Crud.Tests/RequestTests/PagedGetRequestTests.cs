@@ -11,7 +11,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     {
         private async Task SeedEntities()
         {
-            await Context.AddRangeAsync(
+            Context.AddRange(
                 new User { Name = "CUser", IsDeleted = false },
                 new User { Name = "BUser", IsDeleted = true },
                 new User { Name = "FUser", IsDeleted = false },

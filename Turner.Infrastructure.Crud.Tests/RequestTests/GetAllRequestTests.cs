@@ -12,7 +12,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     {
         private async Task SeedSortEntities()
         {
-            await Context.AddRangeAsync(
+            Context.AddRange(
                 new User { Name = "BUser", IsDeleted = true },
                 new User { Name = "AUser", IsDeleted = false },
                 new User { Name = "CUser", IsDeleted = false },
@@ -222,7 +222,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         [Test]
         public async Task Handle_GetAllCustomFilteredUsersRequest_ReturnsAllEntitiesFiltered()
         {
-            await Context.AddRangeAsync(
+            Context.AddRange(
                 new User { Name = "BUser", IsDeleted = true },
                 new User { Name = "AUser", IsDeleted = false },
                 new User { Name = "CUser", IsDeleted = false },
@@ -245,7 +245,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         [Test]
         public async Task Handle_GetAllBasicUnconditionalFilteredUsersRequest_ReturnsAllEntitiesFiltered()
         {
-            await Context.AddRangeAsync(
+            Context.AddRange(
                 new User { Name = "BUser", IsDeleted = true },
                 new User { Name = "AUser", IsDeleted = false },
                 new User { Name = "CUser", IsDeleted = true },
@@ -268,7 +268,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         [Test]
         public async Task Handle_GetAllBasicConditionalFilteredUsersRequestWithFilterOff_ReturnsAllEntitiesUnfiltered()
         {
-            await Context.AddRangeAsync(
+            Context.AddRange(
                 new User { Name = "BUser", IsDeleted = false },
                 new User { Name = "AUser", IsDeleted = true },
                 new User { Name = "CUser", IsDeleted = true },
@@ -296,7 +296,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         [Test]
         public async Task Handle_GetAllBasicConditionalFilteredUsersRequestWithFilterOnFalse_ReturnsAllEntitiesFiltered()
         {
-            await Context.AddRangeAsync(
+            Context.AddRange(
                 new User { Name = "BUser", IsDeleted = false },
                 new User { Name = "AUser", IsDeleted = false },
                 new User { Name = "CUser", IsDeleted = true },
@@ -323,7 +323,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         [Test]
         public async Task Handle_GetAllBasicConditionalFilteredUsersRequestWithFilterOnTrue_ReturnsAllEntitiesFiltered()
         {
-            await Context.AddRangeAsync(
+            Context.AddRange(
                 new User { Name = "BUser", IsDeleted = false },
                 new User { Name = "AUser", IsDeleted = false },
                 new User { Name = "CUser", IsDeleted = true },
@@ -396,7 +396,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         [Test]
         public async Task Handle_DefaultGetAllRequest_ReturnsAllEntities()
         {
-            await Context.AddRangeAsync(new User { Name = "User1" }, new User { Name = "User2" });
+            Context.AddRange(new User { Name = "User1" }, new User { Name = "User2" });
             await Context.SaveChangesAsync();
 
             var request = new GetAllRequest<User, UserGetDto>();
@@ -410,7 +410,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         [Test]
         public async Task Handle_UnprojectedGetAllRequest_ReturnsAllEntities()
         {
-            await Context.AddRangeAsync(new User { Name = "User1" }, new User { Name = "User2" });
+            Context.AddRange(new User { Name = "User1" }, new User { Name = "User2" });
             await Context.SaveChangesAsync();
 
             var request = new GetUsersUnprojectedRequest();

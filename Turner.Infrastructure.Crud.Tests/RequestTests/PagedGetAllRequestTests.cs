@@ -11,7 +11,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     {
         private async Task SeedEntities()
         {
-            await Context.AddRangeAsync(
+            Context.AddRange(
                 new User { Name = "BUser" },
                 new User { Name = "AUser" },
                 new User { Name = "CUser" },
@@ -127,7 +127,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         [Test]
         public async Task Handle_GetAllUsersPagedRequest_WithNoResults_ReturnsEmptyList()
         {
-            await Context.AddRangeAsync(
+            Context.AddRange(
                 new User { Name = "BUser", IsDeleted = true },
                 new User { Name = "AUser", IsDeleted = true },
                 new User { Name = "CUser", IsDeleted = true },
@@ -159,7 +159,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         [Test]
         public async Task Handle_GetAllUsersPagedRequest_WithFilter_ReturnsFilteredList()
         {
-            await Context.AddRangeAsync(
+            Context.AddRange(
                 new User { Name = "BUser", IsDeleted = true },
                 new User { Name = "AUser", IsDeleted = false },
                 new User { Name = "CUser", IsDeleted = true },
