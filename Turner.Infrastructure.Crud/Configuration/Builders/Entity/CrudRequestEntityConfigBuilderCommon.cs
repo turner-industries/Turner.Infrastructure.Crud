@@ -164,6 +164,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return AddRequestFilter(FunctionFilterFactory.From(filterFunc));
         }
 
+        // TODO: Is this overload necessary?
         public TBuilder FilterWith(
             Func<TRequest, IQueryable<TEntity>, IQueryable<TEntity>> filterFunc)
             => FilterWith<TRequest>(filterFunc);
@@ -215,6 +216,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         public TBuilder SortWith(
             Func<TRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
         {
+            // TODO: Contravariant TRequest?
             Sorter = FunctionSorterFactory.From(sortFunc);
 
             return (TBuilder)this;

@@ -1,6 +1,6 @@
-﻿using AutoMapper;
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
+using AutoMapper;
 
 namespace Turner.Infrastructure.Crud.Tests.Fakes
 {
@@ -56,11 +56,15 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
     {
         [Required]
         public Guid Guid { get; set; }
+
+        public DateTime CreatedDate { get; set; }
     }
 
     public class SiteDto
     {
         public Guid Guid { get; set; }
+
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
     }
 
     public class SiteGetDto : SiteDto

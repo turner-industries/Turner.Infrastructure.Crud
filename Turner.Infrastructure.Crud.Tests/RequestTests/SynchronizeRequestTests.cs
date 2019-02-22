@@ -180,10 +180,11 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     {
         public SynchronizeUserClaimsProfile() : base(request => request.Claims)
         {
+            // TODO: Consistent filter naming?
             ForEntity<UserClaim>()
                 .WithKeys(x => x, x => x.Claim)
                 .FilterWith(new NotDeletedFilter())
-                .FilterUsing((request, claim) => request.UserId == claim.UserId)
+                .FilterWith((request, claim) => request.UserId == claim.UserId)
                 .CreateResultWith(x => x.Claim)
                 .UpdateEntityWith((claim, entity) => entity)
                 .CreateEntityWith((request, claim) => new UserClaim
