@@ -523,6 +523,32 @@ namespace Turner.Infrastructure.Crud.Tests
             Assert.AreEqual("BADSite2", response.Data.Items[1].Name);
             Assert.AreEqual("Site3BAD", response.Data.Items[2].Name);
         }
+
+        [Test]
+        public async Task Handle_ExcludeWithFalsePredicate_DoesNotFilterEntities()
+        {
+            var request = new ExcludeWithPredicateRequest { Name = string.Empty };
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.NotNull(response.Data);
+            Assert.NotNull(response.Data.Items);
+            Assert.AreEqual(5, response.Data.Items.Count);
+        }
+
+        [Test]
+        public async Task Handle_ExcludeWithTruePredicate_FiltersEntities()
+        {
+            var request = new ExcludeWithPredicateRequest { Name = "BAD" };
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.NotNull(response.Data);
+            Assert.NotNull(response.Data.Items);
+            Assert.AreEqual(1, response.Data.Items.Count);
+        }
     }
 
     public class IncludeBeforeConstantDateRequest 
@@ -1040,6 +1066,23 @@ namespace Turner.Infrastructure.Crud.Tests
             ForEntity<Site>()
                 .FilterWith(builder =>
                     builder.Exclude(e => e.Name).Containing(x => x.Name));
+        }
+    }
+
+    public class ExcludeWithPredicateRequest
+        : GetAllRequest<Site, SiteGetDto>
+    {
+        public string Name { get; set; }
+    }
+
+    public class ExcludeWithPredicateProfile
+        : CrudRequestProfile<ExcludeWithPredicateRequest>
+    {
+        public ExcludeWithPredicateProfile()
+        {
+            ForEntity<Site>()
+                .FilterWith(builder =>
+                    builder.Exclude(e => e.Name).Containing(x => x.Name).When(x => !string.IsNullOrWhiteSpace(x.Name)));
         }
     }
 }
