@@ -163,8 +163,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
 
             return AddRequestFilter(FunctionFilterFactory.From(filterFunc));
         }
-
-        // TODO: Is this overload necessary?
+        
         public TBuilder FilterWith(
             Func<TRequest, IQueryable<TEntity>, IQueryable<TEntity>> filterFunc)
             => FilterWith<TRequest>(filterFunc);
@@ -213,14 +212,19 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return (TBuilder)this;
         }
 
-        public TBuilder SortWith(
-            Func<TRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
+        public TBuilder SortWith<TBaseRequest>(
+            Func<TBaseRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
         {
-            // TODO: Contravariant TRequest?
+            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(SortWith), typeof(TBaseRequest), typeof(TRequest));
+
             Sorter = FunctionSorterFactory.From(sortFunc);
 
             return (TBuilder)this;
         }
+
+        public TBuilder SortWith(Func<TRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
+            => SortWith<TRequest>(sortFunc);
 
         public TBuilder SortWith<TSorter, TBaseRequest>()
             where TSorter : ISorter<TBaseRequest, TEntity>
