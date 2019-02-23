@@ -50,17 +50,6 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         }
     }
 
-    public class DefaultGetRequestProfile<TEntity, TKey, TOut> 
-        : CrudRequestProfile<GetRequest<TEntity, TKey, TOut>>
-        where TEntity : class
-    {
-        public DefaultGetRequestProfile()
-        {
-            ForEntity<IEntity>()
-                .SelectWith(builder => builder.Single(r => r.Key, e => e.Id));
-        }
-    }
-
     public class DefaultUpdateRequestProfile<TEntity, TKey, TIn, TOut>
         : CrudRequestProfile<UpdateRequest<TEntity, TKey, TIn, TOut>>
         where TEntity : class

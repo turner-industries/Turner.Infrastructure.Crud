@@ -89,7 +89,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public DeleteAllUsersByIdProfile()
         {
             ForEntity<User>()
-                .FilterWith(builder => builder.FilterOn(r => r.Ids, "Id"));
+                .FilterWith(builder => builder.On(r => r.Ids, "Id"));
 
             ConfigureErrors(config => config.FailedToFindInDeleteIsError = false);
         }

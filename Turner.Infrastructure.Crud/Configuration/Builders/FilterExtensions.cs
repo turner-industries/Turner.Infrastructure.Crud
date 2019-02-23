@@ -5,54 +5,54 @@ using Turner.Infrastructure.Crud.Configuration.Builders;
 // ReSharper disable once CheckNamespace
 namespace Turner.Infrastructure.Crud.Configuration
 {
-    public static class FilterExtensions
+    public static class FunctionFilterExtensions
     {
-        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> FilterOn<TRequest, TEntity>(
+        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> FilterUsing<TRequest, TEntity>(
             this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
             Func<TRequest, Expression<Func<TEntity, bool>>> filterFunc)
             where TEntity : class
         {
-            return config.FilterWith(builder => builder.FilterOn(filterFunc));
+            return config.FilterWith(builder => builder.Using(filterFunc));
         }
 
-        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterOn<TRequest, TItem, TEntity>(
+        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterUsing<TRequest, TItem, TEntity>(
             this CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Func<TRequest, Expression<Func<TEntity, bool>>> filterFunc)
             where TEntity : class
         {
-            return config.FilterWith(builder => builder.FilterOn(filterFunc));
+            return config.FilterWith(builder => builder.Using(filterFunc));
         }
 
-        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> FilterOn<TRequest, TEntity>(
+        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> FilterUsing<TRequest, TEntity>(
             this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
             Expression<Func<TRequest, TEntity, bool>> filterFunc)
             where TEntity : class
         {
-            return config.FilterWith(builder => builder.FilterOn(filterFunc));
+            return config.FilterWith(builder => builder.Using(filterFunc));
         }
 
-        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterOn<TRequest, TItem, TEntity>(
+        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterUsing<TRequest, TItem, TEntity>(
             this CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Expression<Func<TRequest, TEntity, bool>> filterFunc)
             where TEntity : class
         {
-            return config.FilterWith(builder => builder.FilterOn(filterFunc));
+            return config.FilterWith(builder => builder.Using(filterFunc));
         }
 
-        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> FilterOn<TRequest, TEntity>(
+        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> FilterUsing<TRequest, TEntity>(
             this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
             Expression<Func<TEntity, bool>> filterFunc)
             where TEntity : class
         {
-            return config.FilterWith(builder => builder.FilterOn(filterFunc));
+            return config.FilterWith(builder => builder.Using(filterFunc));
         }
 
-        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterOn<TRequest, TItem, TEntity>(
+        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterUsing<TRequest, TItem, TEntity>(
             this CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Expression<Func<TEntity, bool>> filterFunc)
             where TEntity : class
         {
-            return config.FilterWith(builder => builder.FilterOn(filterFunc));
+            return config.FilterWith(builder => builder.Using(filterFunc));
         }
     }
 }

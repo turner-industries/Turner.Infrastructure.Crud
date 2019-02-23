@@ -22,7 +22,7 @@ namespace Turner.Infrastructure.Crud.Requests
         
         protected async Task<TEntity[]> UpdateEntities(TRequest request, CancellationToken ct)
         {
-            var requestHooks = RequestConfig.GetRequestHooks(request);
+            var requestHooks = RequestConfig.GetRequestHooks();
             foreach (var hook in requestHooks)
                 await hook.Run(request, ct).Configure();
 
@@ -34,7 +34,7 @@ namespace Turner.Infrastructure.Crud.Requests
             var data = RequestConfig.GetRequestItemSourceFor<TEntity>();
             var items = ((IEnumerable<object>)data.ItemSource(request)).ToArray();
 
-            var itemHooks = RequestConfig.GetItemHooksFor<TEntity>(request);
+            var itemHooks = RequestConfig.GetItemHooksFor<TEntity>();
             foreach (var hook in itemHooks)
                 for (var i = 0; i < items.Length; ++i)
                     items[i] = await hook.Run(request, items[i], ct).Configure();
@@ -56,7 +56,7 @@ namespace Turner.Infrastructure.Crud.Requests
             entities = await Context.EntitySet<TEntity>().UpdateAsync(updatedEntities, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
-            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>(request);
+            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>();
             foreach (var entity in updatedEntities)
                 foreach (var hook in entityHooks)
                     await hook.Run(request, entity, ct).Configure();
@@ -77,7 +77,7 @@ namespace Turner.Infrastructure.Crud.Requests
             entities = entities.Where(selector(request));
             entities = RequestConfig
                 .GetFiltersFor<TEntity>()
-                .Aggregate(entities, (current, filter) => filter.Filter(request, current));
+                .Aggregate(entities, (current, filter) => (IQueryable<TEntity>)filter.Filter(request, current));
 
             return await Context.ToArrayAsync(entities, ct).Configure();
         }
@@ -131,7 +131,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 var items = new List<TOut>(await Task.WhenAll(entities.Select(x => transform(x, ct))));
                 ct.ThrowIfCancellationRequested();
 
-                var resultHooks = RequestConfig.GetResultHooks(request);
+                var resultHooks = RequestConfig.GetResultHooks();
                 foreach (var hook in resultHooks)
                     for (var i = 0; i < items.Count; ++i)
                         items[i] = (TOut)await hook.Run(request, items[i], ct).Configure();

@@ -107,11 +107,13 @@ namespace Turner.Infrastructure.Crud
         private static void RegisterSystem(Container container, Assembly[] configAssemblies, CrudOptions options)
         {
             container.RegisterSingleton(() => new CrudConfigManager(configAssemblies));
-
+            
             TypeRequestHookFactory.BindContainer(container.GetInstance);
             TypeEntityHookFactory.BindContainer(container.GetInstance);
             TypeItemHookFactory.BindContainer(container.GetInstance);
             TypeResultHookFactory.BindContainer(container.GetInstance);
+            TypeFilterFactory.BindContainer(container.GetInstance);
+            TypeSorterFactory.BindContainer(container.GetInstance);
 
             if (options.UseEntityFramework)
                 container.Register(typeof(IEntityContext), typeof(EFContext));

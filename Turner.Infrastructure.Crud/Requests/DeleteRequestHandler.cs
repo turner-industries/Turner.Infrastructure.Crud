@@ -27,8 +27,8 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity> DeleteEntity(TRequest request, TEntity entity, CancellationToken ct)
         {
-            var requestHooks = RequestConfig.GetRequestHooks(request);
-            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>(request);
+            var requestHooks = RequestConfig.GetRequestHooks();
+            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>();
 
             foreach (var hook in requestHooks)
                 await hook.Run(request, ct).Configure();
@@ -142,7 +142,7 @@ namespace Turner.Infrastructure.Crud.Requests
                     result = await transform(entity, ct).Configure();
                     ct.ThrowIfCancellationRequested();
 
-                    var resultHooks = RequestConfig.GetResultHooks(request);
+                    var resultHooks = RequestConfig.GetResultHooks();
                     foreach (var hook in resultHooks)
                         result = (TOut)await hook.Run(request, result, ct).Configure();
 

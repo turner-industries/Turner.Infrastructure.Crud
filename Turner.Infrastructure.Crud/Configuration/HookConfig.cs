@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Turner.Infrastructure.Crud.Configuration
 {
-    public abstract class HookConfig<TRequest, THookFactory, THook>
+    public abstract class HookConfig<THookFactory, THook>
     {
         private readonly Func<THookFactory, THook> _hookFactoryCreateFunc;
 
@@ -25,36 +25,35 @@ namespace Turner.Infrastructure.Crud.Configuration
             _hookFactories.AddRange(hookFactories);
         }
 
-        public List<THook> GetHooks(TRequest request)
-            => _hookFactories.Select(_hookFactoryCreateFunc).ToList();
+        public List<THook> GetHooks() => _hookFactories.Select(_hookFactoryCreateFunc).ToList();
     }
 
-    public class RequestHookConfig<TRequest> 
-        : HookConfig<TRequest, IRequestHookFactory, IBoxedRequestHook>
+    public class RequestHookConfig
+        : HookConfig<IRequestHookFactory, IBoxedRequestHook>
     {
         public RequestHookConfig() : base(factory => factory.Create())
         {
         }
     }
 
-    public class EntityHookConfig<TRequest>
-        : HookConfig<TRequest, IEntityHookFactory, IBoxedEntityHook>
+    public class EntityHookConfig
+        : HookConfig<IEntityHookFactory, IBoxedEntityHook>
     {
         public EntityHookConfig() : base(factory => factory.Create())
         {
         }
     }
 
-    public class ItemHookConfig<TRequest>
-        : HookConfig<TRequest, IItemHookFactory, IBoxedItemHook>
+    public class ItemHookConfig
+        : HookConfig<IItemHookFactory, IBoxedItemHook>
     {
         public ItemHookConfig() : base(factory => factory.Create())
         {
         }
     }
 
-    public class ResultHookConfig<TRequest>
-        : HookConfig<TRequest, IResultHookFactory, IBoxedResultHook>
+    public class ResultHookConfig
+        : HookConfig<IResultHookFactory, IBoxedResultHook>
     {
         public ResultHookConfig() : base(factory => factory.Create())
         {

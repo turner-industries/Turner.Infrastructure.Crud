@@ -39,6 +39,5 @@ namespace Turner.Infrastructure.Crud.Exceptions
 
             base.GetObjectData(info, context);
         }
-
     }
 }

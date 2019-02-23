@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
@@ -9,22 +8,13 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
     public abstract class SortBuilderBase<TRequest, TEntity>
         where TEntity : class
     {
-        internal abstract ISorter Build();
+        internal abstract ISorterFactory Build();
     }
 
     public class SortBuilder<TRequest, TEntity>
         where TEntity : class
     {
         private SortBuilderBase<TRequest, TEntity> _builder;
-
-        public CustomSortBuilder<TRequest, TEntity> Custom(
-            Func<TRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> customSortFunc)
-        {
-            var builder = new CustomSortBuilder<TRequest, TEntity>(customSortFunc);
-            _builder = builder;
-
-            return builder;
-        }
 
         public ConfigurableBasicSortClauseBuilder<TRequest, TEntity> SortBy<TProp>(
             Expression<Func<TEntity, TProp>> entityProperty)
@@ -43,7 +33,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             return builder.SortBy(entityProperty);
         }
 
-        public SwitchSortBuilder<TRequest, TEntity, TValue> AsSwitchSort<TValue>(
+        public SwitchSortBuilder<TRequest, TEntity, TValue> AsSwitch<TValue>(
             Func<TRequest, TValue> getSwitchValue)
             where TValue : class
         {
@@ -53,7 +43,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             return builder;
         }
 
-        public SwitchSortBuilder<TRequest, TEntity, TValue> AsSwitchSort<TValue>(string requestProperty)
+        public SwitchSortBuilder<TRequest, TEntity, TValue> AsSwitch<TValue>(string requestProperty)
             where TValue : class
         {
             var requestParam = Expression.Parameter(typeof(TRequest));
@@ -67,7 +57,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             return builder;
         }
 
-        public TableSortBuilder<TRequest, TEntity, TControl> AsTableSort<TControl>()
+        public TableSortBuilder<TRequest, TEntity, TControl> AsTable<TControl>()
             where TControl : class
         {
             var builder = new TableSortBuilder<TRequest, TEntity, TControl>();
@@ -77,7 +67,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             return builder;
         }
 
-        public TableSortBuilder<TRequest, TEntity, TControl> AsTableSort<TControl>(
+        public TableSortBuilder<TRequest, TEntity, TControl> AsTable<TControl>(
             Func<TRequest, TControl> getControlValue,
             Func<TRequest, SortDirection> getDirectionValue)
             where TControl : class
@@ -90,7 +80,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             return builder;
         }
         
-        public TableSortBuilder<TRequest, TEntity, TControl> AsTableSort<TControl>(
+        public TableSortBuilder<TRequest, TEntity, TControl> AsTable<TControl>(
             Func<TRequest, TControl> getControlValue,
             SortDirection direction = SortDirection.Default)
             where TControl : class
@@ -103,7 +93,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             return builder;
         }
 
-        public TableSortBuilder<TRequest, TEntity, TControl> AsTableSort<TControl>(
+        public TableSortBuilder<TRequest, TEntity, TControl> AsTable<TControl>(
             string controlProperty, SortDirection directionValue)
             where TControl : class
         {
@@ -115,7 +105,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             return builder;
         }
 
-        public TableSortBuilder<TRequest, TEntity, TControl> AsTableSort<TControl>(
+        public TableSortBuilder<TRequest, TEntity, TControl> AsTable<TControl>(
             string controlProperty, string directionProperty)
             where TControl : class
         {
@@ -127,7 +117,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             return builder;
         }
 
-        internal ISorter Build()
+        internal ISorterFactory Build()
         {
             return _builder?.Build();
         }

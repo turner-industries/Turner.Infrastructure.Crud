@@ -5,64 +5,66 @@ using System.Linq.Expressions;
 
 namespace Turner.Infrastructure.Crud
 {
-    public class BasicSortOperation
+    public class BasicSortOperation<TRequest, TEntity>
+        where TEntity : class
     {
-        private Func<IQueryable, IOrderedQueryable> _firstSortFunc;
-        private readonly List<Func<IOrderedQueryable, IOrderedQueryable>> _restSortFuncs
-            = new List<Func<IOrderedQueryable, IOrderedQueryable>>();
+        private Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> _firstSortFunc;
+        private readonly List<Func<IOrderedQueryable<TEntity>, IOrderedQueryable<TEntity>>> _restSortFuncs
+            = new List<Func<IOrderedQueryable<TEntity>, IOrderedQueryable<TEntity>>>();
 
-        private readonly Func<object, bool> _predicate;
+        private readonly Func<TRequest, bool> _predicate;
 
-        public BasicSortOperation(Func<object, bool> predicate)
+        public BasicSortOperation(Func<TRequest, bool> predicate)
         {
             _predicate = predicate;
         }
 
-        internal void AddSort<T, TKey>(
-            Expression<Func<T, TKey>> clause, 
+        internal void AddSort<TKey>(
+            Expression<Func<TEntity, TKey>> clause, 
             SortDirection direction)
         {
             if (_firstSortFunc == null)
             {
                 _firstSortFunc = direction == SortDirection.Ascending
-                    ? (Func<IQueryable, IOrderedQueryable>)
-                        (queryable => ((IQueryable<T>) queryable).OrderBy(clause))
-                    : queryable => ((IQueryable<T>) queryable).OrderByDescending(clause);
+                    ? (Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>)
+                        (queryable => queryable.OrderBy(clause))
+                    : queryable => queryable.OrderByDescending(clause);
             }
             else
             {
                 _restSortFuncs.Add(direction == SortDirection.Ascending
-                    ? (Func<IOrderedQueryable, IOrderedQueryable>)
-                        (queryable => ((IOrderedQueryable<T>) queryable).ThenBy(clause))
-                    : queryable => ((IOrderedQueryable<T>) queryable).ThenByDescending(clause));
+                    ? (Func<IOrderedQueryable<TEntity>, IOrderedQueryable<TEntity>>)
+                        (queryable => queryable.ThenBy(clause))
+                    : queryable => queryable.ThenByDescending(clause));
             }
         }
 
-        public IOrderedQueryable<T> Sort<TRequest, T>(TRequest request, IQueryable<T> queryable)
+        public IOrderedQueryable<TEntity> Sort(TRequest request, IQueryable<TEntity> queryable)
         {
             if (_firstSortFunc == null ||
                 (_predicate != null && !_predicate(request)))
                 return null;
             
-            var result = _firstSortFunc(queryable) as IOrderedQueryable<T>;
+            var result = _firstSortFunc(queryable) as IOrderedQueryable<TEntity>;
             foreach (var sortFunc in _restSortFuncs)
-                result = sortFunc(result) as IOrderedQueryable<T>;
+                result = sortFunc(result) as IOrderedQueryable<TEntity>;
 
             return result;
         }
     }
 
-    public class BasicSorter : ISorter
+    public class BasicSorter<TRequest, TEntity> : ISorter<TRequest, TEntity>
+        where TEntity : class
     {
-        private readonly List<BasicSortOperation> _operations
-            = new List<BasicSortOperation>();
+        private readonly List<BasicSortOperation<TRequest, TEntity>> _operations
+            = new List<BasicSortOperation<TRequest, TEntity>>();
 
-        public BasicSorter(List<BasicSortOperation> operations)
+        public BasicSorter(List<BasicSortOperation<TRequest, TEntity>> operations)
         {
             _operations = operations;
         }
         
-        public IOrderedQueryable<T> Sort<TRequest, T>(TRequest request, IQueryable<T> queryable)
+        public IOrderedQueryable<TEntity> Sort(TRequest request, IQueryable<TEntity> queryable)
         {
             foreach (var operation in _operations)
             {

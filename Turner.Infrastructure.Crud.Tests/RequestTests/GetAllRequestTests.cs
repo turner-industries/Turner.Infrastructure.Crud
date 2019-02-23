@@ -12,7 +12,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     {
         private async Task SeedSortEntities()
         {
-            await Context.AddRangeAsync(
+            Context.AddRange(
                 new User { Name = "BUser", IsDeleted = true },
                 new User { Name = "AUser", IsDeleted = false },
                 new User { Name = "CUser", IsDeleted = false },
@@ -222,7 +222,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         [Test]
         public async Task Handle_GetAllCustomFilteredUsersRequest_ReturnsAllEntitiesFiltered()
         {
-            await Context.AddRangeAsync(
+            Context.AddRange(
                 new User { Name = "BUser", IsDeleted = true },
                 new User { Name = "AUser", IsDeleted = false },
                 new User { Name = "CUser", IsDeleted = false },
@@ -245,7 +245,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         [Test]
         public async Task Handle_GetAllBasicUnconditionalFilteredUsersRequest_ReturnsAllEntitiesFiltered()
         {
-            await Context.AddRangeAsync(
+            Context.AddRange(
                 new User { Name = "BUser", IsDeleted = true },
                 new User { Name = "AUser", IsDeleted = false },
                 new User { Name = "CUser", IsDeleted = true },
@@ -268,7 +268,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         [Test]
         public async Task Handle_GetAllBasicConditionalFilteredUsersRequestWithFilterOff_ReturnsAllEntitiesUnfiltered()
         {
-            await Context.AddRangeAsync(
+            Context.AddRange(
                 new User { Name = "BUser", IsDeleted = false },
                 new User { Name = "AUser", IsDeleted = true },
                 new User { Name = "CUser", IsDeleted = true },
@@ -296,7 +296,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         [Test]
         public async Task Handle_GetAllBasicConditionalFilteredUsersRequestWithFilterOnFalse_ReturnsAllEntitiesFiltered()
         {
-            await Context.AddRangeAsync(
+            Context.AddRange(
                 new User { Name = "BUser", IsDeleted = false },
                 new User { Name = "AUser", IsDeleted = false },
                 new User { Name = "CUser", IsDeleted = true },
@@ -323,7 +323,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         [Test]
         public async Task Handle_GetAllBasicConditionalFilteredUsersRequestWithFilterOnTrue_ReturnsAllEntitiesFiltered()
         {
-            await Context.AddRangeAsync(
+            Context.AddRange(
                 new User { Name = "BUser", IsDeleted = false },
                 new User { Name = "AUser", IsDeleted = false },
                 new User { Name = "CUser", IsDeleted = true },
@@ -396,7 +396,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         [Test]
         public async Task Handle_DefaultGetAllRequest_ReturnsAllEntities()
         {
-            await Context.AddRangeAsync(new User { Name = "User1" }, new User { Name = "User2" });
+            Context.AddRange(new User { Name = "User1" }, new User { Name = "User2" });
             await Context.SaveChangesAsync();
 
             var request = new GetAllRequest<User, UserGetDto>();
@@ -410,7 +410,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         [Test]
         public async Task Handle_UnprojectedGetAllRequest_ReturnsAllEntities()
         {
-            await Context.AddRangeAsync(new User { Name = "User1" }, new User { Name = "User2" });
+            Context.AddRange(new User { Name = "User1" }, new User { Name = "User2" });
             await Context.SaveChangesAsync();
 
             var request = new GetUsersUnprojectedRequest();
@@ -487,7 +487,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         {
             ForEntity<User>()
                 .SortWith(builder => builder
-                    .AsSwitchSort<string>("Case")
+                    .AsSwitch<string>("Case")
                     .ForCase(UsersSortColumn.Name).SortBy("Name").Descending()
                     .ForDefault().SortBy(user => user.IsDeleted).ThenBy("Name").Descending());
         }
@@ -508,7 +508,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         {
             ForEntity<User>()
                 .SortWith(builder => builder
-                    .AsTableSort<string>()
+                    .AsTable<string>()
                     .WithControl(r => r.PrimaryColumn, SortDirection.Ascending)
                     .WithControl("SecondaryColumn", "SecondaryDirection")
                     .WithColumn(UsersSortColumn.Name, "Name")
@@ -526,11 +526,11 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public GetAllCustomFilteredUsersProfile()
         {
             ForEntity<IEntity>()
-                .FilterWith(builder => builder.FilterWith((request, users) => users.Where(x => !x.IsDeleted)));
+                .FilterWith(builder => builder.Using((request, users) => users.Where(x => !x.IsDeleted)));
 
             ForEntity<User>()
                 .SortWith((q, users) => users.OrderByDescending(user => user.Name))
-                .FilterWith(builder => builder.FilterWith((request, users) => users.Where(x => x.Name != "AUser")));
+                .FilterWith(builder => builder.Using((request, users) => users.Where(x => x.Name != "AUser")));
         }
     }
     
@@ -544,7 +544,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public GetAllBasicUnconditionalFilteredUsersProfile()
         {
             ForEntity<IEntity>()
-                .FilterWith(builder => builder.FilterOn(x => !x.IsDeleted));
+                .FilterWith(builder => builder.Using(x => !x.IsDeleted));
         }
     }
     
@@ -561,7 +561,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         {
             ForEntity<IEntity>()
                 .FilterWith(builder => builder
-                    .FilterOn((request, entity) => entity.IsDeleted == request.DeletedFilter.Value)
+                    .Using((request, entity) => entity.IsDeleted == request.DeletedFilter.Value)
                     .When(r => r.DeletedFilter.HasValue));
         }
     }

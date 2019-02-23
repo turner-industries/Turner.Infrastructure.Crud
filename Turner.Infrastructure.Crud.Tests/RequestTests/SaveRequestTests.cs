@@ -49,7 +49,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public async Task Handle_SaveExistingWithoutResponse_UpdatesUser()
         {
             var existing = new User { Name = "TestUser" };
-            await Context.AddAsync(existing);
+            Context.Add(existing);
+
             await Context.SaveChangesAsync();
 
             var request = new SaveUserWithoutResponseRequest
@@ -72,7 +73,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public async Task Handle_SaveExistingWithResponse_UpdatesUser()
         {
             var existing = new User { Name = "TestUser" };
-            await Context.AddAsync(existing);
+            Context.Add(existing);
+
             await Context.SaveChangesAsync();
 
             var request = new SaveUserWithResponseRequest
@@ -127,7 +129,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public async Task Handle_SaveByIdRequest_UpdatesUser()
         {
             var existing = new User { Name = "TestUser" };
-            await Context.AddAsync(existing);
+            Context.Add(existing);
+
             await Context.SaveChangesAsync();
 
             var request = new SaveByIdRequest<User, UserDto, UserGetDto>(

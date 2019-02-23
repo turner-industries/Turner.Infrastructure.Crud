@@ -39,13 +39,13 @@ namespace Turner.Infrastructure.Crud.Requests
                     .AsQueryable();
 
                 foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
-                    entities = filter.Filter(request, entities);
+                    entities = filter.Filter(request, entities).Cast<TEntity>();
 
                 var totalItemCount = await Context.CountAsync(entities, ct).Configure();
                 ct.ThrowIfCancellationRequested();
 
                 var sorter = RequestConfig.GetSorterFor<TEntity>();
-                entities = sorter?.Sort(request, entities) ?? entities;
+                entities = sorter?.Sort(request, entities).Cast<TEntity>() ?? entities;
 
                 var pageSize = request.PageSize < 1 ? totalItemCount : request.PageSize;
                 var totalPageCount = totalItemCount == 0 ? 1 : (totalItemCount + pageSize - 1) / pageSize;
@@ -87,7 +87,7 @@ namespace Turner.Infrastructure.Crud.Requests
                     ct.ThrowIfCancellationRequested();
                 }
 
-                var resultHooks = RequestConfig.GetResultHooks(request);
+                var resultHooks = RequestConfig.GetResultHooks();
                 foreach (var hook in resultHooks)
                     for (var i = 0; i < items.Count; ++i)
                         items[i] = (TOut)await hook.Run(request, items[i], ct).Configure();

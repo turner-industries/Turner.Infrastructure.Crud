@@ -32,10 +32,10 @@ namespace Turner.Infrastructure.Crud.Tests
             Assert.AreEqual(2, Context.Set<HookEntity>().Count());
 
             var entity = Context.Set<HookEntity>().First();
-            Assert.AreEqual("r1/r2/r3/r4", entity.RequestHookMessage);
-            Assert.AreEqual("e1/e2/e3/e4", entity.EntityHookMessage);
-            Assert.AreEqual("i1/i2/i3/i4", entity.ItemHookMessage);
-            Assert.AreEqual("t1/t2/t3/t4", response.Data.Items[0]);
+            Assert.AreEqual("r1/r2/r3/r4/r5", entity.RequestHookMessage);
+            Assert.AreEqual("e1/e2/e3/e4/e5", entity.EntityHookMessage);
+            Assert.AreEqual("i1/i2/i3/i4/i5", entity.ItemHookMessage);
+            Assert.AreEqual("t1/t2/t3/t4/t5", response.Data.Items[0]);
         }
     }
     
@@ -98,60 +98,104 @@ namespace Turner.Infrastructure.Crud.Tests
 
     public class TestTypeRequestHook : IRequestHook<TestHooksRequest>
     {
-        public TestTypeRequestHook(DbContext context)
+        public TestTypeRequestHook(FakeInjectable injectable)
         {
-            if (context == null)
+            if (injectable.Value == 0)
                 throw new System.Exception("Injection Failed");
         }
 
         public Task Run(TestHooksRequest request, CancellationToken token)
         {
-            request.Items.ForEach(i => i.RequestHookMessage += "r4");
+            request.Items.ForEach(i => i.RequestHookMessage += "r4/");
             return Task.CompletedTask;
         }
     }
 
     public class TestTypeEntityHook : IEntityHook<TestHooksRequest, HookEntity>
     {
-        public TestTypeEntityHook(DbContext context)
+        public TestTypeEntityHook(FakeInjectable injectable)
         {
-            if (context == null)
+            if (injectable.Value == 0)
                 throw new System.Exception("Injection Failed");
         }
 
         public Task Run(TestHooksRequest request, HookEntity entity, CancellationToken token)
         {
-            entity.EntityHookMessage += "e4";
+            entity.EntityHookMessage += "e4/";
             return Task.CompletedTask;
         }
     }
 
     public class TestTypeItemHook : IItemHook<TestHooksRequest, HookDto>
     {
-        public TestTypeItemHook(DbContext context)
+        public TestTypeItemHook(FakeInjectable injectable)
         {
-            if (context == null)
+            if (injectable.Value == 0)
                 throw new System.Exception("Injection Failed");
         }
 
         public Task<HookDto> Run(TestHooksRequest request, HookDto item, CancellationToken token)
         {
-            item.ItemHookMessage += "i4";
+            item.ItemHookMessage += "i4/";
             return Task.FromResult(item);
         }
     }
 
     public class TestTypeResultHook : IResultHook<TestHooksRequest, string>
     {
-        public TestTypeResultHook(DbContext context)
+        public TestTypeResultHook(FakeInjectable injectable)
         {
-            if (context == null)
+            if (injectable.Value == 0)
                 throw new System.Exception("Injection Failed");
         }
 
         public Task<string> Run(TestHooksRequest request, string result, CancellationToken token)
         {
-            return Task.FromResult(result + "t4");
+            return Task.FromResult(result + "t4/");
+        }
+    }
+
+    public class TestContravariantRequestHook : IRequestHook<ICrudRequest>
+    {
+        public Task Run(ICrudRequest request, CancellationToken token)
+        {
+            ((ITestHooksRequest)request).Items.ForEach(i => i.RequestHookMessage += "r5");
+            return Task.CompletedTask;
+        }
+    }
+
+    public class TestContravariantEntityHook : IEntityHook<ICrudRequest, IEntity>
+    {
+        public Task Run(ICrudRequest request, IEntity entity, CancellationToken token)
+        {
+            if (!(request is TestHooksRequest))
+                throw new System.Exception("Contravariance Failed");
+
+            ((HookEntity)entity).EntityHookMessage += "e5";
+            return Task.CompletedTask;
+        }
+    }
+
+    public class TestContravariantItemHook : IItemHook<ICrudRequest, HookDto>
+    {
+        public Task<HookDto> Run(ICrudRequest request, HookDto item, CancellationToken token)
+        {
+            if (!(request is TestHooksRequest))
+                throw new System.Exception("Contravariance Failed");
+
+            item.ItemHookMessage += "i5";
+            return Task.FromResult(item);
+        }
+    }
+
+    public class TestContravariantResultHook : IResultHook<ICrudRequest, string>
+    {
+        public Task<string> Run(ICrudRequest request, string result, CancellationToken token)
+        {
+            if (!(request is TestHooksRequest))
+                throw new System.Exception("Contravariance Failed");
+
+            return Task.FromResult(result + "t5");
         }
     }
 
@@ -197,16 +241,20 @@ namespace Turner.Infrastructure.Crud.Tests
         {
             WithRequestHook(new TestInstanceRequestHook());
             WithRequestHook<TestTypeRequestHook>();
+            WithRequestHook(new TestContravariantRequestHook());
 
             WithResultHook(new TestInstanceResultHook());
             WithResultHook<TestTypeResultHook, string>();
+            WithResultHook(new TestContravariantResultHook());
 
             ForEntity<HookEntity>()
                 .CreateResultWith(x => string.Empty)
                 .WithEntityHook(new TestInstanceEntityHook())
                 .WithEntityHook<TestTypeEntityHook>()
+                .WithEntityHook(new TestContravariantEntityHook())
                 .WithItemHook(new TestInstanceItemHook())
-                .WithItemHook<TestTypeItemHook>();
+                .WithItemHook<TestTypeItemHook>()
+                .WithItemHook(new TestContravariantItemHook());
         }
     }
 }

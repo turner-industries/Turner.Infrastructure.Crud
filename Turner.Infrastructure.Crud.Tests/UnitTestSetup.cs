@@ -38,6 +38,8 @@ namespace Turner.Infrastructure.Crud.Tests
                 ValidateAllRequests = false
             };
 
+            container.RegisterInstance(new FakeInjectable { Value = 1 });
+
             Crud.Configure(container, assemblies, crudOptions);
             
             Container = container;

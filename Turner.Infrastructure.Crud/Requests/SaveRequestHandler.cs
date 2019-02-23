@@ -30,7 +30,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity> SaveEntity(TRequest request, TEntity entity, CancellationToken ct)
         {
-            var requestHooks = RequestConfig.GetRequestHooks(request);
+            var requestHooks = RequestConfig.GetRequestHooks();
             foreach (var hook in requestHooks)
                 await hook.Run(request, ct).Configure();
 
@@ -43,7 +43,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 entity = await CreateEntity(request, item, ct).Configure();
                 ct.ThrowIfCancellationRequested();
 
-                var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>(request);
+                var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>();
                 foreach (var hook in entityHooks)
                     await hook.Run(request, entity, ct).Configure();
 
@@ -56,7 +56,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 entity = await UpdateEntity(request, item, entity, ct).Configure();
                 ct.ThrowIfCancellationRequested();
 
-                var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>(request);
+                var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>();
                 foreach (var hook in entityHooks)
                     await hook.Run(request, entity, ct).Configure();
 
@@ -175,7 +175,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
                 ct.ThrowIfCancellationRequested();
 
-                var resultHooks = RequestConfig.GetResultHooks(request);
+                var resultHooks = RequestConfig.GetResultHooks();
                 foreach (var hook in resultHooks)
                     result = (TOut)await hook.Run(request, result, ct).Configure();
 

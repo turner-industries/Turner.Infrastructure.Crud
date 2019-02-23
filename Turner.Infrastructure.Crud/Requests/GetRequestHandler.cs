@@ -34,7 +34,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
                 try
                 {
-                    var requestHooks = RequestConfig.GetRequestHooks(request);
+                    var requestHooks = RequestConfig.GetRequestHooks();
                     foreach (var hook in requestHooks)
                         await hook.Run(request, ct).Configure();
                     ct.ThrowIfCancellationRequested();
@@ -44,7 +44,7 @@ namespace Turner.Infrastructure.Crud.Requests
                     var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
 
                     foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
-                        entities = filter.Filter(request, entities);
+                        entities = filter.Filter(request, entities).Cast<TEntity>();
 
                     if (Options.UseProjection)
                     {
@@ -91,7 +91,7 @@ namespace Turner.Infrastructure.Crud.Requests
                     return ErrorDispatcher.Dispatch<TOut>(error);
                 }
 
-                var resultHooks = RequestConfig.GetResultHooks(request);
+                var resultHooks = RequestConfig.GetResultHooks();
                 foreach (var hook in resultHooks)
                     result = (TOut)await hook.Run(request, result, ct).Configure();
 
