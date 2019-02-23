@@ -77,7 +77,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
             var rContainsExpr = Expression.Call(containsInfo, rEnumerableExpr, eKeyExpr);
             var whereClause = Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr);
 
-            var builder = CreateFilterBuilder(qParamExpr, rParamExpr, eParamExpr, whereClause);
+            var builder = CreateFilterBuilder(qParamExpr, rParamExpr, whereClause);
             _builder = builder;
 
             return builder;
@@ -102,7 +102,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
             var rContainsExpr = Expression.Call(containsInfo, rEnumerableExpr, eKeyExpr);
             var whereClause = Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr);
 
-            var builder = CreateFilterBuilder(qParamExpr, rParamExpr, eParamExpr, whereClause);
+            var builder = CreateFilterBuilder(qParamExpr, rParamExpr, whereClause);
             _builder = builder;
 
             return builder;
@@ -137,7 +137,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
 
             var whereClause = Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr);
 
-            var builder = CreateFilterBuilder(qParamExpr, rParamExpr, eParamExpr, whereClause);
+            var builder = CreateFilterBuilder(qParamExpr, rParamExpr, whereClause);
             _builder = builder;
 
             return builder;
@@ -176,12 +176,44 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
 
             var whereClause = Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr);
 
-            var builder = CreateFilterBuilder(qParamExpr, rParamExpr, eParamExpr, whereClause);
+            var builder = CreateFilterBuilder(qParamExpr, rParamExpr, whereClause);
             _builder = builder;
 
             return builder;
         }
 
+        public DateFilterBuilder<TRequest, TEntity> Include(Expression<Func<TEntity, DateTime>> entityDateExpr)
+        {
+            var builder = new DateFilterBuilder<TRequest, TEntity>(entityDateExpr, true);
+            _builder = builder;
+
+            return builder;
+        }
+
+        public DateFilterBuilder<TRequest, TEntity> Exclude(Expression<Func<TEntity, DateTime>> entityDateExpr)
+        {
+            var builder = new DateFilterBuilder<TRequest, TEntity>(entityDateExpr, false);
+            _builder = builder;
+
+            return builder;
+        }
+
+        public StringFilterBuilder<TRequest, TEntity> Include(Expression<Func<TEntity, string>> entityStringExpr)
+        {
+            var builder = new StringFilterBuilder<TRequest, TEntity>(entityStringExpr, true);
+            _builder = builder;
+
+            return builder;
+        }
+
+        public StringFilterBuilder<TRequest, TEntity> Exclude(Expression<Func<TEntity, string>> entityStringExpr)
+        {
+            var builder = new StringFilterBuilder<TRequest, TEntity>(entityStringExpr, false);
+            _builder = builder;
+
+            return builder;
+        }
+        
         internal IFilterFactory Build()
         {
             return _builder?.Build();
@@ -190,7 +222,6 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Filter
         private BasicFilterBuilder<TRequest, TEntity> CreateFilterBuilder(
             ParameterExpression queryableExpr,
             ParameterExpression requestExpr,
-            ParameterExpression entityExpr,
             Expression<Func<TEntity, bool>> whereClause)
         {
             var whereInfo = typeof(Queryable)
