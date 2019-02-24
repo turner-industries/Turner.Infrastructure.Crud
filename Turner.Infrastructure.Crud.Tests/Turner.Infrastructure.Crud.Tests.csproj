@@ -34,6 +34,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Turner.Infrastructure.Crud.EntityFrameworkCore\Turner.Infrastructure.Crud.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\Turner.Infrastructure.Crud.FluentValidation\Turner.Infrastructure.Crud.FluentValidation.csproj" />
     <ProjectReference Include="..\Turner.Infrastructure.Crud\Turner.Infrastructure.Crud.csproj" />
   </ItemGroup>

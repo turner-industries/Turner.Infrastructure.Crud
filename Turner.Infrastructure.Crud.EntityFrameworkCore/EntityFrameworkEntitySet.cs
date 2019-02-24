@@ -1,15 +1,15 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace Turner.Infrastructure.Crud.Context
 {
-    public class EFEntitySet<TEntity> : IEntitySet<TEntity>, IAsyncEnumerable<TEntity>
+    public class EntityFrameworkEntitySet<TEntity> : IEntitySet<TEntity>, IAsyncEnumerable<TEntity>
         where TEntity : class
     {
         private DbSet<TEntity> _set;
@@ -26,9 +26,9 @@ namespace Turner.Infrastructure.Crud.Context
 
         IAsyncEnumerator<TEntity> IAsyncEnumerable<TEntity>.GetEnumerator() => _set.ToAsyncEnumerable().GetEnumerator();
 
-        internal static EFEntitySet<TEntity> From(DbSet<TEntity> set)
+        internal static EntityFrameworkEntitySet<TEntity> From(DbSet<TEntity> set)
         {
-            return new EFEntitySet<TEntity>
+            return new EntityFrameworkEntitySet<TEntity>
             {
                 _set = set
             };

@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using NUnit.Framework;
 using SimpleInjector;
 using SimpleInjector.Lifestyles;
+using Turner.Infrastructure.Crud.EntityFrameworkCore;
 using Turner.Infrastructure.Crud.FluentValidation;
 using Turner.Infrastructure.Crud.Tests.Fakes;
 using Turner.Infrastructure.Mediator.Configuration;
@@ -37,7 +38,7 @@ namespace Turner.Infrastructure.Crud.Tests
             Crud.CreateInitializer(container, assemblies)
                 .ValidateAllRequests(false)
                 .UseFluentValidation()
-                // TODO: .UseEntityFramework()
+                .UseEntityFramework()
                 .Initialize();
             
             Container = container;

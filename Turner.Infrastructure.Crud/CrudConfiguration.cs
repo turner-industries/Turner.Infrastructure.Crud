@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using SimpleInjector;
 using Turner.Infrastructure.Crud.Configuration;
-using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Validation;
@@ -82,9 +81,6 @@ namespace Turner.Infrastructure.Crud
             TypeResultHookFactory.BindContainer(_container.GetInstance);
             TypeFilterFactory.BindContainer(_container.GetInstance);
             TypeSorterFactory.BindContainer(_container.GetInstance);
-
-            //TODO: if (options.UseEntityFramework)
-            _container.Register(typeof(IEntityContext), typeof(EFContext));
 
             _tasks.ForEach(t => t.Run(_container, assemblies, _options));
         }

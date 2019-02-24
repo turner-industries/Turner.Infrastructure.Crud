@@ -10,10 +10,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Turner.Infrastructure.Crud.
 		{AEB041AF-8991-4D90-90D1-08F63AAD0594} = {AEB041AF-8991-4D90-90D1-08F63AAD0594}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Turner.Infrastructure.Crud.FluentValidation", "Turner.Infrastructure.Crud.FluentValidation\Turner.Infrastructure.Crud.FluentValidation.csproj", "{AEB041AF-8991-4D90-90D1-08F63AAD0594}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Turner.Infrastructure.Crud.FluentValidation", "Turner.Infrastructure.Crud.FluentValidation\Turner.Infrastructure.Crud.FluentValidation.csproj", "{AEB041AF-8991-4D90-90D1-08F63AAD0594}"
 	ProjectSection(ProjectDependencies) = postProject
 		{8A0F3F0E-C6AB-4D28-8792-08F2B51AF6E6} = {8A0F3F0E-C6AB-4D28-8792-08F2B51AF6E6}
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Turner.Infrastructure.Crud.EntityFrameworkCore", "Turner.Infrastructure.Crud.EntityFrameworkCore\Turner.Infrastructure.Crud.EntityFrameworkCore.csproj", "{76788663-B660-48E9-8DEA-AD7657417F85}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -40,6 +42,12 @@ Global
 		{AEB041AF-8991-4D90-90D1-08F63AAD0594}.Deploy|Any CPU.Build.0 = Debug|Any CPU
 		{AEB041AF-8991-4D90-90D1-08F63AAD0594}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AEB041AF-8991-4D90-90D1-08F63AAD0594}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76788663-B660-48E9-8DEA-AD7657417F85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76788663-B660-48E9-8DEA-AD7657417F85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76788663-B660-48E9-8DEA-AD7657417F85}.Deploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{76788663-B660-48E9-8DEA-AD7657417F85}.Deploy|Any CPU.Build.0 = Debug|Any CPU
+		{76788663-B660-48E9-8DEA-AD7657417F85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76788663-B660-48E9-8DEA-AD7657417F85}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
