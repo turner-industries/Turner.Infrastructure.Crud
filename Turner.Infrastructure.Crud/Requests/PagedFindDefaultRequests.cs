@@ -4,7 +4,7 @@ using Turner.Infrastructure.Crud.Validation;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-#pragma warning disable 0618
+    #pragma warning disable 0618
 
     [Obsolete("Linq does not currently support positional queries. PagedFindRequest may cause a large result set to be created.")]
     [MaybeValidate]
@@ -75,5 +75,26 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-#pragma warning restore 0618
+    [Obsolete("Linq does not currently support positional queries. PagedFindRequest may cause a large result set to be created.")]
+    [MaybeValidate]
+    public class PagedFindByNameRequest<TEntity, TOut> : PagedFindRequest<TEntity, string, TOut>
+        where TEntity : class
+    {
+        public PagedFindByNameRequest(string name, int pageSize = 10)
+            : base(name, pageSize)
+        {
+        }
+    }
+
+    public class PagedFindByNameRequestProfile<TEntity, TOut>
+        : CrudRequestProfile<PagedFindByNameRequest<TEntity, TOut>>
+        where TEntity : class
+    {
+        public PagedFindByNameRequestProfile()
+        {
+            ForEntity<TEntity>().WithEntityKey("Name");
+        }
+    }
+
+    #pragma warning restore 0618
 }

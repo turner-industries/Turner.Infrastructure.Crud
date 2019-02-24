@@ -4,7 +4,7 @@ using Turner.Infrastructure.Crud.Validation;
 
 namespace Turner.Infrastructure.Crud.Requests
 {
-#pragma warning disable 0618
+    #pragma warning disable 0618
 
     [Obsolete("Linq does not currently support positional queries. PagedGetRequest may cause a large result set to be created.")]
     [MaybeValidate]
@@ -22,11 +22,11 @@ namespace Turner.Infrastructure.Crud.Requests
         public int PageSize { get; set; }
     }
 
-    public class PagedGetProfile<TEntity, TKey, TOut>
+    public class PagedGetRequestProfile<TEntity, TKey, TOut>
         : CrudRequestProfile<PagedGetRequest<TEntity, TKey, TOut>>
         where TEntity : class
     {
-        public PagedGetProfile()
+        public PagedGetRequestProfile()
         {
             ForEntity<TEntity>().WithRequestKey(request => request.Key);
         }
@@ -76,5 +76,27 @@ namespace Turner.Infrastructure.Crud.Requests
         }
     }
 
-#pragma warning restore 0618
+    [Obsolete("Linq does not currently support positional queries. PagedGetRequest may cause a large result set to be created.")]
+    [MaybeValidate]
+    public class PagedGetByNameRequest<TEntity, TOut>
+        : PagedGetRequest<TEntity, string, TOut>
+        where TEntity : class
+    {
+        public PagedGetByNameRequest(string name, int pageSize = 10)
+            : base(name, pageSize)
+        {
+        }
+    }
+
+    public class PagedGetByNameRequestProfile<TEntity, TOut>
+        : CrudRequestProfile<PagedGetByNameRequest<TEntity, TOut>>
+        where TEntity : class
+    {
+        public PagedGetByNameRequestProfile()
+        {
+            ForEntity<TEntity>().WithEntityKey("Name");
+        }
+    }
+
+    #pragma warning restore 0618
 }
