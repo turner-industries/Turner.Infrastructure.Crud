@@ -250,7 +250,7 @@ namespace Turner.Infrastructure.Crud
 
     public static class Crud
     {
-        public static CrudInitializer CreateInitializer(Container container, Assembly[] assemblies)
+        public static CrudInitializer CreateInitializer(Container container, Assembly[] assemblies = null)
             => new CrudInitializer(container, assemblies);
     }
 }
