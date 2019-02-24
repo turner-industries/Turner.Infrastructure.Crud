@@ -38,7 +38,9 @@ namespace Turner.Infrastructure.Crud
             _container = container;
 
             _assemblies.Add(typeof(CrudInitializer).Assembly);
-            _assemblies.AddRange(assemblies);
+
+            if (assemblies != null)
+                _assemblies.AddRange(assemblies);
 
             _tasks.AddRange(new ICrudInitializationTask[]
             {
@@ -250,7 +252,7 @@ namespace Turner.Infrastructure.Crud
 
     public static class Crud
     {
-        public static CrudInitializer CreateInitializer(Container container, Assembly[] assemblies)
+        public static CrudInitializer CreateInitializer(Container container, Assembly[] assemblies = null)
             => new CrudInitializer(container, assemblies);
     }
 }
