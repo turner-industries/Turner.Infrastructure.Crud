@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Turner.Infrastructure.Crud.Exceptions;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Mediator;
@@ -16,7 +18,7 @@ namespace Turner.Infrastructure.Crud.Validation
             if (validatorType != null && (
                 validatorType.IsGenericTypeDefinition ||
                 !validatorType.GetInterfaces().Any(
-                    x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IValidator<>))))
+                    x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IRequestValidator<>))))
             {
                 string message = $"The type '{validatorType}' cannot be used for this attribute because " +
                                  $"it is not a concrete type implementing the IValidator interface.";
@@ -34,7 +36,7 @@ namespace Turner.Infrastructure.Crud.Validation
     
     public class CrudValidateBaseDecorator<TRequest, TResponse, TValidator> 
         where TResponse : Response, new()
-        where TValidator : IValidator<TRequest>
+        where TValidator : IRequestValidator<TRequest>
     {
         private readonly TValidator _validator;
 
@@ -49,14 +51,14 @@ namespace Turner.Infrastructure.Crud.Validation
             if (errors == null || errors.Count == 0)
                 return await processRequest();
             
-            return new TResponse { Errors = errors };
+            return new TResponse { Errors = Mapper.Map<List<Error>>(errors) };
         }
     }
 
     public class CrudValidateDecorator<TRequest, TValidator> 
         : IRequestHandler<TRequest> 
         where TRequest : IRequest, ICrudRequest
-        where TValidator : IValidator<TRequest>
+        where TValidator : IRequestValidator<TRequest>
     {
         private readonly Func<IRequestHandler<TRequest>> _decorateeFactory;
         private readonly CrudValidateBaseDecorator<TRequest, Response, TValidator> _validationHandler;
@@ -75,7 +77,7 @@ namespace Turner.Infrastructure.Crud.Validation
     public class CrudValidateDecorator<TRequest, TResult, TValidator> 
         : IRequestHandler<TRequest, TResult> 
         where TRequest : IRequest<TResult>, ICrudRequest
-        where TValidator : IValidator<TRequest>
+        where TValidator : IRequestValidator<TRequest>
     {
         private readonly Func<IRequestHandler<TRequest, TResult>> _decorateeFactory;
         private readonly CrudValidateBaseDecorator<TRequest, Response<TResult>, TValidator> _validationHandler;

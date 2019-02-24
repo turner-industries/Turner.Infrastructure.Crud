@@ -11,11 +11,11 @@ namespace Turner.Infrastructure.Crud.Validation
             _validatorCreator = creator;
         }
 
-        public IValidator<TRequest> TryCreate<TRequest>()
+        public IRequestValidator<TRequest> TryCreate<TRequest>()
         {
             try
             {
-                return (IValidator<TRequest>)_validatorCreator(typeof(IValidator<TRequest>));
+                return (IRequestValidator<TRequest>)_validatorCreator(typeof(IRequestValidator<TRequest>));
             }
             catch
             {

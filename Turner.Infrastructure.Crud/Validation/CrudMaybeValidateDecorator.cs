@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using AutoMapper;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Mediator;
 
@@ -29,7 +31,7 @@ namespace Turner.Infrastructure.Crud.Validation
             if (errors == null || errors.Count == 0)
                 return await processRequest();
             
-            return new TResponse { Errors = errors };
+            return new TResponse { Errors = Mapper.Map<List<Error>>(errors) };
         }
     }
 
