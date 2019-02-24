@@ -1,18 +1,18 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace Turner.Infrastructure.Crud.Context
 {
-    public class EFContext : IEntityContext
+    public class EntityFrameworkContext : IEntityContext
     {
         private readonly DbContext _context;
 
-        public EFContext(DbContext context)
+        public EntityFrameworkContext(DbContext context)
         {
             _context = context;
         }
@@ -20,12 +20,12 @@ namespace Turner.Infrastructure.Crud.Context
         public virtual IEntitySet<TEntity> EntitySet<TEntity>()
             where TEntity : class
         {
-            return EFEntitySet<TEntity>.From(_context.Set<TEntity>());
+            return EntityFrameworkEntitySet<TEntity>.From(_context.Set<TEntity>());
         }
 
         public virtual async Task<int> ApplyChangesAsync(CancellationToken token = default(CancellationToken))
         {
-            var result = await _context.SaveChangesAsync(token).Configure();
+            var result = await _context.SaveChangesAsync(token).ConfigureAwait(false);
 
             token.ThrowIfCancellationRequested();
             return result;

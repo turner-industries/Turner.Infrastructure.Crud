@@ -2,27 +2,28 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Turner.Infrastructure.Mediator;
+using FluentValidation;
+using Turner.Infrastructure.Crud.Validation;
 
-namespace Turner.Infrastructure.Crud.Validation
+namespace Turner.Infrastructure.Crud.FluentValidation
 {
-    public class FluentValidator<TRequest> : IValidator<TRequest>
+    public class FluentValidator<TRequest> : IRequestValidator<TRequest>
     {
-        private readonly FluentValidation.IValidator<TRequest> _validator;
+        private readonly IValidator<TRequest> _validator;
 
-        public FluentValidator(FluentValidation.IValidator<TRequest> validator)
+        public FluentValidator(IValidator<TRequest> validator)
         {
             _validator = validator;
         }
 
-        public async Task<List<Error>> ValidateAsync(TRequest request, CancellationToken token = default(CancellationToken))
+        public async Task<List<ValidationError>> ValidateAsync(TRequest request, CancellationToken token = default(CancellationToken))
         {
             var validationResult = await _validator.ValidateAsync(request, token);
             if (validationResult.IsValid)
                 return null;
 
             return validationResult.Errors
-                .Select(error => new Error
+                .Select(error => new ValidationError
                 {
                     ErrorMessage = error.ErrorMessage,
                     PropertyName = error.PropertyName

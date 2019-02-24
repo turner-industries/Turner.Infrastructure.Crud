@@ -1,9 +1,9 @@
-﻿using SimpleInjector;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SimpleInjector;
 using Turner.Infrastructure.Crud.Configuration;
-using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Validation;
@@ -14,50 +14,112 @@ namespace Turner.Infrastructure.Crud
     public class CrudOptions
     {
         public bool ValidateAllRequests { get; set; } = false;
-
-        public bool UseEntityFramework { get; set; } = true;
-
-        public bool UseFluentValidation { get; set; } = true;
     }
 
-    public static class Crud
+    public interface ICrudInitializationTask
     {
-        public static void Configure(Container container, Assembly[] assemblies, CrudOptions options = null)
+        void Run(Container container, Assembly[] assemblies, CrudOptions options);
+    }
+
+    public class CrudInitializer
+    {
+        private readonly Container _container;
+
+        private readonly List<Assembly> _assemblies
+            = new List<Assembly>();
+
+        private readonly List<ICrudInitializationTask> _tasks
+            = new List<ICrudInitializationTask>();
+
+        private CrudOptions _options = new CrudOptions();
+
+        public CrudInitializer(Container container, Assembly[] assemblies = null)
         {
-            options = options ?? new CrudOptions();
+            _container = container;
 
-            var allAssemblies = new Assembly[1 + assemblies.Length];
-            allAssemblies[0] = typeof(Crud).Assembly;
-            Array.Copy(assemblies, 0, allAssemblies, 1, assemblies.Length);
+            _assemblies.Add(typeof(CrudInitializer).Assembly);
+            _assemblies.AddRange(assemblies);
 
-            var configAssemblies = allAssemblies.Distinct().ToArray();
-
-            RegisterSystem(container, configAssemblies, options);
-            RegisterErrorHandling(container);
-            RegisterValidation(container, options);
-            RegisterRequests(container, configAssemblies);
+            _tasks.AddRange(new ICrudInitializationTask[]
+            {
+                new CrudErrorHandlingInitializer(),
+                new CrudValidationInitializer(),
+                new CrudRequestInitializer()
+            });
         }
-        
-        private static bool IfNotHandled(PredicateContext c) => !c.Handled;
 
-        private static Predicate<DecoratorPredicateContext> ShouldValidate(CrudOptions options)
+        public CrudInitializer WithAssemblies(params Assembly[] assemblies)
+        {
+            _assemblies.AddRange(assemblies);
+
+            return this;
+        }
+
+        public CrudInitializer ValidateAllRequests(bool validate = true)
+        {
+            _options.ValidateAllRequests = validate;
+
+            return this;
+        }
+
+        public CrudInitializer AddInitializer(ICrudInitializationTask task)
+        {
+            _tasks.Add(task);
+
+            return this;
+        }
+
+        public void Initialize()
+        {
+            var assemblies = _assemblies.Distinct().ToArray();
+
+            _container.RegisterSingleton(() => new CrudConfigManager(assemblies));
+
+            TypeRequestHookFactory.BindContainer(_container.GetInstance);
+            TypeEntityHookFactory.BindContainer(_container.GetInstance);
+            TypeItemHookFactory.BindContainer(_container.GetInstance);
+            TypeResultHookFactory.BindContainer(_container.GetInstance);
+            TypeFilterFactory.BindContainer(_container.GetInstance);
+            TypeSorterFactory.BindContainer(_container.GetInstance);
+
+            _tasks.ForEach(t => t.Run(_container, assemblies, _options));
+        }
+    }
+
+    internal class CrudErrorHandlingInitializer : ICrudInitializationTask
+    {
+        public void Run(Container container, Assembly[] assemblies, CrudOptions options)
+        {
+            container.RegisterInitializer<ICrudRequestHandler>(handler =>
+            {
+                if (handler.ErrorDispatcher.Handler == null)
+                    handler.ErrorDispatcher.Handler = container.GetInstance<ICrudErrorHandler>();
+            });
+
+            container.Register(typeof(ICrudErrorHandler), typeof(CrudErrorHandler), Lifestyle.Singleton);
+        }
+    }
+
+    internal class CrudValidationInitializer : ICrudInitializationTask
+    {
+        private static Predicate<DecoratorPredicateContext> ShouldValidate(bool validateAllRequests)
         {
             return c =>
                 typeof(ICrudRequestHandler).IsAssignableFrom(c.ImplementationType) &&
                 !c.ImplementationType.RequestHasAttribute(typeof(DoNotValidateAttribute)) &&
-                (options.ValidateAllRequests || c.ImplementationType.RequestHasAttribute(typeof(ValidateAttribute)));
+                (validateAllRequests || c.ImplementationType.RequestHasAttribute(typeof(ValidateAttribute)));
         }
 
-        private static Predicate<DecoratorPredicateContext> ShouldMaybeValidate(CrudOptions options)
+        private static Predicate<DecoratorPredicateContext> ShouldMaybeValidate(bool validateAllRequests)
         {
-            var shouldValidate = ShouldValidate(options);
+            var shouldValidate = ShouldValidate(validateAllRequests);
 
             return c => typeof(ICrudRequestHandler).IsAssignableFrom(c.ImplementationType) &&
                 !c.ImplementationType.RequestHasAttribute(typeof(DoNotValidateAttribute)) &&
                 !shouldValidate(c) &&
                 c.ImplementationType.RequestHasAttribute(typeof(MaybeValidateAttribute));
         }
-        
+
         private static Type ValidatorFactory(DecoratorPredicateContext c)
         {
             var tRequestHandler = c.ImplementationType
@@ -90,7 +152,7 @@ namespace Turner.Infrastructure.Crud
 
             var validateAttribute = FindAttribute(tRequest);
             var tValidator = validateAttribute?.ValidatorType ??
-                typeof(IValidator<>).MakeGenericType(tRequest);
+                typeof(IRequestValidator<>).MakeGenericType(tRequest);
 
             if (handlerArguments.Length == 1)
                 return typeof(CrudValidateDecorator<,>).MakeGenericType(tRequest, tValidator);
@@ -104,36 +166,10 @@ namespace Turner.Infrastructure.Crud
             return null;
         }
 
-        private static void RegisterSystem(Container container, Assembly[] configAssemblies, CrudOptions options)
+        public void Run(Container container, Assembly[] assemblies, CrudOptions options)
         {
-            container.RegisterSingleton(() => new CrudConfigManager(configAssemblies));
-            
-            TypeRequestHookFactory.BindContainer(container.GetInstance);
-            TypeEntityHookFactory.BindContainer(container.GetInstance);
-            TypeItemHookFactory.BindContainer(container.GetInstance);
-            TypeResultHookFactory.BindContainer(container.GetInstance);
-            TypeFilterFactory.BindContainer(container.GetInstance);
-            TypeSorterFactory.BindContainer(container.GetInstance);
-
-            if (options.UseEntityFramework)
-                container.Register(typeof(IEntityContext), typeof(EFContext));
-        }
-        
-        private static void RegisterErrorHandling(Container container)
-        {
-            container.RegisterInitializer<ICrudRequestHandler>(handler =>
-            {
-                if (handler.ErrorDispatcher.Handler == null)
-                    handler.ErrorDispatcher.Handler = container.GetInstance<ICrudErrorHandler>();
-            });
-
-            container.Register(typeof(ICrudErrorHandler), typeof(CrudErrorHandler), Lifestyle.Singleton);
-        }
-
-        private static void RegisterValidation(Container container, CrudOptions options)
-        {
-            var shouldValidate = ShouldValidate(options);
-            var shouldMaybeValidate = ShouldMaybeValidate(options);
+            var shouldValidate = ShouldValidate(options.ValidateAllRequests);
+            var shouldMaybeValidate = ShouldMaybeValidate(options.ValidateAllRequests);
 
             container.RegisterDecorator(typeof(IRequestHandler<>), ValidatorFactory, Lifestyle.Transient, shouldValidate);
             container.RegisterDecorator(typeof(IRequestHandler<,>), ValidatorFactory, Lifestyle.Transient, shouldValidate);
@@ -141,72 +177,80 @@ namespace Turner.Infrastructure.Crud
             container.RegisterInstance(new ValidatorFactory(container.GetInstance));
             container.RegisterDecorator(typeof(IRequestHandler<>), typeof(CrudMaybeValidateDecorator<>), shouldMaybeValidate);
             container.RegisterDecorator(typeof(IRequestHandler<,>), typeof(CrudMaybeValidateDecorator<,>), shouldMaybeValidate);
-
-            if (options.UseFluentValidation)
-                container.RegisterConditional(typeof(IValidator<>), typeof(FluentValidator<>), IfNotHandled);
         }
+    }
 
-        private static void RegisterRequests(Container container, Assembly[] configAssemblies)
+    internal class CrudRequestInitializer : ICrudInitializationTask
+    {
+        public void Run(Container container, Assembly[] assemblies, CrudOptions options)
         {
-            container.Register(typeof(CreateRequestHandler<,>), configAssemblies);
-            container.Register(typeof(CreateRequestHandler<,,>), configAssemblies);
+            bool IfNotHandled(PredicateContext c) => !c.Handled;
+
+            container.Register(typeof(CreateRequestHandler<,>), assemblies);
+            container.Register(typeof(CreateRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(CreateRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(CreateRequestHandler<,,>), IfNotHandled);
 
-            container.Register(typeof(CreateAllRequestHandler<,>), configAssemblies);
-            container.Register(typeof(CreateAllRequestHandler<,,>), configAssemblies);
+            container.Register(typeof(CreateAllRequestHandler<,>), assemblies);
+            container.Register(typeof(CreateAllRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(CreateAllRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(CreateAllRequestHandler<,,>), IfNotHandled);
 
-            container.Register(typeof(GetRequestHandler<,,>), configAssemblies);
+            container.Register(typeof(GetRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(GetRequestHandler<,,>), IfNotHandled);
 
-            container.Register(typeof(GetAllRequestHandler<,,>), configAssemblies);
+            container.Register(typeof(GetAllRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(GetAllRequestHandler<,,>), IfNotHandled);
 
-            container.Register(typeof(PagedGetAllRequestHandler<,,>), configAssemblies);
+            container.Register(typeof(PagedGetAllRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(PagedGetAllRequestHandler<,,>), IfNotHandled);
 
-            container.Register(typeof(PagedGetRequestHandler<,,>), configAssemblies);
+            container.Register(typeof(PagedGetRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(PagedGetRequestHandler<,,>), IfNotHandled);
 
-            container.Register(typeof(PagedFindRequestHandler<,,>), configAssemblies);
+            container.Register(typeof(PagedFindRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(PagedFindRequestHandler<,,>), IfNotHandled);
 
-            container.Register(typeof(UpdateRequestHandler<,>), configAssemblies);
-            container.Register(typeof(UpdateRequestHandler<,,>), configAssemblies);
+            container.Register(typeof(UpdateRequestHandler<,>), assemblies);
+            container.Register(typeof(UpdateRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(UpdateRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(UpdateRequestHandler<,,>), IfNotHandled);
 
-            container.Register(typeof(UpdateAllRequestHandler<,>), configAssemblies);
-            container.Register(typeof(UpdateAllRequestHandler<,,>), configAssemblies);
+            container.Register(typeof(UpdateAllRequestHandler<,>), assemblies);
+            container.Register(typeof(UpdateAllRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(UpdateAllRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(UpdateAllRequestHandler<,,>), IfNotHandled);
 
-            container.Register(typeof(DeleteRequestHandler<,>), configAssemblies);
-            container.Register(typeof(DeleteRequestHandler<,,>), configAssemblies);
+            container.Register(typeof(DeleteRequestHandler<,>), assemblies);
+            container.Register(typeof(DeleteRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(DeleteRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(DeleteRequestHandler<,,>), IfNotHandled);
 
-            container.Register(typeof(DeleteAllRequestHandler<,>), configAssemblies);
-            container.Register(typeof(DeleteAllRequestHandler<,,>), configAssemblies);
+            container.Register(typeof(DeleteAllRequestHandler<,>), assemblies);
+            container.Register(typeof(DeleteAllRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(DeleteAllRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(DeleteAllRequestHandler<,,>), IfNotHandled);
 
-            container.Register(typeof(SaveRequestHandler<,>), configAssemblies);
-            container.Register(typeof(SaveRequestHandler<,,>), configAssemblies);
+            container.Register(typeof(SaveRequestHandler<,>), assemblies);
+            container.Register(typeof(SaveRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(SaveRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(SaveRequestHandler<,,>), IfNotHandled);
 
-            container.Register(typeof(MergeRequestHandler<,>), configAssemblies);
-            container.Register(typeof(MergeRequestHandler<,,>), configAssemblies);
+            container.Register(typeof(MergeRequestHandler<,>), assemblies);
+            container.Register(typeof(MergeRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(MergeRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(MergeRequestHandler<,,>), IfNotHandled);
 
-            container.Register(typeof(SynchronizeRequestHandler<,>), configAssemblies);
-            container.Register(typeof(SynchronizeRequestHandler<,,>), configAssemblies);
+            container.Register(typeof(SynchronizeRequestHandler<,>), assemblies);
+            container.Register(typeof(SynchronizeRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(SynchronizeRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(SynchronizeRequestHandler<,,>), IfNotHandled);
         }
+    }
+
+    public static class Crud
+    {
+        public static CrudInitializer CreateInitializer(Container container, Assembly[] assemblies)
+            => new CrudInitializer(container, assemblies);
     }
 }

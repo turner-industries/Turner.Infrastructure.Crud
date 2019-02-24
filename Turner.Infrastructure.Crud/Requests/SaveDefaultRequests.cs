@@ -9,9 +9,9 @@ namespace Turner.Infrastructure.Crud.Requests
     public class SaveRequest<TEntity, TIn> : ISaveRequest<TEntity>
         where TEntity : class
     {
-        public SaveRequest(TIn data) { Data = data; }
+        public SaveRequest(TIn item) { Item = item; }
 
-        public TIn Data { get; }
+        public TIn Item { get; }
     }
 
     public class SaveRequestProfile<TEntity, TIn>
@@ -21,8 +21,8 @@ namespace Turner.Infrastructure.Crud.Requests
         public SaveRequestProfile()
         {
             ForEntity<TEntity>()
-                .CreateEntityWith(request => Mapper.Map<TEntity>(request.Data))
-                .UpdateEntityWith((request, entity) => Mapper.Map(request.Data, entity));
+                .CreateEntityWith(request => Mapper.Map<TEntity>(request.Item))
+                .UpdateEntityWith((request, entity) => Mapper.Map(request.Item, entity));
         }
     }
 
@@ -30,9 +30,9 @@ namespace Turner.Infrastructure.Crud.Requests
     public class SaveRequest<TEntity, TIn, TOut> : ISaveRequest<TEntity, TOut>
         where TEntity : class
     {
-        public SaveRequest(TIn data) { Data = data; }
+        public SaveRequest(TIn item) { Item = item; }
 
-        public TIn Data { get; }
+        public TIn Item { get; }
     }
 
     public class SaveRequestProfile<TEntity, TIn, TOut>
@@ -42,8 +42,8 @@ namespace Turner.Infrastructure.Crud.Requests
         public SaveRequestProfile()
         {
             ForEntity<TEntity>()
-                .CreateEntityWith(request => Mapper.Map<TEntity>(request.Data))
-                .UpdateEntityWith((request, entity) => Mapper.Map(request.Data, entity));
+                .CreateEntityWith(request => Mapper.Map<TEntity>(request.Item))
+                .UpdateEntityWith((request, entity) => Mapper.Map(request.Item, entity));
         }
     }
 
@@ -52,15 +52,15 @@ namespace Turner.Infrastructure.Crud.Requests
         : ISaveRequest<TEntity, TOut>
         where TEntity : class
     {
-        public TKey Key { get; }
-
-        public TIn Data { get; }
-
-        public SaveRequest(TKey key, TIn data)
+        public SaveRequest(TKey key, TIn item)
         {
             Key = key;
-            Data = data;
+            Item = item;
         }
+
+        public TKey Key { get; }
+
+        public TIn Item { get; }
     }
 
     public class SaveRequestProfile<TEntity, TKey, TIn, TOut>
@@ -71,8 +71,8 @@ namespace Turner.Infrastructure.Crud.Requests
         {
             ForEntity<TEntity>()
                 .WithRequestKey(request => request.Key)
-                .CreateEntityWith(request => Mapper.Map<TEntity>(request.Data))
-                .UpdateEntityWith((request, entity) => Mapper.Map(request.Data, entity));
+                .CreateEntityWith(request => Mapper.Map<TEntity>(request.Item))
+                .UpdateEntityWith((request, entity) => Mapper.Map(request.Item, entity));
         }
     }
 

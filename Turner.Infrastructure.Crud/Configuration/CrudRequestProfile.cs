@@ -213,9 +213,9 @@ namespace Turner.Infrastructure.Crud.Configuration
         {
         }
 
-        public CrudBulkRequestProfile(Expression<Func<TRequest, IEnumerable<TItem>>> defaultDataSource)
+        public CrudBulkRequestProfile(Expression<Func<TRequest, IEnumerable<TItem>>> defaultItemSource)
         {
-            _defaultItemSource = defaultDataSource;
+            _defaultItemSource = defaultItemSource;
         }
 
         protected CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> ForEntity<TEntity>()

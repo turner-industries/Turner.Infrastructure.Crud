@@ -9,9 +9,9 @@ namespace Turner.Infrastructure.Crud.Requests
     public class UpdateRequest<TEntity, TIn> : IUpdateRequest<TEntity>
         where TEntity : class
     {
-        public UpdateRequest(TIn data) { Data = data; }
+        public UpdateRequest(TIn item) { Item = item; }
 
-        public TIn Data { get; }
+        public TIn Item { get; }
     }
 
     public class UpdateRequestProfile<TEntity, TIn>
@@ -21,7 +21,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public UpdateRequestProfile()
         {
             ForEntity<TEntity>()
-                .UpdateEntityWith((request, entity) => Mapper.Map(request.Data, entity));
+                .UpdateEntityWith((request, entity) => Mapper.Map(request.Item, entity));
         }
     }
 
@@ -29,9 +29,9 @@ namespace Turner.Infrastructure.Crud.Requests
     public class UpdateRequest<TEntity, TIn, TOut> : IUpdateRequest<TEntity, TOut>
         where TEntity : class
     {
-        public UpdateRequest(TIn data) { Data = data; }
+        public UpdateRequest(TIn item) { Item = item; }
 
-        public TIn Data { get; }
+        public TIn Item { get; }
     }
 
     public class UpdateRequestProfile<TEntity, TIn, TOut>
@@ -41,7 +41,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public UpdateRequestProfile()
         {
             ForEntity<TEntity>()
-                .UpdateEntityWith((request, entity) => Mapper.Map(request.Data, entity));
+                .UpdateEntityWith((request, entity) => Mapper.Map(request.Item, entity));
         }
     }
 
@@ -52,12 +52,12 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public TKey Key { get; }
 
-        public TIn Data { get; }
+        public TIn Item { get; }
 
-        public UpdateRequest(TKey key, TIn data)
+        public UpdateRequest(TKey key, TIn item)
         {
             Key = key;
-            Data = data;
+            Item = item;
         }
     }
 
@@ -68,7 +68,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public UpdateRequestProfile()
         {
             ForEntity<TEntity>()
-                .UpdateEntityWith((request, entity) => Mapper.Map(request.Data, entity));
+                .UpdateEntityWith((request, entity) => Mapper.Map(request.Item, entity));
         }
     }
 

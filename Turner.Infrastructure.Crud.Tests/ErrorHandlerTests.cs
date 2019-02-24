@@ -1,10 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using SimpleInjector;
 using SimpleInjector.Lifestyles;
-using System;
-using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.EntityFrameworkCore;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Tests.Fakes;
@@ -43,7 +44,9 @@ namespace Turner.Infrastructure.Crud.Tests
             
             container.ConfigureMediator(assemblies);
 
-            Crud.Configure(container, assemblies);
+            Crud.CreateInitializer(container, assemblies)
+                .UseEntityFramework()
+                .Initialize();
             
             container.Options.AllowOverridingRegistrations = true;
             container.Register<ICrudErrorHandler, TestErrorHandler>(Lifestyle.Singleton);

@@ -105,7 +105,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             var user = Context.Set<User>().First();
             Assert.IsNotNull(user);
             Assert.AreNotEqual(0, user.Id);
-            Assert.AreEqual("NewUser", request.Data.Name);
+            Assert.AreEqual("NewUser", user.Name);
         }
 
         [Test]
@@ -186,7 +186,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public DefaultSaveWithoutResponseRequestProfile()
         {
             ForEntity<User>()
-                .SelectWith(builder => builder.Single(r => e => r.Data.Id == e.Id));
+                .SelectWith(builder => builder.Single(r => e => r.Item.Id == e.Id));
         }
     }
 
@@ -196,7 +196,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public DefaultSaveWithResponseRequestProfile()
         {
             ForEntity<User>()
-                .SelectWith(builder => builder.Single(request => entity => request.Data.Id == entity.Id));
+                .SelectWith(builder => builder.Single(request => entity => request.Item.Id == entity.Id));
         }
     }
 }
