@@ -21,8 +21,8 @@ namespace Turner.Infrastructure.Crud.Requests
         public SaveRequestProfile()
         {
             ForEntity<TEntity>()
-                .CreateEntityWith((SaveRequest<TEntity, TIn> request) => Mapper.Map<TEntity>(request.Data))
-                .UpdateEntityWith((SaveRequest<TEntity, TIn> request, TEntity entity) => Mapper.Map(request.Data, entity));
+                .CreateEntityWith(request => Mapper.Map<TEntity>(request.Data))
+                .UpdateEntityWith((request, entity) => Mapper.Map(request.Data, entity));
         }
     }
 
@@ -42,8 +42,8 @@ namespace Turner.Infrastructure.Crud.Requests
         public SaveRequestProfile()
         {
             ForEntity<TEntity>()
-                .CreateEntityWith((SaveRequest<TEntity, TIn, TOut> request) => Mapper.Map<TEntity>(request.Data))
-                .UpdateEntityWith((SaveRequest<TEntity, TIn, TOut> request, TEntity entity) => Mapper.Map(request.Data, entity));
+                .CreateEntityWith(request => Mapper.Map<TEntity>(request.Data))
+                .UpdateEntityWith((request, entity) => Mapper.Map(request.Data, entity));
         }
     }
 
@@ -107,6 +107,23 @@ namespace Turner.Infrastructure.Crud.Requests
         public SaveByGuidRequestProfile()
         {
             ForEntity<TEntity>().WithEntityKey("Guid");
+        }
+    }
+
+    [MaybeValidate]
+    public class SaveByNameRequest<TEntity, TIn, TOut> : SaveRequest<TEntity, string, TIn, TOut>
+        where TEntity : class
+    {
+        public SaveByNameRequest(string name, TIn data) : base(name, data) { }
+    }
+
+    public class SaveByNameRequestProfile<TEntity, TIn, TOut>
+        : CrudRequestProfile<SaveByNameRequest<TEntity, TIn, TOut>>
+        where TEntity : class
+    {
+        public SaveByNameRequestProfile()
+        {
+            ForEntity<TEntity>().WithEntityKey("Name");
         }
     }
 }

@@ -14,6 +14,15 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     [MaybeValidate]
+    public class SynchronizeRequest<TEntity, TIn, TOut> : ISynchronizeRequest<TEntity, TOut>
+        where TEntity : class
+    {
+        public SynchronizeRequest(List<TIn> items) { Items = items; }
+
+        public List<TIn> Items { get; }
+    }
+
+    [MaybeValidate]
     public class SynchronizeByIdRequest<TEntity, TIn> : SynchronizeRequest<TEntity, TIn>
         where TEntity : class
     {
@@ -22,6 +31,25 @@ namespace Turner.Infrastructure.Crud.Requests
 
     public class SynchronizeByIdRequestProfile<TEntity, TIn>
         : CrudBulkRequestProfile<SynchronizeByIdRequest<TEntity, TIn>, TIn>
+        where TEntity : class
+    {
+        public SynchronizeByIdRequestProfile()
+            : base(request => request.Items)
+        {
+            ForEntity<TEntity>()
+                .WithKeys("Id");
+        }
+    }
+
+    [MaybeValidate]
+    public class SynchronizeByIdRequest<TEntity, TIn, TOut> : SynchronizeRequest<TEntity, TIn, TOut>
+        where TEntity : class
+    {
+        public SynchronizeByIdRequest(List<TIn> items) : base(items) { }
+    }
+
+    public class SynchronizeByIdRequestProfile<TEntity, TIn, TOut>
+        : CrudBulkRequestProfile<SynchronizeByIdRequest<TEntity, TIn, TOut>, TIn>
         where TEntity : class
     {
         public SynchronizeByIdRequestProfile()
@@ -52,34 +80,6 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     [MaybeValidate]
-    public class SynchronizeRequest<TEntity, TIn, TOut> : ISynchronizeRequest<TEntity, TOut>
-        where TEntity : class
-    {
-        public SynchronizeRequest(List<TIn> items) { Items = items; }
-
-        public List<TIn> Items { get; }
-    }
-
-    [MaybeValidate]
-    public class SynchronizeByIdRequest<TEntity, TIn, TOut> : SynchronizeRequest<TEntity, TIn, TOut>
-        where TEntity : class
-    {
-        public SynchronizeByIdRequest(List<TIn> items) : base(items) { }
-    }
-
-    public class SynchronizeByIdRequestProfile<TEntity, TIn, TOut>
-        : CrudBulkRequestProfile<SynchronizeByIdRequest<TEntity, TIn, TOut>, TIn>
-        where TEntity : class
-    {
-        public SynchronizeByIdRequestProfile()
-            : base(request => request.Items)
-        {
-            ForEntity<TEntity>()
-                .WithKeys("Id");
-        }
-    }
-
-    [MaybeValidate]
     public class SynchronizeByGuidRequest<TEntity, TIn, TOut> : SynchronizeRequest<TEntity, TIn, TOut>
         where TEntity : class
     {
@@ -95,6 +95,44 @@ namespace Turner.Infrastructure.Crud.Requests
         {
             ForEntity<TEntity>()
                 .WithKeys("Guid");
+        }
+    }
+
+    [MaybeValidate]
+    public class SynchronizeByNameRequest<TEntity, TIn> : SynchronizeRequest<TEntity, TIn>
+        where TEntity : class
+    {
+        public SynchronizeByNameRequest(List<TIn> items) : base(items) { }
+    }
+
+    public class SynchronizeByNameRequestProfile<TEntity, TIn>
+        : CrudBulkRequestProfile<SynchronizeByNameRequest<TEntity, TIn>, TIn>
+        where TEntity : class
+    {
+        public SynchronizeByNameRequestProfile()
+            : base(request => request.Items)
+        {
+            ForEntity<TEntity>()
+                .WithKeys("Name");
+        }
+    }
+
+    [MaybeValidate]
+    public class SynchronizeByNameRequest<TEntity, TIn, TOut> : SynchronizeRequest<TEntity, TIn, TOut>
+        where TEntity : class
+    {
+        public SynchronizeByNameRequest(List<TIn> items) : base(items) { }
+    }
+
+    public class SynchronizeByNameRequestProfile<TEntity, TIn, TOut>
+        : CrudBulkRequestProfile<SynchronizeByNameRequest<TEntity, TIn, TOut>, TIn>
+        where TEntity : class
+    {
+        public SynchronizeByNameRequestProfile()
+            : base(request => request.Items)
+        {
+            ForEntity<TEntity>()
+                .WithKeys("Name");
         }
     }
 }

@@ -21,7 +21,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public UpdateRequestProfile()
         {
             ForEntity<TEntity>()
-                .UpdateEntityWith((UpdateRequest<TEntity, TIn> request, TEntity entity) => Mapper.Map(request.Data, entity));
+                .UpdateEntityWith((request, entity) => Mapper.Map(request.Data, entity));
         }
     }
 
@@ -41,7 +41,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public UpdateRequestProfile()
         {
             ForEntity<TEntity>()
-                .UpdateEntityWith((UpdateRequest<TEntity, TIn, TOut> request, TEntity entity) => Mapper.Map(request.Data, entity));
+                .UpdateEntityWith((request, entity) => Mapper.Map(request.Data, entity));
         }
     }
 
@@ -68,7 +68,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public UpdateRequestProfile()
         {
             ForEntity<TEntity>()
-                .UpdateEntityWith((UpdateRequest<TEntity, TKey, TIn, TOut> request, TEntity entity) => Mapper.Map(request.Data, entity));
+                .UpdateEntityWith((request, entity) => Mapper.Map(request.Data, entity));
         }
     }
 
@@ -105,6 +105,24 @@ namespace Turner.Infrastructure.Crud.Requests
         {
             ForEntity<TEntity>()
                 .SelectWith(builder => builder.Single(request => request.Key, "Guid"));
+        }
+    }
+
+    [MaybeValidate]
+    public class UpdateByNameRequest<TEntity, TIn, TOut> : UpdateRequest<TEntity, string, TIn, TOut>
+        where TEntity : class
+    {
+        public UpdateByNameRequest(string name, TIn data) : base(name, data) { }
+    }
+
+    public class UpdateByNameRequestProfile<TEntity, TIn, TOut>
+        : CrudRequestProfile<UpdateByNameRequest<TEntity, TIn, TOut>>
+        where TEntity : class
+    {
+        public UpdateByNameRequestProfile()
+        {
+            ForEntity<TEntity>()
+                .SelectWith(builder => builder.Single(request => request.Key, "Name"));
         }
     }
 }

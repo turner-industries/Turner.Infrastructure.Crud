@@ -94,4 +94,40 @@ namespace Turner.Infrastructure.Crud.Requests
                 .FilterWith(builder => builder.On(request => request.Keys, "Guid"));
         }
     }
+
+    [MaybeValidate]
+    public class DeleteAllByNameRequest<TEntity> : DeleteAllRequest<TEntity, string>
+        where TEntity : class
+    {
+        public DeleteAllByNameRequest(List<string> names) : base(names) { }
+    }
+
+    public class DeleteAllByNameRequestProfile<TEntity>
+        : CrudRequestProfile<DeleteAllByNameRequest<TEntity>>
+        where TEntity : class
+    {
+        public DeleteAllByNameRequestProfile()
+        {
+            ForEntity<TEntity>()
+                .FilterWith(builder => builder.On(request => request.Keys, "Name"));
+        }
+    }
+
+    [MaybeValidate]
+    public class DeleteAllByNameRequest<TEntity, TOut> : DeleteAllRequest<TEntity, string, TOut>
+        where TEntity : class
+    {
+        public DeleteAllByNameRequest(List<string> names) : base(names) { }
+    }
+
+    public class DeleteAllByNameRequestProfile<TEntity, TOut>
+        : CrudRequestProfile<DeleteAllByNameRequest<TEntity, TOut>>
+        where TEntity : class
+    {
+        public DeleteAllByNameRequestProfile()
+        {
+            ForEntity<TEntity>()
+                .FilterWith(builder => builder.On(request => request.Keys, "Name"));
+        }
+    }
 }

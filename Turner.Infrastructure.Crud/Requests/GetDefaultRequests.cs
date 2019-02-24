@@ -56,4 +56,21 @@ namespace Turner.Infrastructure.Crud.Requests
             ForEntity<TEntity>().WithEntityKey("Guid");
         }
     }
+
+    [MaybeValidate]
+    public class GetByNameRequest<TEntity, TOut> : GetRequest<TEntity, string, TOut>
+        where TEntity : class
+    {
+        public GetByNameRequest(string name) : base(name) { }
+    }
+
+    public class GetByNameRequestProfile<TEntity, TOut>
+        : CrudRequestProfile<GetByNameRequest<TEntity, TOut>>
+        where TEntity : class
+    {
+        public GetByNameRequestProfile()
+        {
+            ForEntity<TEntity>().WithEntityKey("Name");
+        }
+    }
 }
