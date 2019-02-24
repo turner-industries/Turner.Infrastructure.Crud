@@ -10,18 +10,24 @@ namespace Turner.Infrastructure.Crud.Configuration
     internal class CrudConfigManager
     {
         private readonly Assembly[] _profileAssemblies;
-        private readonly Dictionary<Type, CrudRequestProfile> _requestProfiles
-            = new Dictionary<Type, CrudRequestProfile>();
+        
         private readonly Dictionary<Type, ICrudRequestConfig> _requestConfigs
             = new Dictionary<Type, ICrudRequestConfig>();
+
+        private readonly Type[] _allProfiles;
 
         public CrudConfigManager(params Assembly[] profileAssemblies)
         {
             _profileAssemblies = profileAssemblies;
-            
-            // TODO: Maybe it should be optional whether or not to pre-build profiles
-            // since it will cause all tests to fail if there's a profile error
-            //BuildRequestConfigurations();
+
+            _allProfiles = _profileAssemblies
+                .SelectMany(x => x.GetExportedTypes())
+                .Where(x =>
+                    x.BaseType != null &&
+                    x.BaseType.IsGenericType &&
+                    (x.BaseType.GetGenericTypeDefinition() == typeof(CrudRequestProfile<>) ||
+                     x.BaseType.GetGenericTypeDefinition() == typeof(CrudBulkRequestProfile<,>)))
+                .ToArray();
         }
 
         public ICrudRequestConfig GetRequestConfigFor<TRequest>() 
@@ -29,77 +35,80 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         public ICrudRequestConfig GetRequestConfigFor(Type tRequest) 
             => BuildRequestConfigFor(tRequest);
-
-        private void BuildRequestConfigurations()
-        {
-            var requests = _profileAssemblies
-                .SelectMany(x => x.GetExportedTypes())
-                .Where(x => x.IsClass &&
-                            !x.IsAbstract &&
-                            !x.IsGenericTypeDefinition &&
-                            typeof(ICrudRequest).IsAssignableFrom(x));
-
-            foreach (var request in requests)
-                BuildRequestConfigFor(request);
-        }
         
+        private IEnumerable<Type> FindRequestProfilesFor(Type tRequest)
+        {
+            Type GetProfileRequestType(Type tProfile) => tProfile.BaseType.GenericTypeArguments[0];
+
+            bool IsGenericallyCompatible(Type first, Type second)
+            {
+                var firstArgs = first.GetGenericArguments();
+                var secondArgs = second.GetGenericArguments();
+                
+                return firstArgs.Length == secondArgs.Length &&
+                    firstArgs
+                        .Zip(secondArgs, (a, b) => new Tuple<Type, Type>(a, b))
+                        .All(x => x.Item2.IsGenericParameter || x.Item1 == x.Item2);
+            }
+
+            Type InstantiateProfile(Type tProfile)
+            {
+                if (!tProfile.IsGenericTypeDefinition)
+                    return tProfile;
+                
+                var argMap = GetProfileRequestType(tProfile)
+                    .GetGenericArguments()
+                    .Zip(tRequest.GetGenericArguments(), 
+                        (a, b) => new Tuple<Type, Type>(a, a.IsGenericParameter ? b : null))
+                    .Where(x => x.Item2 != null)
+                    .ToDictionary(x => x.Item1, x => x.Item2);
+
+                var args = tProfile.GetGenericArguments()
+                    .Where(x => argMap.ContainsKey(x))
+                    .Select(x => argMap[x])
+                    .ToArray();
+
+                if (args.Length != tProfile.GetGenericArguments().Length)
+                {
+                    throw new BadCrudConfigurationException(
+                        $"Failed to determine arguments for profile '{tProfile}'.\r\n" +
+                        $"Profiles may not contain more generic arguments than their requests.'");
+                }
+
+                return tProfile.MakeGenericType(args);
+            }
+
+            if (!tRequest.IsGenericType)
+                return _allProfiles.Where(x => !x.IsAbstract && GetProfileRequestType(x) == tRequest);
+
+            var requestDefinition = tRequest.GetGenericTypeDefinition();
+
+            return _allProfiles
+                .Where(x =>
+                    GetProfileRequestType(x).IsGenericType &&
+                    GetProfileRequestType(x).GetGenericTypeDefinition() == requestDefinition &&
+                    IsGenericallyCompatible(tRequest, GetProfileRequestType(x)))
+                .OrderBy(x => 
+                    GetProfileRequestType(x).GetGenericArguments().Count(y => !y.IsGenericParameter))
+                .Select(InstantiateProfile);
+        }
+
         private CrudRequestProfile GetRequestProfileFor(Type tRequest)
         {
-            if (_requestProfiles.TryGetValue(tRequest, out var profile))
-                return profile;
-
             if (!typeof(ICrudRequest).IsAssignableFrom(tRequest))
                 throw new BadCrudConfigurationException($"{tRequest} is not an ICrudRequest");
 
-            var profiles = new List<CrudRequestProfile>();
-
-            // TODO: Evaluate the request type to determine regular vs bulk profile
-            var allProfiles = _profileAssemblies
-                .SelectMany(x => x.GetExportedTypes())
-                .Where(x => 
-                    !x.IsAbstract &&
-                    x.BaseType != null &&
-                    x.BaseType.IsGenericType &&
-                    (x.BaseType.GetGenericTypeDefinition() == typeof(CrudRequestProfile<>) ||
-                     x.BaseType.GetGenericTypeDefinition() == typeof(CrudBulkRequestProfile<,>)))
-                .ToArray();
+            var tProfile = typeof(IBulkRequest).IsAssignableFrom(tRequest)
+                ? typeof(DefaultBulkCrudRequestProfile<>).MakeGenericType(tRequest)
+                : typeof(DefaultCrudRequestProfile<>).MakeGenericType(tRequest);
             
-            profiles.AddRange(allProfiles
-                .Where(x => x.BaseType.GenericTypeArguments[0] == tRequest)
+            var profile = (CrudRequestProfile)Activator.CreateInstance(tProfile);
+
+            profile.Inherit(tRequest
+                .BuildTypeHierarchyDown()
+                .Where(x => typeof(ICrudRequest).IsAssignableFrom(tRequest))
+                .SelectMany(FindRequestProfilesFor)
                 .Select(x => (CrudRequestProfile)Activator.CreateInstance(x)));
-            
-            if (tRequest.IsGenericType)
-            {
-                var tGenericRequest = tRequest.GetGenericTypeDefinition();
-                var tProfiles = allProfiles
-                    .Where(x =>
-                        x.IsGenericTypeDefinition &&
-                        x.BaseType.GenericTypeArguments[0].IsGenericType &&
-                        x.BaseType.GenericTypeArguments[0].GetGenericTypeDefinition() == tGenericRequest)
-                    .Select(x => x.MakeGenericType(tRequest.GenericTypeArguments));
-
-                profiles.AddRange(tProfiles
-                    .Select(x => (CrudRequestProfile)Activator.CreateInstance(x)));
-            }
-
-            if (!profiles.Any())
-            {
-                var tProfile = typeof(IBulkRequest).IsAssignableFrom(tRequest)
-                    ? typeof(DefaultBulkCrudRequestProfile<>).MakeGenericType(tRequest)
-                    : typeof(DefaultCrudRequestProfile<>).MakeGenericType(tRequest);
-
-                profiles.Add((CrudRequestProfile)Activator.CreateInstance(tProfile));
-            }
-            
-            profiles.AddRange(new[] { tRequest.BaseType }
-                .Concat(tRequest.GetInterfaces())
-                .Where(x => x != null && typeof(ICrudRequest).IsAssignableFrom(x))
-                .Select(GetRequestProfileFor));
-
-            profile = profiles.First();
-            profile.Inherit(profiles.Skip(1).Where(x => x != null));
-
-            _requestProfiles[tRequest] = profile;
 
             return profile;
         }
@@ -108,11 +117,8 @@ namespace Turner.Infrastructure.Crud.Configuration
         {
             if (_requestConfigs.TryGetValue(tRequest, out var config))
                 return config;
-
-            config = (ICrudRequestConfig) Activator.CreateInstance(
-                typeof(CrudRequestConfig<>).MakeGenericType(tRequest));
-
-            GetRequestProfileFor(tRequest).Apply(config);
+            
+            config = GetRequestProfileFor(tRequest).BuildConfiguration();
 
             _requestConfigs[tRequest] = config;
 

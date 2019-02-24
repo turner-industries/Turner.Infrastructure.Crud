@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,9 +16,9 @@ namespace Turner.Infrastructure.Crud.Configuration
         
         internal abstract void Inherit(IEnumerable<CrudRequestProfile> profile);
 
-        internal abstract void Apply(ICrudRequestConfig config);
+        internal abstract ICrudRequestConfig BuildConfiguration();
 
-        internal abstract void Apply<TRequest>(CrudRequestConfig<TRequest> config, ref List<Type> inherited);
+        internal abstract void Apply<TRequestConfig>(CrudRequestConfig<TRequestConfig> config);
     }
     
     public abstract class CrudRequestProfileCommon<TRequest> 
@@ -26,7 +27,7 @@ namespace Turner.Infrastructure.Crud.Configuration
         internal readonly Dictionary<Type, ICrudRequestEntityConfigBuilder> _requestEntityBuilders
             = new Dictionary<Type, ICrudRequestEntityConfigBuilder>();
 
-        private readonly List<CrudRequestProfile> _inheritProfiles 
+        private List<CrudRequestProfile> _inheritProfiles 
             = new List<CrudRequestProfile>();
 
         private Action<CrudRequestOptionsConfig> _optionsConfig;
@@ -42,34 +43,22 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         internal override void Inherit(IEnumerable<CrudRequestProfile> profiles)
         {
-            _inheritProfiles.AddRange(profiles);
+            _inheritProfiles = profiles.ToList();
         }
 
-        internal override void Apply(ICrudRequestConfig config)
+        internal override ICrudRequestConfig BuildConfiguration()
         {
-            if (!(config is CrudRequestConfig<TRequest> tConfig))
-            {
-                const string message = "Apply() should only be called internally.";
-                throw new BadCrudConfigurationException(message);
-            }
-
-            var inherited = new List<Type>();
-
-            Apply(tConfig, ref inherited);
-        }
-
-        internal override void Apply<TPerspective>(CrudRequestConfig<TPerspective> config, ref List<Type> inherited)
-        {
+            var config = (CrudRequestConfig<TRequest>)Activator.CreateInstance(
+                typeof(CrudRequestConfig<>).MakeGenericType(typeof(TRequest)));
+            
             foreach (var profile in _inheritProfiles)
-            {
-                if (inherited.Contains(profile.RequestType))
-                    continue;
+                profile.Apply(config);
 
-                inherited.Add(profile.RequestType);
+            return config;
+        }
 
-                profile.Apply(config, ref inherited);
-            }
-
+        internal override void Apply<TConfigRequest>(CrudRequestConfig<TConfigRequest> config)
+        {
             if (_optionsConfig != null)
             {
                 var options = new CrudRequestOptionsConfig();
