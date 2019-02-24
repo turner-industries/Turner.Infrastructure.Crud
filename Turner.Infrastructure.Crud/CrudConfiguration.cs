@@ -38,7 +38,9 @@ namespace Turner.Infrastructure.Crud
             _container = container;
 
             _assemblies.Add(typeof(CrudInitializer).Assembly);
-            _assemblies.AddRange(assemblies);
+
+            if (assemblies != null)
+                _assemblies.AddRange(assemblies);
 
             _tasks.AddRange(new ICrudInitializationTask[]
             {
