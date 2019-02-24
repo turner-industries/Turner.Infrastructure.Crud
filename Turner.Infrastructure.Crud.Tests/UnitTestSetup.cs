@@ -1,12 +1,13 @@
-﻿using AutoMapper;
+﻿using System;
+using System.Reflection;
+using AutoMapper;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using NUnit.Framework;
 using SimpleInjector;
 using SimpleInjector.Lifestyles;
-using System;
-using System.Reflection;
+using Turner.Infrastructure.Crud.FluentValidation;
 using Turner.Infrastructure.Crud.Tests.Fakes;
 using Turner.Infrastructure.Mediator.Configuration;
 
@@ -30,17 +31,14 @@ namespace Turner.Infrastructure.Crud.Tests
             ConfigureFluentValidation(container, assemblies);
 
             container.ConfigureMediator(assemblies);
-
-            var crudOptions = new CrudOptions
-            {
-                UseFluentValidation = true,
-                UseEntityFramework = true,
-                ValidateAllRequests = false
-            };
-
+            
             container.RegisterInstance(new FakeInjectable { Value = 1 });
 
-            Crud.Configure(container, assemblies, crudOptions);
+            Crud.CreateInitializer(container, assemblies)
+                .ValidateAllRequests(false)
+                .UseFluentValidation()
+                // TODO: .UseEntityFramework()
+                .Initialize();
             
             Container = container;
         }
