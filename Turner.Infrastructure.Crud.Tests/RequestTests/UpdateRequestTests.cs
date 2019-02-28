@@ -162,7 +162,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public UpdateUserWithoutResponseRequestProfile()
         {
             ForEntity<User>()
-                .WithKeys(r => r.Item.Id, e => e.Id);
+                .UseKeys(r => r.Item.Id, e => e.Id);
         }
     }
 
