@@ -70,7 +70,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public SaveRequestProfile()
         {
             ForEntity<TEntity>()
-                .WithRequestKey(request => request.Key)
+                .UseRequestKey(request => request.Key)
                 .CreateEntityWith(request => Mapper.Map<TEntity>(request.Item))
                 .UpdateEntityWith((request, entity) => Mapper.Map(request.Item, entity));
         }
@@ -89,7 +89,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public SaveByIdRequestProfile()
         {
-            ForEntity<TEntity>().WithEntityKey("Id");
+            ForEntity<TEntity>().UseEntityKey("Id");
         }
     }
 
@@ -106,7 +106,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public SaveByGuidRequestProfile()
         {
-            ForEntity<TEntity>().WithEntityKey("Guid");
+            ForEntity<TEntity>().UseEntityKey("Guid");
         }
     }
 
@@ -123,7 +123,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public SaveByNameRequestProfile()
         {
-            ForEntity<TEntity>().WithEntityKey("Name");
+            ForEntity<TEntity>().UseEntityKey("Name");
         }
     }
 }

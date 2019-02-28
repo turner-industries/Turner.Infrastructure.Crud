@@ -8,6 +8,8 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Select
     public class SelectorBuilder<TRequest, TEntity>
         where TEntity : class
     {
+        // TODO: Expose simple selectors through extensions
+
         public ISelector Single(Func<TRequest, Expression<Func<TEntity, bool>>> selector)
         {
             return Selector.From(selector);
@@ -28,8 +30,8 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Select
             Expression<Func<TRequest, TRequestKey>> requestKeyExpr,
             Expression<Func<TEntity, TEntityKey>> entityKeyExpr)
         {
-            var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
-            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
+            var eParamExpr = Expression.Parameter(typeof(TEntity));
+            var rParamExpr = Expression.Parameter(typeof(TRequest));
 
             var eKeyExpr = Expression.Invoke(entityKeyExpr, eParamExpr);
             var rKeyExpr = Expression.Invoke(requestKeyExpr, rParamExpr);

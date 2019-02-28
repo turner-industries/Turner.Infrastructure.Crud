@@ -7,60 +7,60 @@ namespace Turner.Infrastructure.Crud.Configuration
 {
     public static class KeyExtensions
     {
-        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> WithKeys<TRequest, TEntity, TItemKey, TEntityKey>(
+        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> UseKeys<TRequest, TEntity, TRequestKey, TEntityKey>(
             this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
-            Expression<Func<TRequest, TItemKey>> requestKeyExpr,
+            Expression<Func<TRequest, TRequestKey>> requestKeyExpr,
             Expression<Func<TEntity, TEntityKey>> entityKeyExpr)
             where TEntity : class
         {
             return config
-                .WithEntityKey(entityKeyExpr)
-                .WithRequestKey(requestKeyExpr);
+                .UseEntityKey(entityKeyExpr)
+                .UseRequestKey(requestKeyExpr);
         }
         
-        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> WithKeys<TRequest, TEntity>(
+        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> UseKeys<TRequest, TEntity>(
             this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
             string requestKeyProperty,
             string entityKeyProperty)
             where TEntity : class
         {
             return config
-                .WithEntityKey(entityKeyProperty)
-                .WithRequestKey(requestKeyProperty);
+                .UseEntityKey(entityKeyProperty)
+                .UseRequestKey(requestKeyProperty);
         }
 
-        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> WithKeys<TRequest, TEntity>(
+        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> UseKeys<TRequest, TEntity>(
             this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
             string keyProperty)
             where TEntity : class
-        => config.WithKeys(keyProperty, keyProperty);
+        => config.UseKeys(keyProperty, keyProperty);
 
-        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithKeys<TRequest, TItem, TEntity, TItemKey, TEntityKey>(
+        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseKeys<TRequest, TItem, TEntity, TItemKey, TEntityKey>(
             this CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
-            Expression<Func<TItem, TItemKey>> itemKeyExpr,
+            Expression<Func<TItem, TItemKey>> requestItemKeyExpr,
             Expression<Func<TEntity, TEntityKey>> entityKeyExpr)
             where TEntity : class
         {
             return config
-                .WithEntityKey(entityKeyExpr)
-                .WithRequestKey(itemKeyExpr);
+                .UseEntityKey(entityKeyExpr)
+                .UseRequestItemKey(requestItemKeyExpr);
         }
 
-        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithKeys<TRequest, TItem, TEntity>(
+        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseKeys<TRequest, TItem, TEntity>(
             this CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
-            string itemKeyProperty,
+            string requestItemKeyProperty,
             string entityKeyProperty)
             where TEntity : class
         {
             return config
-                .WithEntityKey(entityKeyProperty)
-                .WithRequestKey(itemKeyProperty);
+                .UseEntityKey(entityKeyProperty)
+                .UseRequestItemKey(requestItemKeyProperty);
         }
         
-        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithKeys<TEntity, TItem, TRequest>(
+        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseKeys<TEntity, TItem, TRequest>(
             this CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             string keyProperty)
             where TEntity : class
-        => config.WithKeys(keyProperty, keyProperty);
+        => config.UseKeys(keyProperty, keyProperty);
     }
 }

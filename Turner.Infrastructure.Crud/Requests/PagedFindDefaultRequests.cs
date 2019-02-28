@@ -29,7 +29,7 @@ namespace Turner.Infrastructure.Crud.Requests
         public PagedFindRequestProfile()
         {
             ForEntity<TEntity>()
-                .WithRequestKey(request => request.Key);
+                .UseRequestKey(request => request.Key);
         }
     }
 
@@ -50,7 +50,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public PagedFindByIdRequestProfile()
         {
-            ForEntity<TEntity>().WithEntityKey("Id");
+            ForEntity<TEntity>().UseEntityKey("Id");
         }
     }
 
@@ -71,7 +71,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public PagedFindByGuidRequestProfile()
         {
-            ForEntity<TEntity>().WithEntityKey("Guid");
+            ForEntity<TEntity>().UseEntityKey("Guid");
         }
     }
 
@@ -92,7 +92,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public PagedFindByNameRequestProfile()
         {
-            ForEntity<TEntity>().WithEntityKey("Name");
+            ForEntity<TEntity>().UseEntityKey("Name");
         }
     }
 
