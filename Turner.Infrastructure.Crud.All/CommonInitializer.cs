@@ -1,20 +1,15 @@
-﻿using System.Reflection;
-using SimpleInjector;
-using Turner.Infrastructure.Crud.EntityFrameworkCore;
+﻿using Turner.Infrastructure.Crud.EntityFrameworkCore;
 using Turner.Infrastructure.Crud.FluentValidation;
 
-namespace Turner.Infrastructure.Crud.All
+namespace Turner.Infrastructure.Crud
 {
-    public static partial class Crud
+    public static class CommonInitializer
     {
-        public static void Initialize(Container container, Assembly[] assemblies = null)
+        public static CrudInitializer UseCommonInitialization(this CrudInitializer initializer)
         {
-            Infrastructure.Crud.Crud
-                .CreateInitializer(container)
-                .WithAssemblies(assemblies)
+            return initializer
                 .UseEntityFramework()
-                .UseFluentValidation()
-                .Initialize();
+                .UseFluentValidation();
         }
     }
 }
