@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
-    <Authors>Turner Development Team</Authors>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Turner Development Team</Authors>
     <Company>Turner Industries Group, LLC</Company>
-    <Description>Adds FluentValidation support to Turner.Infrastructure.Crud.  For documentation or support, head to the github page: https://github.com/turner-industries/Turner.Infrastructure.Crud</Description>
+    <Description>Adds all common configurations to Turner.Infrastructure.Crud.  For documentation or support, head to the github page: https://github.com/turner-industries/Turner.Infrastructure.Crud</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/turner-industries/Turner.Infrastructure.Crud</PackageProjectUrl>
     <Version>1.2.0</Version>
@@ -16,11 +16,8 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="FluentValidation" Version="8.1.3" />
-    <PackageReference Include="SimpleInjector" Version="4.4.3" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <ProjectReference Include="..\Turner.Infrastructure.Crud.EntityFrameworkCore\Turner.Infrastructure.Crud.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\Turner.Infrastructure.Crud.FluentValidation\Turner.Infrastructure.Crud.FluentValidation.csproj" />
     <ProjectReference Include="..\Turner.Infrastructure.Crud\Turner.Infrastructure.Crud.csproj" />
   </ItemGroup>
 

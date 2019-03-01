@@ -12,7 +12,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, CrudRequestEntityConfigBuilder<TRequest, TEntity>>
         where TEntity : class
     {
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> WithRequestKey<TKey>(
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> UseRequestKey<TKey>(
             Expression<Func<TRequest, TKey>> requestItemKeyExpr)
         {
             RequestItemKey = new Key(typeof(TKey), requestItemKeyExpr);
@@ -20,7 +20,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudRequestEntityConfigBuilder<TRequest, TEntity> WithRequestKey(string requestKeyProperty)
+        public CrudRequestEntityConfigBuilder<TRequest, TEntity> UseRequestKey(string requestKeyProperty)
         {
             var rParamExpr = Expression.Parameter(typeof(TRequest));
             var rKeyExpr = Expression.PropertyOrField(rParamExpr, requestKeyProperty);

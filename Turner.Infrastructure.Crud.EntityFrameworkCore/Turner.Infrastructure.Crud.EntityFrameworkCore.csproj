@@ -1,9 +1,20 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
+    <Authors>Turner Development Team</Authors>
+    <Company>Turner Industries Group, LLC</Company>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Description>Adds Microsoft's Entity Framework (Core) support to Turner.Infrastructure.Crud.  For documentation or support, head to the github page: https://github.com/turner-industries/Turner.Infrastructure.Crud</Description>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/turner-industries/Turner.Infrastructure.Crud</PackageProjectUrl>
+    <Version>1.2.0</Version>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="LICENSE" Pack="true" PackagePath="" />
+  </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.2" />
   </ItemGroup>
