@@ -2,7 +2,7 @@
 
 namespace Turner.Infrastructure.Crud.Validation
 {
-    public class ValidatorFactory
+    internal class ValidatorFactory
     {
         private readonly Func<Type, object> _validatorCreator;
 

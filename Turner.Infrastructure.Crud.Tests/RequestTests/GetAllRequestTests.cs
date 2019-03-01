@@ -451,7 +451,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public GetAllCustomSortedUsersProfile()
         {
             ForEntity<User>()
-                .SortWith((req, users) => users.OrderByDescending(user => user.Name));
+                .SortUsing((req, users) => users.OrderByDescending(user => user.Name));
         }
     }
     
@@ -496,6 +496,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     public class GetAllTableSortedUsers : IGetAllRequest<User, UserGetDto>
     {
         public string PrimaryColumn { get; set; }
+
         public string SecondaryColumn { get; set; }
         
         public int SecondaryDirection { get; set; }
@@ -511,8 +512,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
                     .AsTable<string>()
                     .WithControl(r => r.PrimaryColumn, SortDirection.Ascending)
                     .WithControl("SecondaryColumn", "SecondaryDirection")
-                    .WithColumn(UsersSortColumn.Name, "Name")
-                    .WithColumn(UsersSortColumn.IsDeleted, user => user.IsDeleted));
+                    .OnProperty(UsersSortColumn.Name, "Name")
+                    .OnProperty(UsersSortColumn.IsDeleted, user => user.IsDeleted));
         }
     }
     
@@ -529,7 +530,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
                 .FilterWith(builder => builder.Using((request, users) => users.Where(x => !x.IsDeleted)));
 
             ForEntity<User>()
-                .SortWith((q, users) => users.OrderByDescending(user => user.Name))
+                .SortUsing((q, users) => users.OrderByDescending(user => user.Name))
                 .FilterWith(builder => builder.Using((request, users) => users.Where(x => x.Name != "AUser")));
         }
     }

@@ -20,7 +20,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         private readonly List<IItemHookFactory> _itemHooks
             = new List<IItemHookFactory>();
         
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItems(
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithRequestItems(
             Expression<Func<TRequest, IEnumerable<TItem>>> requestItemsExpr)
         {
             _getRequestItems = requestItemsExpr;
@@ -29,33 +29,33 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItemHook<THook, TBaseRequest>()
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook<THook, TBaseRequest>()
             where THook : IItemHook<TBaseRequest, TItem>
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(WithItemHook), typeof(TBaseRequest), typeof(TRequest));
+                throw new ContravarianceException(nameof(AddItemHook), typeof(TBaseRequest), typeof(TRequest));
             
             _itemHooks.Add(TypeItemHookFactory.From<THook, TBaseRequest, TItem>());
 
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItemHook<THook>()
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook<THook>()
             where THook : IItemHook<TRequest, TItem>
-            => WithItemHook<THook, TRequest>();
+            => AddItemHook<THook, TRequest>();
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItemHook<TBaseRequest>(
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook<TBaseRequest>(
             IItemHook<TBaseRequest, TItem> hook)
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(WithItemHook), typeof(TBaseRequest), typeof(TRequest));
+                throw new ContravarianceException(nameof(AddItemHook), typeof(TBaseRequest), typeof(TRequest));
 
             _itemHooks.Add(InstanceItemHookFactory.From(hook));
 
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItemHook(
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook(
             Func<TRequest, TItem, CancellationToken, Task<TItem>> hook)
         {
             _itemHooks.Add(FunctionItemHookFactory.From(hook));
@@ -63,11 +63,11 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItemHook(
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook(
             Func<TRequest, TItem, Task<TItem>> hook)
-            => WithItemHook((request, item, ct) => hook(request, item));
+            => AddItemHook((request, item, ct) => hook(request, item));
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItemHook(
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook(
             Func<TRequest, TItem, TItem> hook)
         {
             _itemHooks.Add(FunctionItemHookFactory.From(hook));
@@ -75,7 +75,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithRequestKey<TKey>(
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseRequestItemKey<TKey>(
             Expression<Func<TItem, TKey>> itemKeyExpr)
         {
             RequestItemKey = new Key(typeof(TKey), itemKeyExpr);
@@ -83,7 +83,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithRequestKey(
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseRequestItemKey(
             string itemKeyProperty)
         {
             var iParamExpr = Expression.Parameter(typeof(TItem));
@@ -206,7 +206,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             {
                 var message =
                     $"No request item source has been defined for '{typeof(TRequest)}'." +
-                    $"Define item source by calling `{nameof(WithItems)}` in the request's profile.";
+                    $"Define item source by calling `{nameof(WithRequestItems)}` in the request's profile.";
 
                 throw new BadCrudConfigurationException(message);
             }

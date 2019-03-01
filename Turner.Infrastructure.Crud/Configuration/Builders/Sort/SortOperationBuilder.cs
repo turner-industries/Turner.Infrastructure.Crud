@@ -7,6 +7,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
         where TEntity : class
     {
         public Expression<Func<TEntity, TProp>> Clause { get; set; }
+
         public SortDirection Direction { get; set; } = SortDirection.Default;
     }
 }

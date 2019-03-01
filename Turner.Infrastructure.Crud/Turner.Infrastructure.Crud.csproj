@@ -3,6 +3,16 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <Configurations>Debug;Release;Deploy</Configurations>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <Authors>Turner Development Team</Authors>
+    <Company>Turner Industries Group, LLC</Company>
+    <Description>Turner.Infrastructure.Crud is intended to provide a package that complements the Turner Mediator by providing auto-generated request handlers for commonly-used (CRUD) requests.
+
+For documentation or support, head to the github page: https://github.com/turner-industries/Turner.Infrastructure.Crud</Description>
+    <PackageLicenseUrl>https://github.com/turner-industries/Turner.Infrastructure.Crud/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/turner-industries/Turner.Infrastructure.Crud</PackageProjectUrl>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

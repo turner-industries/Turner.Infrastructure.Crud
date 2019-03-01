@@ -19,7 +19,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public DeleteRequestProfile()
         {
-            ForEntity<TEntity>().WithRequestKey(request => request.Key);
+            ForEntity<TEntity>().UseRequestKey(request => request.Key);
         }
     }
 
@@ -38,7 +38,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public DeleteRequestProfile()
         {
-            ForEntity<TEntity>().WithRequestKey(request => request.Key);
+            ForEntity<TEntity>().UseRequestKey(request => request.Key);
         }
     }
 
@@ -56,7 +56,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public DeleteByIdRequestProfile()
         {
-            ForEntity<TEntity>().WithEntityKey("Id");
+            ForEntity<TEntity>().UseEntityKey("Id");
         }
     }
 
@@ -74,7 +74,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public DeleteByIdRequestProfile()
         {
-            ForEntity<TEntity>().WithEntityKey("Id");
+            ForEntity<TEntity>().UseEntityKey("Id");
         }
     }
 
@@ -92,7 +92,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public DeleteByGuidRequestProfile()
         {
-            ForEntity<TEntity>().WithEntityKey("Guid");
+            ForEntity<TEntity>().UseEntityKey("Guid");
         }
     }
 
@@ -110,7 +110,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public DeleteByGuidRequestProfile()
         {
-            ForEntity<TEntity>().WithEntityKey("Guid");
+            ForEntity<TEntity>().UseEntityKey("Guid");
         }
     }
 
@@ -128,7 +128,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public DeleteByNameRequestProfile()
         {
-            ForEntity<TEntity>().WithEntityKey("Name");
+            ForEntity<TEntity>().UseEntityKey("Name");
         }
     }
 
@@ -146,7 +146,7 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public DeleteByNameRequestProfile()
         {
-            ForEntity<TEntity>().WithEntityKey("Name");
+            ForEntity<TEntity>().UseEntityKey("Name");
         }
     }
 }

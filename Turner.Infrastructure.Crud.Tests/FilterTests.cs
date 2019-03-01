@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Turner.Infrastructure.Crud.Configuration;
@@ -125,7 +126,7 @@ namespace Turner.Infrastructure.Crud.Tests
             var request = new ExcludeAfterConstantDateRequest();
 
             var response = await Mediator.HandleAsync(request);
-
+            
             Assert.IsFalse(response.HasErrors);
             Assert.NotNull(response.Data);
             Assert.NotNull(response.Data.Items);
