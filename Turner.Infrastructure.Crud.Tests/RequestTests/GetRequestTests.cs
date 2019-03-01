@@ -1,6 +1,6 @@
-﻿using NUnit.Framework;
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Tests.Fakes;
@@ -141,7 +141,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public GetUserByIdProfile()
         {
             ForEntity<User>()
-                .SelectWith(builder => builder.Single("Id"))
+                .SelectUsing((r, e) => r.Id == e.Id)
                 .WithDefault(new User { Name = "DefaultUser" });
         }
     }
