@@ -155,7 +155,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     {
         public SynchronizeUsersByIdProfile() : base(request => request.Items)
         {
-            ForEntity<User>().UseKeys("Id");
+            ForEntity<User>().WithKeys("Id");
         }
     }
 
@@ -181,7 +181,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public SynchronizeUserClaimsProfile() : base(request => request.Claims)
         {
             ForEntity<UserClaim>()
-                .UseKeys(x => x, x => x.Claim)
+                .WithKeys(x => x, x => x.Claim)
                 .FilterWith(new NotDeletedFilter())
                 .FilterUsing((request, claim) => request.UserId == claim.UserId)
                 .CreateResultWith(x => x.Claim)

@@ -120,7 +120,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         {
             ForEntity<User>()
                 .CreateEntityWith(user => Mapper.Map<User>(user))
-                .WithRequestItems(request => request.Users);
+                .WithItems(request => request.Users);
         }
     }
 }
