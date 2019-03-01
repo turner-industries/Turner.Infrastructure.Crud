@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
@@ -6,11 +6,15 @@
     <Authors>Turner Development Team</Authors>
     <Company>Turner Industries Group, LLC</Company>
     <Description>Adds all common configurations to Turner.Infrastructure.Crud.  For documentation or support, head to the github page: https://github.com/turner-industries/Turner.Infrastructure.Crud</Description>
-    <PackageLicenseUrl>https://github.com/turner-industries/Turner.Infrastructure.Crud/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/turner-industries/Turner.Infrastructure.Crud</PackageProjectUrl>
-    <Version>1.1.1</Version>
+    <Version>1.2.0</Version>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="LICENSE" Pack="true" PackagePath="" />
+  </ItemGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\Turner.Infrastructure.Crud.EntityFrameworkCore\Turner.Infrastructure.Crud.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\Turner.Infrastructure.Crud.FluentValidation\Turner.Infrastructure.Crud.FluentValidation.csproj" />
