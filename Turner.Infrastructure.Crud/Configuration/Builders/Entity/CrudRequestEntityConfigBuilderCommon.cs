@@ -58,30 +58,30 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return (TBuilder)this;
         }
 
-        public TBuilder AddEntityHook<THook, TBaseRequest, TBaseEntity>()
+        public TBuilder WithEntityHook<THook, TBaseRequest, TBaseEntity>()
             where TBaseEntity : class
             where THook : IEntityHook<TBaseRequest, TBaseEntity>
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(AddEntityHook), typeof(TBaseRequest), typeof(TRequest));
+                throw new ContravarianceException(nameof(WithEntityHook), typeof(TBaseRequest), typeof(TRequest));
 
             if (!typeof(TBaseEntity).IsAssignableFrom(typeof(TEntity)))
-                throw new ContravarianceException(nameof(AddEntityHook), typeof(TBaseEntity), typeof(TEntity));
+                throw new ContravarianceException(nameof(WithEntityHook), typeof(TBaseEntity), typeof(TEntity));
 
             EntityHooks.Add(TypeEntityHookFactory.From<THook, TBaseRequest, TBaseEntity>());
 
             return (TBuilder)this;
         }
 
-        public TBuilder AddEntityHook<THook, TBaseRequest>()
+        public TBuilder WithEntityHook<THook, TBaseRequest>()
             where THook : IEntityHook<TBaseRequest, TEntity>
-            => AddEntityHook<THook, TBaseRequest, TEntity>();
+            => WithEntityHook<THook, TBaseRequest, TEntity>();
 
-        public TBuilder AddEntityHook<THook>()
+        public TBuilder WithEntityHook<THook>()
             where THook : IEntityHook<TRequest, TEntity>
-            => AddEntityHook<THook, TRequest, TEntity>();
+            => WithEntityHook<THook, TRequest, TEntity>();
 
-        public TBuilder AddEntityHook<TBaseRequest, TBaseEntity>(IEntityHook<TBaseRequest, TBaseEntity> hook)
+        public TBuilder WithEntityHook<TBaseRequest, TBaseEntity>(IEntityHook<TBaseRequest, TBaseEntity> hook)
             where TBaseEntity : class
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
@@ -95,31 +95,31 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return (TBuilder)this;
         }
 
-        public TBuilder AddEntityHook(Func<TRequest, TEntity, CancellationToken, Task> hook)
+        public TBuilder WithEntityHook(Func<TRequest, TEntity, CancellationToken, Task> hook)
         {
             EntityHooks.Add(FunctionEntityHookFactory.From(hook));
 
             return (TBuilder)this;
         }
 
-        public TBuilder AddEntityHook(Func<TRequest, TEntity, Task> hook)
-            => AddEntityHook((request, entity, ct) => hook(request, entity));
+        public TBuilder WithEntityHook(Func<TRequest, TEntity, Task> hook)
+            => WithEntityHook((request, entity, ct) => hook(request, entity));
 
-        public TBuilder AddEntityHook(Action<TRequest, TEntity> hook)
+        public TBuilder WithEntityHook(Action<TRequest, TEntity> hook)
         {
             EntityHooks.Add(FunctionEntityHookFactory.From(hook));
 
             return (TBuilder)this;
         }
 
-        public TBuilder UseEntityKey<TKey>(Expression<Func<TEntity, TKey>> entityKeyExpr)
+        public TBuilder WithEntityKey<TKey>(Expression<Func<TEntity, TKey>> entityKeyExpr)
         {
             EntityKey = new Key(typeof(TKey), entityKeyExpr);
 
             return (TBuilder)this;
         }
 
-        public TBuilder UseEntityKey(string entityKeyProperty)
+        public TBuilder WithEntityKey(string entityKeyProperty)
         {
             var eParamExpr = Expression.Parameter(typeof(TEntity));
             var eKeyExpr = Expression.PropertyOrField(eParamExpr, entityKeyProperty);
@@ -155,6 +155,19 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return AddRequestFilter(builder.Build());
         }
 
+        public TBuilder FilterWith<TBaseRequest>(
+            Func<TBaseRequest, IQueryable<TEntity>, IQueryable<TEntity>> filterFunc)
+        {
+            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(FilterWith), typeof(TBaseRequest), typeof(TRequest));
+
+            return AddRequestFilter(FunctionFilterFactory.From(filterFunc));
+        }
+        
+        public TBuilder FilterWith(
+            Func<TRequest, IQueryable<TEntity>, IQueryable<TEntity>> filterFunc)
+            => FilterWith<TRequest>(filterFunc);
+        
         public TBuilder FilterWith<TFilter, TBaseRequest, TBaseEntity>()
             where TBaseEntity : class
             where TFilter : IFilter<TBaseRequest, TBaseEntity>
@@ -188,19 +201,6 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return AddRequestFilter(InstanceFilterFactory.From(filter));
         }
         
-        public TBuilder FilterUsing<TBaseRequest>(
-            Func<TBaseRequest, IQueryable<TEntity>, IQueryable<TEntity>> filterFunc)
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(FilterWith), typeof(TBaseRequest), typeof(TRequest));
-
-            return AddRequestFilter(FunctionFilterFactory.From(filterFunc));
-        }
-        
-        public TBuilder FilterUsing(
-            Func<TRequest, IQueryable<TEntity>, IQueryable<TEntity>> filterFunc)
-            => FilterUsing<TRequest>(filterFunc);
-        
         public TBuilder SortWith(
             Action<SortBuilder<TRequest, TEntity>> build)
         {
@@ -211,6 +211,20 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             
             return (TBuilder)this;
         }
+
+        public TBuilder SortWith<TBaseRequest>(
+            Func<TBaseRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
+        {
+            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(SortWith), typeof(TBaseRequest), typeof(TRequest));
+
+            Sorter = FunctionSorterFactory.From(sortFunc);
+
+            return (TBuilder)this;
+        }
+
+        public TBuilder SortWith(Func<TRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
+            => SortWith<TRequest>(sortFunc);
 
         public TBuilder SortWith<TSorter, TBaseRequest>()
             where TSorter : ISorter<TBaseRequest, TEntity>
@@ -236,20 +250,6 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
 
             return (TBuilder)this;
         }
-
-        public TBuilder SortUsing<TBaseRequest>(
-            Func<TBaseRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(SortWith), typeof(TBaseRequest), typeof(TRequest));
-
-            Sorter = FunctionSorterFactory.From(sortFunc);
-
-            return (TBuilder)this;
-        }
-
-        public TBuilder SortUsing(Func<TRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
-            => SortUsing<TRequest>(sortFunc);
 
         public TBuilder CreateResultWith<TResult>(
             Func<TEntity, CancellationToken, Task<TResult>> creator)

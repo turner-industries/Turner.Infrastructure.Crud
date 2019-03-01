@@ -107,7 +107,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     {
         public MergeUsersByIdProfile() : base(request => request.Items)
         {
-            ForEntity<User>().UseKeys("Id");
+            ForEntity<User>().WithKeys("Id");
         }
     }
 }

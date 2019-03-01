@@ -94,8 +94,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public UpdateAllUsersByIdProfile()
         {
             ForEntity<User>()
-                .WithRequestItems(request => request.Items)
-                .UseKeys(item => item.Id, entity => entity.Id);
+                .WithItems(request => request.Items)
+                .WithKeys(item => item.Id, entity => entity.Id);
         }
     }
 }

@@ -11,7 +11,7 @@ namespace Turner.Infrastructure.Crud.Validation
     {
     }
 
-    internal class CrudMaybeValidateBaseDecorator<TRequest, TResponse>
+    public class CrudMaybeValidateBaseDecorator<TRequest, TResponse>
         where TResponse : Response, new()
     {
         private readonly ValidatorFactory _validatorFactory;
@@ -35,7 +35,7 @@ namespace Turner.Infrastructure.Crud.Validation
         }
     }
 
-    internal class CrudMaybeValidateDecorator<TRequest>
+    public class CrudMaybeValidateDecorator<TRequest>
         : IRequestHandler<TRequest>
         where TRequest : IRequest, ICrudRequest
     {
@@ -53,7 +53,7 @@ namespace Turner.Infrastructure.Crud.Validation
             => _validationHandler.HandleAsync(request, () => _decorateeFactory().HandleAsync(request));
     }
 
-    internal class CrudMaybeValidateDecorator<TRequest, TResult>
+    public class CrudMaybeValidateDecorator<TRequest, TResult>
         : IRequestHandler<TRequest, TResult>
         where TRequest : IRequest<TResult>, ICrudRequest
     {
