@@ -451,7 +451,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public GetAllCustomSortedUsersProfile()
         {
             ForEntity<User>()
-                .SortWith((req, users) => users.OrderByDescending(user => user.Name));
+                .SortUsing((req, users) => users.OrderByDescending(user => user.Name));
         }
     }
     
@@ -529,7 +529,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
                 .FilterWith(builder => builder.Using((request, users) => users.Where(x => !x.IsDeleted)));
 
             ForEntity<User>()
-                .SortWith((q, users) => users.OrderByDescending(user => user.Name))
+                .SortUsing((q, users) => users.OrderByDescending(user => user.Name))
                 .FilterWith(builder => builder.Using((request, users) => users.Where(x => x.Name != "AUser")));
         }
     }

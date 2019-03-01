@@ -224,7 +224,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             var builder = new CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>();
 
             if (_defaultItemSource != null)
-                builder.WithItems(_defaultItemSource);
+                builder.WithRequestItems(_defaultItemSource);
 
             _requestEntityBuilders[typeof(TEntity)] = builder;
 

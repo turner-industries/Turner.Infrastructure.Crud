@@ -20,7 +20,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         private readonly List<IItemHookFactory> _itemHooks
             = new List<IItemHookFactory>();
         
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithItems(
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithRequestItems(
             Expression<Func<TRequest, IEnumerable<TItem>>> requestItemsExpr)
         {
             _getRequestItems = requestItemsExpr;
@@ -206,7 +206,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             {
                 var message =
                     $"No request item source has been defined for '{typeof(TRequest)}'." +
-                    $"Define item source by calling `{nameof(WithItems)}` in the request's profile.";
+                    $"Define item source by calling `{nameof(WithRequestItems)}` in the request's profile.";
 
                 throw new BadCrudConfigurationException(message);
             }
