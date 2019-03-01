@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Turner.Infrastructure.Crud.Exceptions;
 
 namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
 {
@@ -86,7 +87,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
                 });
         }
         
-        public TableSortBuilder<TRequest, TEntity, TControl> WithColumn<TKey>(
+        public TableSortBuilder<TRequest, TEntity, TControl> OnProperty<TKey>(
             TControl controlValue,
             Expression<Func<TEntity, TKey>> clause)
         {
@@ -99,7 +100,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             return this;
         }
 
-        public TableSortBuilder<TRequest, TEntity, TControl> WithColumn(TControl controlValue, string entityProperty)
+        public TableSortBuilder<TRequest, TEntity, TControl> OnProperty(TControl controlValue, string entityProperty)
         {
             if (controlValue == null)
                 throw new ArgumentNullException(nameof(controlValue));
@@ -109,22 +110,60 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
                 ?? throw new ArgumentException(nameof(entityProperty));
 
             var fwdMethodInfo = typeof(TableSortBuilder<TRequest, TEntity, TControl>)
-                .GetMethod("ForwardWithColumn", BindingFlags.Instance | BindingFlags.NonPublic);
+                .GetMethod("ForwardOnProperty", BindingFlags.Instance | BindingFlags.NonPublic);
 
             var fwdMethod = fwdMethodInfo.MakeGenericMethod(entityProp.Type);
 
             return (TableSortBuilder<TRequest, TEntity, TControl>)
                 fwdMethod.Invoke(this, new object[] { controlValue, entityProperty });
         }
-        
-        private TableSortBuilder<TRequest, TEntity, TControl> ForwardWithColumn<TKey>(
+
+        public TableSortBuilder<TRequest, TEntity, TControl> OnAnyProperty()
+        {
+            if (typeof(int).IsAssignableFrom(typeof(TControl)))
+            {
+                var properties = typeof(TEntity).GetProperties();
+                for (int i = 0; i < properties.Length; ++i)
+                    AddPropertyColumn(properties[i], Expression.Constant(i));
+            }
+            else if (typeof(string).IsAssignableFrom(typeof(TControl)))
+            {
+                foreach (var property in typeof(TEntity).GetProperties())
+                    AddPropertyColumn(property, Expression.Constant(property.Name));
+            }
+            else
+            {
+                throw new BadCrudConfigurationException("'OnAnyProperty' may only be used with int and string controls (TControl)");
+            }
+
+            return this;
+        }
+
+        private TableSortBuilder<TRequest, TEntity, TControl> ForwardOnProperty<TKey>(
             TControl controlValue, string entityProperty)
         {
             var entityParam = Expression.Parameter(typeof(TEntity));
             var entityProp = Expression.PropertyOrField(entityParam, entityProperty);
             var readPropExpr = Expression.Lambda<Func<TEntity, TKey>>(entityProp, entityParam);
 
-            return WithColumn(controlValue, readPropExpr);
+            return OnProperty(controlValue, readPropExpr);
+        }
+
+        private void AddPropertyColumn(PropertyInfo property, ConstantExpression key)
+        {
+            var addInfo = _columns.GetType().GetMethods().Single(x => x.Name == "Add");
+
+            var columnsParam = Expression.Constant(_columns);
+            var entityParam = Expression.Parameter(typeof(TEntity));
+            var entityProp = Expression.Property(entityParam, property);
+            var getEntityProp = Expression.Lambda(entityProp, entityParam);
+            var exprHolderType = typeof(TableSortBuilder<,,>.EntityExpressionHolder<>)
+                .MakeGenericType(typeof(TRequest), typeof(TEntity), typeof(TControl), property.PropertyType);
+            var exprHolderCtor = exprHolderType.GetConstructors()[0];
+            var exprHolderParam = Expression.New(exprHolderCtor, getEntityProp);
+            var addColumn = Expression.Call(columnsParam, addInfo, key, exprHolderParam);
+
+            Expression.Lambda<Action>(addColumn).Compile().Invoke();
         }
 
         internal override ISorterFactory Build()

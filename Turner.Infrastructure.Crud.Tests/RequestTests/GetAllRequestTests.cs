@@ -511,8 +511,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
                     .AsTable<string>()
                     .WithControl(r => r.PrimaryColumn, SortDirection.Ascending)
                     .WithControl("SecondaryColumn", "SecondaryDirection")
-                    .WithColumn(UsersSortColumn.Name, "Name")
-                    .WithColumn(UsersSortColumn.IsDeleted, user => user.IsDeleted));
+                    .OnProperty(UsersSortColumn.Name, "Name")
+                    .OnProperty(UsersSortColumn.IsDeleted, user => user.IsDeleted));
         }
     }
     
