@@ -112,14 +112,14 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return (TBuilder)this;
         }
 
-        public TBuilder WithEntityKey<TKey>(Expression<Func<TEntity, TKey>> entityKeyExpr)
+        public TBuilder UseEntityKey<TKey>(Expression<Func<TEntity, TKey>> entityKeyExpr)
         {
             EntityKey = new Key(typeof(TKey), entityKeyExpr);
 
             return (TBuilder)this;
         }
 
-        public TBuilder WithEntityKey(string entityKeyProperty)
+        public TBuilder UseEntityKey(string entityKeyProperty)
         {
             var eParamExpr = Expression.Parameter(typeof(TEntity));
             var eKeyExpr = Expression.PropertyOrField(eParamExpr, entityKeyProperty);

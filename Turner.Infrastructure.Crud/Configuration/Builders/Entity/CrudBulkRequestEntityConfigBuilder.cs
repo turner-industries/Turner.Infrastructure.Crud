@@ -75,7 +75,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithRequestKey<TKey>(
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseRequestItemKey<TKey>(
             Expression<Func<TItem, TKey>> itemKeyExpr)
         {
             RequestItemKey = new Key(typeof(TKey), itemKeyExpr);
@@ -83,7 +83,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithRequestKey(
+        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseRequestItemKey(
             string itemKeyProperty)
         {
             var iParamExpr = Expression.Parameter(typeof(TItem));

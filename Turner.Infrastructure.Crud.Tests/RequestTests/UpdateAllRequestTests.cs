@@ -95,7 +95,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         {
             ForEntity<User>()
                 .WithItems(request => request.Items)
-                .WithKeys(item => item.Id, entity => entity.Id);
+                .UseKeys(item => item.Id, entity => entity.Id);
         }
     }
 }

@@ -166,7 +166,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     {
         public GetUserByKeyProfile()
         {
-            ForEntity<User>().WithKeys("Id");
+            ForEntity<User>().UseKeys("Id");
         }
     }
 }

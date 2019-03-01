@@ -37,7 +37,7 @@ namespace Turner.Infrastructure.Crud.Requests
             : base(request => request.Items)
         {
             ForEntity<TEntity>()
-                .WithKeys("Id");
+                .UseKeys("Id");
         }
     }
 
@@ -56,7 +56,7 @@ namespace Turner.Infrastructure.Crud.Requests
             : base(request => request.Items)
         {
             ForEntity<TEntity>()
-                .WithKeys("Id");
+                .UseKeys("Id");
         }
     }
 
@@ -75,7 +75,7 @@ namespace Turner.Infrastructure.Crud.Requests
             : base(request => request.Items)
         {
             ForEntity<TEntity>()
-                .WithKeys("Guid");
+                .UseKeys("Guid");
         }
     }
     
@@ -94,7 +94,7 @@ namespace Turner.Infrastructure.Crud.Requests
             : base(request => request.Items)
         {
             ForEntity<TEntity>()
-                .WithKeys("Guid");
+                .UseKeys("Guid");
         }
     }
 
@@ -113,7 +113,7 @@ namespace Turner.Infrastructure.Crud.Requests
             : base(request => request.Items)
         {
             ForEntity<TEntity>()
-                .WithKeys("Name");
+                .UseKeys("Name");
         }
     }
 
@@ -132,7 +132,7 @@ namespace Turner.Infrastructure.Crud.Requests
             : base(request => request.Items)
         {
             ForEntity<TEntity>()
-                .WithKeys("Name");
+                .UseKeys("Name");
         }
     }
 }
