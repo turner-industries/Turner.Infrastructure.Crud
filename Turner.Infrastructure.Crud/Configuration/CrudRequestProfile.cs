@@ -76,70 +76,70 @@ namespace Turner.Infrastructure.Crud.Configuration
                 builder.Build(config);
         }
 
-        protected void WithRequestHook<THook, TBaseRequest>()
+        protected void AddRequestHook<THook, TBaseRequest>()
             where THook : IRequestHook<TBaseRequest>
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(WithRequestHook), typeof(TBaseRequest), typeof(TRequest));
+                throw new ContravarianceException(nameof(AddRequestHook), typeof(TBaseRequest), typeof(TRequest));
 
             RequestHooks.Add(TypeRequestHookFactory.From<THook, TBaseRequest>());
         }
 
-        protected void WithRequestHook<THook>()
+        protected void AddRequestHook<THook>()
             where THook : IRequestHook<TRequest>
-            => WithRequestHook<THook, TRequest>();
+            => AddRequestHook<THook, TRequest>();
 
-        protected void WithRequestHook<TBaseRequest>(IRequestHook<TBaseRequest> hook)
+        protected void AddRequestHook<TBaseRequest>(IRequestHook<TBaseRequest> hook)
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(WithRequestHook), typeof(TBaseRequest), typeof(TRequest));
+                throw new ContravarianceException(nameof(AddRequestHook), typeof(TBaseRequest), typeof(TRequest));
 
             RequestHooks.Add(InstanceRequestHookFactory.From(hook));
         }
 
-        protected void WithRequestHook(Func<TRequest, CancellationToken, Task> hook)
+        protected void AddRequestHook(Func<TRequest, CancellationToken, Task> hook)
         {
             RequestHooks.Add(FunctionRequestHookFactory.From(hook));
         }
 
-        protected void WithRequestHook(Func<TRequest, Task> hook)
-            => WithRequestHook((request, ct) => hook(request));
+        protected void AddRequestHook(Func<TRequest, Task> hook)
+            => AddRequestHook((request, ct) => hook(request));
 
-        protected void WithRequestHook(Action<TRequest> hook)
+        protected void AddRequestHook(Action<TRequest> hook)
         {
             RequestHooks.Add(FunctionRequestHookFactory.From(hook));
         }
 
-        protected void WithResultHook<THook, TBaseRequest, TResult>()
+        protected void AddResultHook<THook, TBaseRequest, TResult>()
             where THook : IResultHook<TBaseRequest, TResult>
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(WithResultHook), typeof(TBaseRequest), typeof(TRequest));
+                throw new ContravarianceException(nameof(AddResultHook), typeof(TBaseRequest), typeof(TRequest));
 
             ResultHooks.Add(TypeResultHookFactory.From<THook, TBaseRequest, TResult>());
         }
 
-        protected void WithResultHook<THook, TResult>()
+        protected void AddResultHook<THook, TResult>()
             where THook : IResultHook<TRequest, TResult>
-            => WithResultHook<THook, TRequest, TResult>();
+            => AddResultHook<THook, TRequest, TResult>();
 
-        protected void WithResultHook<TBaseRequest, TResult>(IResultHook<TBaseRequest, TResult> hook)
+        protected void AddResultHook<TBaseRequest, TResult>(IResultHook<TBaseRequest, TResult> hook)
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(WithResultHook), typeof(TBaseRequest), typeof(TRequest));
+                throw new ContravarianceException(nameof(AddResultHook), typeof(TBaseRequest), typeof(TRequest));
 
             ResultHooks.Add(InstanceResultHookFactory.From(hook));
         }
 
-        protected void WithResultHook<TResult>(Func<TRequest, TResult, CancellationToken, Task<TResult>> hook)
+        protected void AddResultHook<TResult>(Func<TRequest, TResult, CancellationToken, Task<TResult>> hook)
         {
             ResultHooks.Add(FunctionResultHookFactory.From(hook));
         }
 
-        protected void WithResultHook<TResult>(Func<TRequest, TResult, Task<TResult>> hook)
-            => WithResultHook<TResult>((request, result, ct) => hook(request, result));
+        protected void AddResultHook<TResult>(Func<TRequest, TResult, Task<TResult>> hook)
+            => AddResultHook<TResult>((request, result, ct) => hook(request, result));
 
-        protected void WithResultHook<TResult>(Func<TRequest, TResult, TResult> hook)
+        protected void AddResultHook<TResult>(Func<TRequest, TResult, TResult> hook)
         {
             ResultHooks.Add(FunctionResultHookFactory.From(hook));
         }

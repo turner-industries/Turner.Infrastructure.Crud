@@ -204,29 +204,29 @@ namespace Turner.Infrastructure.Crud.Tests
     {
         public TestHooksProfile() : base(r => r.Items)
         {
-            WithRequestHook(r => r.Items.ForEach(i => i.RequestHookMessage = "r1/"));
-            WithRequestHook(r =>
+            AddRequestHook(r => r.Items.ForEach(i => i.RequestHookMessage = "r1/"));
+            AddRequestHook(r =>
             {
                 r.Items.ForEach(i => i.RequestHookMessage += "r2/");
                 return Task.CompletedTask;
             });
 
-            WithResultHook<string>((r, t) => "t1/");
-            WithResultHook<string>((r, t) => Task.FromResult(t + "t2/"));
+            AddResultHook<string>((r, t) => "t1/");
+            AddResultHook<string>((r, t) => Task.FromResult(t + "t2/"));
 
             ForEntity<IHookEntity>()
-                .WithEntityHook((r, e) => e.EntityHookMessage = "e1/")
-                .WithEntityHook((r, e) =>
+                .AddEntityHook((r, e) => e.EntityHookMessage = "e1/")
+                .AddEntityHook((r, e) =>
                 {
                     e.EntityHookMessage += "e2/";
                     return Task.CompletedTask;
                 })
-                .WithItemHook((r, i) =>
+                .AddItemHook((r, i) =>
                 {
                     i.ItemHookMessage += "i1/";
                     return i;
                 })
-                .WithItemHook((r, i) =>
+                .AddItemHook((r, i) =>
                 {
                     i.ItemHookMessage += "i2/";
                     return Task.FromResult(i);
@@ -239,22 +239,22 @@ namespace Turner.Infrastructure.Crud.Tests
     {
         public TestHooksRequestProfile() : base(r => r.Items)
         {
-            WithRequestHook(new TestInstanceRequestHook());
-            WithRequestHook<TestTypeRequestHook>();
-            WithRequestHook(new TestContravariantRequestHook());
+            AddRequestHook(new TestInstanceRequestHook());
+            AddRequestHook<TestTypeRequestHook>();
+            AddRequestHook(new TestContravariantRequestHook());
 
-            WithResultHook(new TestInstanceResultHook());
-            WithResultHook<TestTypeResultHook, string>();
-            WithResultHook(new TestContravariantResultHook());
+            AddResultHook(new TestInstanceResultHook());
+            AddResultHook<TestTypeResultHook, string>();
+            AddResultHook(new TestContravariantResultHook());
 
             ForEntity<HookEntity>()
                 .CreateResultWith(x => string.Empty)
-                .WithEntityHook(new TestInstanceEntityHook())
-                .WithEntityHook<TestTypeEntityHook>()
-                .WithEntityHook(new TestContravariantEntityHook())
-                .WithItemHook(new TestInstanceItemHook())
-                .WithItemHook<TestTypeItemHook>()
-                .WithItemHook(new TestContravariantItemHook());
+                .AddEntityHook(new TestInstanceEntityHook())
+                .AddEntityHook<TestTypeEntityHook>()
+                .AddEntityHook(new TestContravariantEntityHook())
+                .AddItemHook(new TestInstanceItemHook())
+                .AddItemHook<TestTypeItemHook>()
+                .AddItemHook(new TestContravariantItemHook());
         }
     }
 }

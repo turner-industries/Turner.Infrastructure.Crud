@@ -58,30 +58,30 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return (TBuilder)this;
         }
 
-        public TBuilder WithEntityHook<THook, TBaseRequest, TBaseEntity>()
+        public TBuilder AddEntityHook<THook, TBaseRequest, TBaseEntity>()
             where TBaseEntity : class
             where THook : IEntityHook<TBaseRequest, TBaseEntity>
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(WithEntityHook), typeof(TBaseRequest), typeof(TRequest));
+                throw new ContravarianceException(nameof(AddEntityHook), typeof(TBaseRequest), typeof(TRequest));
 
             if (!typeof(TBaseEntity).IsAssignableFrom(typeof(TEntity)))
-                throw new ContravarianceException(nameof(WithEntityHook), typeof(TBaseEntity), typeof(TEntity));
+                throw new ContravarianceException(nameof(AddEntityHook), typeof(TBaseEntity), typeof(TEntity));
 
             EntityHooks.Add(TypeEntityHookFactory.From<THook, TBaseRequest, TBaseEntity>());
 
             return (TBuilder)this;
         }
 
-        public TBuilder WithEntityHook<THook, TBaseRequest>()
+        public TBuilder AddEntityHook<THook, TBaseRequest>()
             where THook : IEntityHook<TBaseRequest, TEntity>
-            => WithEntityHook<THook, TBaseRequest, TEntity>();
+            => AddEntityHook<THook, TBaseRequest, TEntity>();
 
-        public TBuilder WithEntityHook<THook>()
+        public TBuilder AddEntityHook<THook>()
             where THook : IEntityHook<TRequest, TEntity>
-            => WithEntityHook<THook, TRequest, TEntity>();
+            => AddEntityHook<THook, TRequest, TEntity>();
 
-        public TBuilder WithEntityHook<TBaseRequest, TBaseEntity>(IEntityHook<TBaseRequest, TBaseEntity> hook)
+        public TBuilder AddEntityHook<TBaseRequest, TBaseEntity>(IEntityHook<TBaseRequest, TBaseEntity> hook)
             where TBaseEntity : class
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
@@ -95,17 +95,17 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return (TBuilder)this;
         }
 
-        public TBuilder WithEntityHook(Func<TRequest, TEntity, CancellationToken, Task> hook)
+        public TBuilder AddEntityHook(Func<TRequest, TEntity, CancellationToken, Task> hook)
         {
             EntityHooks.Add(FunctionEntityHookFactory.From(hook));
 
             return (TBuilder)this;
         }
 
-        public TBuilder WithEntityHook(Func<TRequest, TEntity, Task> hook)
-            => WithEntityHook((request, entity, ct) => hook(request, entity));
+        public TBuilder AddEntityHook(Func<TRequest, TEntity, Task> hook)
+            => AddEntityHook((request, entity, ct) => hook(request, entity));
 
-        public TBuilder WithEntityHook(Action<TRequest, TEntity> hook)
+        public TBuilder AddEntityHook(Action<TRequest, TEntity> hook)
         {
             EntityHooks.Add(FunctionEntityHookFactory.From(hook));
 
