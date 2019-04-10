@@ -1,4 +1,5 @@
 ﻿using System;
+using SimpleInjector;
 
 namespace Turner.Infrastructure.Crud.Validation
 {
@@ -17,7 +18,7 @@ namespace Turner.Infrastructure.Crud.Validation
             {
                 return (IRequestValidator<TRequest>)_validatorCreator(typeof(IRequestValidator<TRequest>));
             }
-            catch
+            catch(ActivationException)
             {
                 return null;
             }

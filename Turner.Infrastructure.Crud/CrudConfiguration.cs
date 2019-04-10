@@ -173,10 +173,13 @@ namespace Turner.Infrastructure.Crud
             var shouldValidate = ShouldValidate(options.ValidateAllRequests);
             var shouldMaybeValidate = ShouldMaybeValidate(options.ValidateAllRequests);
 
+            container.RegisterInstance(new ValidatorFactory(container.GetInstance));
+
+            container.Register(typeof(IRequestValidator<>), assemblies);
+
             container.RegisterDecorator(typeof(IRequestHandler<>), ValidatorFactory, Lifestyle.Transient, shouldValidate);
             container.RegisterDecorator(typeof(IRequestHandler<,>), ValidatorFactory, Lifestyle.Transient, shouldValidate);
 
-            container.RegisterInstance(new ValidatorFactory(container.GetInstance));
             container.RegisterDecorator(typeof(IRequestHandler<>), typeof(CrudMaybeValidateDecorator<>), shouldMaybeValidate);
             container.RegisterDecorator(typeof(IRequestHandler<,>), typeof(CrudMaybeValidateDecorator<,>), shouldMaybeValidate);
         }
