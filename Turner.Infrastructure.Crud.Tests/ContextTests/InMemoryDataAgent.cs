@@ -7,7 +7,7 @@ using Turner.Infrastructure.Crud.Tests.Fakes;
 
 namespace Turner.Infrastructure.Crud.Tests.ContextTests
 {
-    public class InMemorySetOperator : ISingleSetOperator, IBulkSetOperator
+    public class InMemoryDataAgent : IDataAgent
     {
         public Task<TEntity> CreateAsync<TEntity>(EntitySet<TEntity> entitySet,
             TEntity entity,

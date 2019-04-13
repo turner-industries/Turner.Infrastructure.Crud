@@ -9,8 +9,7 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkCore
         public void Run(Container container, Assembly[] assemblies, CrudOptions options)
         {
             container.Register<IEntityContext, EntityFrameworkContext>();
-            container.Register<ISingleSetOperator, EntityFrameworkSingleSetOperator>();
-            container.Register<IBulkSetOperator, EntityFrameworkBulkSetOperator>();
+            container.Register<IDataAgent, EntityFrameworkDataAgent>();
         }
     }
 

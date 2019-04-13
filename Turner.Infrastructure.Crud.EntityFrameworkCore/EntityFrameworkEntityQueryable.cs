@@ -8,7 +8,7 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkCore
     public class EntityFrameworkEntityQueryable<TEntity> : EntityQueryable<TEntity>
         where TEntity : class
     {
-        private EntityFrameworkEntityQueryable(IEntityQueryProvider queryProvider, Expression expression)
+        private EntityFrameworkEntityQueryable(IAsyncQueryProvider queryProvider, Expression expression)
             : base(queryProvider, expression)
         {
         }

@@ -6,7 +6,7 @@ using Turner.Infrastructure.Crud.Context;
 
 namespace Turner.Infrastructure.Crud.EntityFrameworkCore
 {
-    public class EntityFrameworkSingleSetOperator : ISingleSetOperator
+    public class EntityFrameworkDataAgent : IDataAgent
     {
         public Task<TEntity> CreateAsync<TEntity>(EntitySet<TEntity> entitySet, 
             TEntity entity, 
@@ -43,13 +43,10 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkCore
 
             return Task.FromResult(trackedEntity.Entity);
         }
-    }
 
-    public class EntityFrameworkBulkSetOperator : IBulkSetOperator
-    {
-        public Task<TEntity[]> CreateAsync<TEntity>(EntitySet<TEntity> entitySet, 
-            IEnumerable<TEntity> entities, 
-            CancellationToken token = default(CancellationToken)) 
+        public Task<TEntity[]> CreateAsync<TEntity>(EntitySet<TEntity> entitySet,
+            IEnumerable<TEntity> entities,
+            CancellationToken token = default(CancellationToken))
             where TEntity : class
         {
             var set = entitySet as EntityFrameworkEntitySet<TEntity>;
@@ -66,9 +63,9 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkCore
             return Task.FromResult(result.ToArray());
         }
 
-        public Task<TEntity[]> DeleteAsync<TEntity>(EntitySet<TEntity> entitySet, 
-            IEnumerable<TEntity> entities, 
-            CancellationToken token = default(CancellationToken)) 
+        public Task<TEntity[]> DeleteAsync<TEntity>(EntitySet<TEntity> entitySet,
+            IEnumerable<TEntity> entities,
+            CancellationToken token = default(CancellationToken))
             where TEntity : class
         {
             var set = entitySet as EntityFrameworkEntitySet<TEntity>;
@@ -85,9 +82,9 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkCore
             return Task.FromResult(result.ToArray());
         }
 
-        public Task<TEntity[]> UpdateAsync<TEntity>(EntitySet<TEntity> entitySet, 
-            IEnumerable<TEntity> entities, 
-            CancellationToken token = default(CancellationToken)) 
+        public Task<TEntity[]> UpdateAsync<TEntity>(EntitySet<TEntity> entitySet,
+            IEnumerable<TEntity> entities,
+            CancellationToken token = default(CancellationToken))
             where TEntity : class
         {
             token.ThrowIfCancellationRequested();

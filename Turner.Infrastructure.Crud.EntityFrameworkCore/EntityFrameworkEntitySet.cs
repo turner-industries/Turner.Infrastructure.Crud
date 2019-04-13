@@ -9,9 +9,8 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkCore
         public DbSet<TEntity> Set { get; }
 
         public EntityFrameworkEntitySet(DbSet<TEntity> set, 
-            ISingleSetOperator singleSetOperator,
-            IBulkSetOperator bulkSetOperator)
-            : base(EntityFrameworkEntityQueryable<TEntity>.From(set), singleSetOperator, bulkSetOperator)
+            IDataAgent dataAgent)
+            : base(EntityFrameworkEntityQueryable<TEntity>.From(set), dataAgent)
         {
             Set = set;
         }

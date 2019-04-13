@@ -9,7 +9,7 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
 {
     public class InMemoryContext : IEntityContext
     {
-        private static readonly Dictionary<Type, Tuple<IInMemorySet, IList>> _sets
+        private readonly Dictionary<Type, Tuple<IInMemorySet, IList>> _sets
             = new Dictionary<Type, Tuple<IInMemorySet, IList>>();
         
         public Task<int> ApplyChangesAsync(CancellationToken token = default(CancellationToken))
@@ -23,7 +23,7 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
                 var dataList = new List<TEntity>();
 
                 _sets[typeof(TEntity)] = new Tuple<IInMemorySet, IList>(
-                    new InMemorySet<TEntity>(this, dataList, new InMemorySetOperator()),
+                    new InMemorySet<TEntity>(this, dataList, new InMemoryDataAgent()),
                     dataList);
             }
 

@@ -12,12 +12,15 @@ namespace Turner.Infrastructure.Crud.Context
 
     public class EntityQueryable<TEntity> : IEntityQueryable<TEntity>
     {
-        protected readonly IEntityQueryProvider QueryProvider;
+        protected readonly IAsyncQueryProvider QueryProvider;
         
-        public EntityQueryable(IEntityQueryProvider queryProvider, Expression expression)
+        public EntityQueryable(IQueryProvider queryProvider, Expression expression)
         {
-            QueryProvider = queryProvider ?? throw new ArgumentNullException(nameof(queryProvider));
-            Expression = expression ?? throw new ArgumentNullException(nameof(expression));
+            QueryProvider = queryProvider.AsAsyncQueryProvider() 
+                ?? throw new ArgumentNullException(nameof(queryProvider));
+
+            Expression = expression 
+                ?? throw new ArgumentNullException(nameof(expression));
         }
 
         public virtual IQueryProvider Provider => QueryProvider;

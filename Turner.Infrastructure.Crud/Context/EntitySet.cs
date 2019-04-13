@@ -13,11 +13,10 @@ namespace Turner.Infrastructure.Crud.Context
         where TEntity : class
     {
         private readonly EntityQueryable<TEntity> _entityQueryable;
-        private readonly ISingleSetOperator _singleSetOperator;
-        private readonly IBulkSetOperator _bulkSetOperator;
+        private readonly IDataAgent _dataAgent;
 
         IEnumerator<TEntity> IEnumerable<TEntity>.GetEnumerator() => _entityQueryable.GetEnumerator();
-        
+
         IEnumerator IEnumerable.GetEnumerator() => _entityQueryable.GetEnumerator();
 
         IAsyncEnumerable<TEntity> IAsyncEnumerableAccessor<TEntity>.AsyncEnumerable => _entityQueryable;
@@ -28,37 +27,34 @@ namespace Turner.Infrastructure.Crud.Context
 
         IQueryProvider IQueryable.Provider => _entityQueryable.Provider;
         
-        public EntitySet(EntityQueryable<TEntity> entityQueryable,
-            ISingleSetOperator singleSetOperator,
-            IBulkSetOperator bulkSetOperator)
+        public EntitySet(EntityQueryable<TEntity> entityQueryable, IDataAgent dataAgent)
         {
             _entityQueryable = entityQueryable;
-            _singleSetOperator = singleSetOperator ?? throw new ArgumentNullException(nameof(singleSetOperator));
-            _bulkSetOperator = bulkSetOperator ?? throw new ArgumentNullException(nameof(bulkSetOperator));
+            _dataAgent = dataAgent ?? throw new ArgumentNullException(nameof(dataAgent));
         }
 
         public Task<TEntity> CreateAsync(TEntity entity, 
             CancellationToken token = default(CancellationToken))
-            => _singleSetOperator.CreateAsync(this, entity, token);
+            => _dataAgent.CreateAsync(this, entity, token);
 
         public Task<TEntity> UpdateAsync(TEntity entity, 
             CancellationToken token = default(CancellationToken))
-            => _singleSetOperator.UpdateAsync(this, entity, token);
+            => _dataAgent.UpdateAsync(this, entity, token);
 
         public Task<TEntity> DeleteAsync(TEntity entity, 
             CancellationToken token = default(CancellationToken))
-            => _singleSetOperator.DeleteAsync(this, entity, token);
+            => _dataAgent.DeleteAsync(this, entity, token);
 
         public Task<TEntity[]> CreateAsync(IEnumerable<TEntity> entities, 
             CancellationToken token = default(CancellationToken))
-            => _bulkSetOperator.CreateAsync(this, entities, token);
+            => _dataAgent.CreateAsync(this, entities, token);
 
         public Task<TEntity[]> UpdateAsync(IEnumerable<TEntity> entities, 
             CancellationToken token = default(CancellationToken))
-            => _bulkSetOperator.UpdateAsync(this, entities, token);
+            => _dataAgent.UpdateAsync(this, entities, token);
 
         public Task<TEntity[]> DeleteAsync(IEnumerable<TEntity> entities, 
             CancellationToken token = default(CancellationToken))
-            => _bulkSetOperator.DeleteAsync(this, entities, token);
+            => _dataAgent.DeleteAsync(this, entities, token);
     }
 }

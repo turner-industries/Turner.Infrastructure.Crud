@@ -5,26 +5,26 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore.Query.Internal;
 using Turner.Infrastructure.Crud.Context;
+using EFAsyncQueryProvider = Microsoft.EntityFrameworkCore.Query.Internal.IAsyncQueryProvider;
 
 namespace Turner.Infrastructure.Crud.EntityFrameworkCore
 {
-    public class EntityFrameworkQueryProvider : IEntityQueryProvider
+    public class EntityFrameworkQueryProvider : IAsyncQueryProvider
     {
         private static readonly MethodInfo _createQuery
             = typeof(EntityFrameworkQueryProvider)
                 .GetRuntimeMethods()
                 .Single(x => x.Name == "CreateQuery" && x.IsGenericMethod);
 
-        private readonly IAsyncQueryProvider _queryProvider;
+        private readonly EFAsyncQueryProvider _queryProvider;
         
         internal EntityFrameworkQueryProvider(IQueryProvider queryProvider)
         {
-            if (!(queryProvider is IAsyncQueryProvider asyncQueryProvider))
+            if (!(queryProvider is EFAsyncQueryProvider efQueryProvider))
                 throw new ArgumentException(nameof(queryProvider));
 
-            _queryProvider = asyncQueryProvider;
+            _queryProvider = efQueryProvider;
         }
 
         public IQueryable CreateQuery(Expression expression)
@@ -35,7 +35,7 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkCore
         }
 
         public IQueryable<TEntity> CreateQuery<TEntity>(Expression expression)
-            => new Context.EntityQueryable<TEntity>(this, expression);
+            => new EntityQueryable<TEntity>(this, expression);
 
         public object Execute(Expression expression)
             => _queryProvider.Execute(expression);

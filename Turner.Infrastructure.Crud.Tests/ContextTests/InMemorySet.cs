@@ -12,12 +12,12 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
     public class InMemorySet<TEntity> : EntitySet<TEntity>, IInMemorySet
         where TEntity : class
     {
-        public List<TEntity> Items { get; private set; }
+        public List<TEntity> Items { get; }
 
         public int Id { get; set; } = 1;
         
-        public InMemorySet(InMemoryContext context, List<TEntity> items, InMemorySetOperator setOperator)
-            : base(CreateEntityQueryable(items), setOperator, setOperator)
+        public InMemorySet(InMemoryContext context, List<TEntity> items, InMemoryDataAgent dataAgent)
+            : base(CreateEntityQueryable(items), dataAgent)
         {
             Items = items;
         }
@@ -25,9 +25,8 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
         private static EntityQueryable<TEntity> CreateEntityQueryable(List<TEntity> items)
         {
             var data = items.AsQueryable();
-            var provider = new InMemoryQueryProvider(data.Provider);
-            
-            return new EntityQueryable<TEntity>(provider, Expression.Constant(data));
+
+            return new EntityQueryable<TEntity>(data.Provider, Expression.Constant(data));
         }
     }
 }

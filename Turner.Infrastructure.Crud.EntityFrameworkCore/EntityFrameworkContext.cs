@@ -8,26 +8,18 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkCore
     public class EntityFrameworkContext : IEntityContext
     {
         private readonly DbContext _context;
-        private readonly ISingleSetOperator _singleSetOperator;
-        private readonly IBulkSetOperator _bulkSetOperator;
+        private readonly IDataAgent _dataAgent;
 
         public EntityFrameworkContext(DbContext context, 
-            ISingleSetOperator singleSetOperator,
-            IBulkSetOperator bulkSetOperator)
+            IDataAgent dataAgent)
         {
             _context = context;
-            _singleSetOperator = singleSetOperator;
-            _bulkSetOperator = bulkSetOperator;
+            _dataAgent = dataAgent;
         }
 
         public virtual EntitySet<TEntity> Set<TEntity>()
             where TEntity : class
-        {
-            return new EntityFrameworkEntitySet<TEntity>(
-                _context.Set<TEntity>(), 
-                _singleSetOperator, 
-                _bulkSetOperator);
-        }
+            => new EntityFrameworkEntitySet<TEntity>(_context.Set<TEntity>(), _dataAgent);
 
         public virtual async Task<int> ApplyChangesAsync(CancellationToken token = default(CancellationToken))
         {
