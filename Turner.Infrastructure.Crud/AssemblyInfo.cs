@@ -3,3 +3,5 @@
 #if !DEPLOY
     [assembly: InternalsVisibleTo("Turner.Infrastructure.Crud.Tests")]
 #endif
+
+[assembly: InternalsVisibleTo("Turner.Infrastructure.Crud.EntityFrameworkCore")]
