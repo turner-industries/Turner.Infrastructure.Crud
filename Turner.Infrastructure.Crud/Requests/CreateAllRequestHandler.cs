@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
+using Turner.Infrastructure.Crud.Extensions;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -11,6 +12,7 @@ namespace Turner.Infrastructure.Crud.Requests
     internal abstract class CreateAllRequestHandlerBase<TRequest, TEntity>
         : CrudRequestHandler<TRequest, TEntity>
         where TEntity : class
+        where TRequest : ICreateAllRequest
     {
         protected CreateAllRequestHandlerBase(IEntityContext context, CrudConfigManager profileManager)
             : base(context, profileManager)
@@ -19,21 +21,14 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity[]> CreateEntities(TRequest request, CancellationToken ct)
         {
-            var requestHooks = RequestConfig.GetRequestHooks();
-            foreach (var hook in requestHooks)
-                await hook.Run(request, ct).Configure();
+            await request.RunRequestHooks(RequestConfig.GetRequestHooks(), ct).Configure();
 
             ct.ThrowIfCancellationRequested();
 
             var itemSource = RequestConfig.GetRequestItemSourceFor<TEntity>();
             var items = ((IEnumerable<object>)itemSource.ItemSource(request)).ToArray();
 
-            var itemHooks = RequestConfig.GetItemHooksFor<TEntity>();
-            foreach (var hook in itemHooks)
-                for (var i = 0; i < items.Length; ++i)
-                    items[i] = await hook.Run(request, items[i], ct).Configure();
-
-            ct.ThrowIfCancellationRequested();
+            items = await request.RunItemHooks(RequestConfig.GetItemHooksFor<TEntity>(), items, ct);
 
             var creator = RequestConfig.GetCreatorFor<TEntity>();
             
@@ -47,15 +42,9 @@ namespace Turner.Infrastructure.Crud.Requests
             var entities = await Context.Set<TEntity>().CreateAsync(newEntities, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
-            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>();
-            foreach (var entity in entities)
-                foreach (var hook in entityHooks)
-                    await hook.Run(request, entity, ct).Configure();
-
-            ct.ThrowIfCancellationRequested();
-
+            await request.RunEntityHooks(RequestConfig.GetEntityHooksFor<TEntity>(), entities, ct);
+            
             await Context.ApplyChangesAsync(ct).Configure();
-
             ct.ThrowIfCancellationRequested();
 
             return entities;
@@ -103,19 +92,14 @@ namespace Turner.Infrastructure.Crud.Requests
             {
                 var ct = cts.Token;
                 var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
-                var resultHooks = RequestConfig.GetResultHooks();
-
+                
                 var entities = await CreateEntities(request, ct).Configure();
                 ct.ThrowIfCancellationRequested();
 
                 var items = new List<TOut>(await Task.WhenAll(entities.Select(x => transform(x, ct))).Configure());
                 ct.ThrowIfCancellationRequested();
 
-                foreach (var hook in resultHooks)
-                    for (var i = 0; i < items.Count; ++i)
-                        items[i] = (TOut)await hook.Run(request, items[i], ct).Configure();
-
-                ct.ThrowIfCancellationRequested();
+                items = await request.RunResultHooks(RequestConfig.GetResultHooks(), items, ct);
 
                 result = new CreateAllResult<TOut>(items);
             }

@@ -1,11 +1,11 @@
-﻿using System.Linq;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper.QueryableExtensions;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Exceptions;
+using Turner.Infrastructure.Crud.Extensions;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -34,22 +34,17 @@ namespace Turner.Infrastructure.Crud.Requests
                 
                 try
                 {
-                    var requestHooks = RequestConfig.GetRequestHooks();
-                    foreach (var hook in requestHooks)
-                        await hook.Run(request, ct).Configure();
-                    ct.ThrowIfCancellationRequested();
+                    await request.RunRequestHooks(RequestConfig.GetRequestHooks(), ct).Configure();
 
-                    var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
-                    var entities = Context.Set<TEntity>().AsQueryable();
                     var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
 
-                    foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
-                        entities = filter.Filter(request, entities).Cast<TEntity>();
-
+                    var entities = Context.Set<TEntity>()
+                        .FilterWith(request, RequestConfig.GetFiltersFor<TEntity>())
+                        .SelectWith(request, RequestConfig.GetSelectorFor<TEntity>());
+                    
                     if (Options.UseProjection)
                     {
                         result = await entities
-                            .Where(selector(request))
                             .ProjectTo<TOut>()
                             .SingleOrDefaultAsync(ct)
                             .Configure();
@@ -66,7 +61,7 @@ namespace Turner.Infrastructure.Crud.Requests
                     else
                     {
                         var entity = await entities
-                            .SingleOrDefaultAsync(selector(request), ct)
+                            .SingleOrDefaultAsync(ct)
                             .Configure();
 
                         ct.ThrowIfCancellationRequested();
@@ -93,11 +88,7 @@ namespace Turner.Infrastructure.Crud.Requests
                     return ErrorDispatcher.Dispatch<TOut>(error);
                 }
 
-                var resultHooks = RequestConfig.GetResultHooks();
-                foreach (var hook in resultHooks)
-                    result = (TOut)await hook.Run(request, result, ct).Configure();
-
-                ct.ThrowIfCancellationRequested();
+                result = await request.RunResultHooks(RequestConfig.GetResultHooks(), result, ct);
             }
 
             return result.AsResponse();

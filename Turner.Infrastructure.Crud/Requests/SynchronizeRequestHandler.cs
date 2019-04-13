@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
+using Turner.Infrastructure.Crud.Extensions;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -14,6 +15,7 @@ namespace Turner.Infrastructure.Crud.Requests
     internal abstract class SynchronizeRequestHandlerBase<TRequest, TEntity>
         : CrudRequestHandler<TRequest, TEntity>
         where TEntity : class
+        where TRequest : ISynchronizeRequest
     {
         protected readonly RequestOptions Options;
 
@@ -25,11 +27,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity[]> SynchronizeEntities(TRequest request, CancellationToken ct)
         {
-            var requestHooks = RequestConfig.GetRequestHooks();
-            foreach (var hook in requestHooks)
-                await hook.Run(request, ct).Configure();
-
-            ct.ThrowIfCancellationRequested();
+            await request.RunRequestHooks(RequestConfig.GetRequestHooks(), ct).Configure();
 
             await DeleteEntities(request, ct).Configure();
             ct.ThrowIfCancellationRequested();
@@ -40,12 +38,7 @@ namespace Turner.Infrastructure.Crud.Requests
             var data = RequestConfig.GetRequestItemSourceFor<TEntity>();
             var items = ((IEnumerable<object>)data.ItemSource(request)).ToArray();
 
-            var itemHooks = RequestConfig.GetItemHooksFor<TEntity>();
-            foreach (var hook in itemHooks)
-                for (var i = 0; i < items.Length; ++i)
-                    items[i] = await hook.Run(request, items[i], ct).Configure();
-
-            ct.ThrowIfCancellationRequested();
+            items = await request.RunItemHooks(RequestConfig.GetItemHooksFor<TEntity>(), items, ct);
 
             var joinedItems = RequestConfig
                 .Join(items.Where(x => x != null), entities)
@@ -60,13 +53,7 @@ namespace Turner.Infrastructure.Crud.Requests
             ct.ThrowIfCancellationRequested();
 
             var changedEntities = updatedEntities.Concat(createdEntities).ToArray();
-
-            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>();
-            foreach (var entity in changedEntities)
-                foreach (var hook in entityHooks)
-                    await hook.Run(request, entity, ct).Configure();
-
-            ct.ThrowIfCancellationRequested();
+            await request.RunEntityHooks(RequestConfig.GetEntityHooksFor<TEntity>(), changedEntities, ct);
 
             await Context.ApplyChangesAsync(ct).Configure();
             ct.ThrowIfCancellationRequested();
@@ -76,31 +63,24 @@ namespace Turner.Infrastructure.Crud.Requests
 
         private async Task DeleteEntities(TRequest request, CancellationToken ct)
         {
-            var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
-            var set = Context.Set<TEntity>();
-            var entities = set.AsQueryable();
+            var whereClause = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>()(request);
+            var notWhereClause = whereClause.Update(
+                Expression.NotEqual(whereClause.Body, Expression.Constant(true)), 
+                whereClause.Parameters);
 
-            foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
-                entities = filter.Filter(request, entities).Cast<TEntity>();
+            var deleteEntities = await Context.Set<TEntity>()
+                .FilterWith(request, RequestConfig.GetFiltersFor<TEntity>())
+                .Where(notWhereClause)
+                .ToArrayAsync(ct);
 
-            var where = selector(request);
-            var notWhere = where.Update(
-                Expression.NotEqual(where.Body, Expression.Constant(true)), 
-                where.Parameters);
-
-            var deleteEntities = await entities.Where(notWhere).ToArrayAsync();
-
-            await set.DeleteAsync(deleteEntities, ct);
+            await Context.Set<TEntity>().DeleteAsync(deleteEntities, ct);
         }
 
-        private async Task<TEntity[]> GetEntities(TRequest request, CancellationToken ct)
+        private Task<TEntity[]> GetEntities(TRequest request, CancellationToken ct)
         {
-            var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
-            var entities = Context.Set<TEntity>().AsQueryable();
-            
-            entities = entities.Where(selector(request));
-
-            return await entities.ToArrayAsync(ct).Configure();
+            return Context.Set<TEntity>()
+                .SelectWith(request, RequestConfig.GetSelectorFor<TEntity>())
+                .ToArrayAsync(ct);
         }
 
         private async Task<TEntity[]> CreateEntities(TRequest request, 
@@ -190,12 +170,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 var items = new List<TOut>(await Task.WhenAll(entities.Select(x => transform(x, ct))));
                 ct.ThrowIfCancellationRequested();
 
-                var resultHooks = RequestConfig.GetResultHooks();
-                foreach (var hook in resultHooks)
-                    for (var i = 0; i < items.Count; ++i)
-                        items[i] = (TOut)await hook.Run(request, items[i], ct).Configure();
-
-                ct.ThrowIfCancellationRequested();
+                items = await request.RunResultHooks(RequestConfig.GetResultHooks(), items, ct);
 
                 result = new SynchronizeResult<TOut>(items);
             }

@@ -7,6 +7,7 @@ using AutoMapper.QueryableExtensions;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Errors;
+using Turner.Infrastructure.Crud.Extensions;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -32,20 +33,18 @@ namespace Turner.Infrastructure.Crud.Requests
             {
                 var ct = cts.Token;
                 List<TOut> items;
-                var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
+
+                await request.RunRequestHooks(RequestConfig.GetRequestHooks(), ct).Configure();
 
                 var entities = Context
                     .Set<TEntity>()
-                    .AsQueryable();
+                    .FilterWith(request, RequestConfig.GetFiltersFor<TEntity>())
+                    .SortWith(request, RequestConfig.GetSorterFor<TEntity>());
 
-                foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
-                    entities = filter.Filter(request, entities).Cast<TEntity>();
-
+                var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
+                
                 var totalItemCount = await entities.CountAsync(ct).Configure();
                 ct.ThrowIfCancellationRequested();
-
-                var sorter = RequestConfig.GetSorterFor<TEntity>();
-                entities = sorter?.Sort(request, entities).Cast<TEntity>() ?? entities;
 
                 var pageSize = request.PageSize < 1 ? totalItemCount : request.PageSize;
                 var totalPageCount = totalItemCount == 0 ? 1 : (totalItemCount + pageSize - 1) / pageSize;
@@ -91,12 +90,7 @@ namespace Turner.Infrastructure.Crud.Requests
                     ct.ThrowIfCancellationRequested();
                 }
 
-                var resultHooks = RequestConfig.GetResultHooks();
-                foreach (var hook in resultHooks)
-                    for (var i = 0; i < items.Count; ++i)
-                        items[i] = (TOut)await hook.Run(request, items[i], ct).Configure();
-
-                ct.ThrowIfCancellationRequested();
+                items = await request.RunResultHooks(RequestConfig.GetResultHooks(), items, ct);
 
                 result = new PagedGetAllResult<TOut>(items, pageNumber, pageSize, totalPageCount, totalItemCount);
             }

@@ -4,6 +4,7 @@ using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Exceptions;
+using Turner.Infrastructure.Crud.Extensions;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -11,6 +12,7 @@ namespace Turner.Infrastructure.Crud.Requests
     internal abstract class DeleteRequestHandlerBase<TRequest, TEntity>
         : CrudRequestHandler<TRequest, TEntity>
         where TEntity : class
+        where TRequest : IDeleteRequest
     {
         protected DeleteRequestHandlerBase(IEntityContext context, CrudConfigManager profileManager)
             : base(context, profileManager)
@@ -19,28 +21,21 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected Task<TEntity> GetEntity(TRequest request, CancellationToken ct)
         {
-            var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
-
-            return Context.Set<TEntity>().SingleOrDefaultAsync(selector(request), ct);
+            return Context.Set<TEntity>()
+                .SelectWith(request, RequestConfig.GetSelectorFor<TEntity>())
+                .SingleOrDefaultAsync(ct);
         }
 
         protected async Task<TEntity> DeleteEntity(TRequest request, TEntity entity, CancellationToken ct)
         {
-            var requestHooks = RequestConfig.GetRequestHooks();
-            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>();
-
-            foreach (var hook in requestHooks)
-                await hook.Run(request, ct).Configure();
+            await request.RunRequestHooks(RequestConfig.GetRequestHooks(), ct).Configure();
 
             ct.ThrowIfCancellationRequested();
 
             entity = await Context.Set<TEntity>().DeleteAsync(entity, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
-            foreach (var hook in entityHooks)
-                await hook.Run(request, entity, ct).Configure();
-
-            ct.ThrowIfCancellationRequested();
+            await request.RunEntityHooks(RequestConfig.GetEntityHooksFor<TEntity>(), entity, ct);
 
             await Context.ApplyChangesAsync(ct).Configure();
             ct.ThrowIfCancellationRequested();
@@ -141,11 +136,7 @@ namespace Turner.Infrastructure.Crud.Requests
                     result = await transform(entity, ct).Configure();
                     ct.ThrowIfCancellationRequested();
 
-                    var resultHooks = RequestConfig.GetResultHooks();
-                    foreach (var hook in resultHooks)
-                        result = (TOut)await hook.Run(request, result, ct).Configure();
-
-                    ct.ThrowIfCancellationRequested();
+                    result = await request.RunResultHooks(RequestConfig.GetResultHooks(), result, ct);
                 }
             }
 
