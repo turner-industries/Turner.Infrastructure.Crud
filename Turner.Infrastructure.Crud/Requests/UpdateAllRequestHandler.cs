@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
+using Turner.Infrastructure.Crud.Extensions;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -11,6 +12,7 @@ namespace Turner.Infrastructure.Crud.Requests
     internal abstract class UpdateAllRequestHandlerBase<TRequest, TEntity>
         : CrudRequestHandler<TRequest, TEntity>
         where TEntity : class
+        where TRequest : IUpdateAllRequest
     {
         protected readonly RequestOptions Options;
 
@@ -22,11 +24,7 @@ namespace Turner.Infrastructure.Crud.Requests
         
         protected async Task<TEntity[]> UpdateEntities(TRequest request, CancellationToken ct)
         {
-            var requestHooks = RequestConfig.GetRequestHooks();
-            foreach (var hook in requestHooks)
-                await hook.Run(request, ct).Configure();
-
-            ct.ThrowIfCancellationRequested();
+            await request.RunRequestHooks(RequestConfig.GetRequestHooks(), ct).Configure();
 
             var entities = await GetEntities(request, ct).Configure();
             ct.ThrowIfCancellationRequested();
@@ -34,12 +32,7 @@ namespace Turner.Infrastructure.Crud.Requests
             var data = RequestConfig.GetRequestItemSourceFor<TEntity>();
             var items = ((IEnumerable<object>)data.ItemSource(request)).ToArray();
 
-            var itemHooks = RequestConfig.GetItemHooksFor<TEntity>();
-            foreach (var hook in itemHooks)
-                for (var i = 0; i < items.Length; ++i)
-                    items[i] = await hook.Run(request, items[i], ct).Configure();
-
-            ct.ThrowIfCancellationRequested();
+            items = await request.RunItemHooks(RequestConfig.GetItemHooksFor<TEntity>(), items, ct);
 
             var updator = RequestConfig.GetUpdatorFor<TEntity>();
 
@@ -53,33 +46,23 @@ namespace Turner.Infrastructure.Crud.Requests
                 ct.ThrowIfCancellationRequested();
             }
 
-            entities = await Context.EntitySet<TEntity>().UpdateAsync(updatedEntities, ct).Configure();
+            entities = await Context.Set<TEntity>().UpdateAsync(updatedEntities, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
-            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>();
-            foreach (var entity in updatedEntities)
-                foreach (var hook in entityHooks)
-                    await hook.Run(request, entity, ct).Configure();
-
-            ct.ThrowIfCancellationRequested();
-
+            await request.RunEntityHooks(RequestConfig.GetEntityHooksFor<TEntity>(), updatedEntities, ct);
+            
             await Context.ApplyChangesAsync(ct).Configure();
             ct.ThrowIfCancellationRequested();
 
             return entities;
         }
 
-        private async Task<TEntity[]> GetEntities(TRequest request, CancellationToken ct)
+        private Task<TEntity[]> GetEntities(TRequest request, CancellationToken ct)
         {
-            var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
-            var entities = Context.EntitySet<TEntity>().AsQueryable();
-            
-            entities = entities.Where(selector(request));
-            entities = RequestConfig
-                .GetFiltersFor<TEntity>()
-                .Aggregate(entities, (current, filter) => (IQueryable<TEntity>)filter.Filter(request, current));
-
-            return await Context.ToArrayAsync(entities, ct).Configure();
+            return Context.Set<TEntity>()
+                .FilterWith(request, RequestConfig.GetFiltersFor<TEntity>())
+                .SelectWith(request, RequestConfig.GetSelectorFor<TEntity>())
+                .ToArrayAsync(ct);
         }
     }
 
@@ -131,12 +114,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 var items = new List<TOut>(await Task.WhenAll(entities.Select(x => transform(x, ct))));
                 ct.ThrowIfCancellationRequested();
 
-                var resultHooks = RequestConfig.GetResultHooks();
-                foreach (var hook in resultHooks)
-                    for (var i = 0; i < items.Count; ++i)
-                        items[i] = (TOut)await hook.Run(request, items[i], ct).Configure();
-
-                ct.ThrowIfCancellationRequested();
+                items = await request.RunResultHooks(RequestConfig.GetResultHooks(), items, ct);
 
                 result = new UpdateAllResult<TOut>(items);
             }

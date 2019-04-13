@@ -4,6 +4,7 @@ using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Exceptions;
+using Turner.Infrastructure.Crud.Extensions;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -11,6 +12,7 @@ namespace Turner.Infrastructure.Crud.Requests
     internal abstract class UpdateRequestHandlerBase<TRequest, TEntity>
         : CrudRequestHandler<TRequest, TEntity>
         where TEntity : class
+        where TRequest : IUpdateRequest
     {
         protected UpdateRequestHandlerBase(IEntityContext context, CrudConfigManager profileManager)
             : base(context, profileManager)
@@ -19,34 +21,24 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected Task<TEntity> GetEntity(TRequest request, CancellationToken ct)
         {
-            var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
-            var set = Context.EntitySet<TEntity>();
-            
-            return Context.SingleOrDefaultAsync(set, selector(request), ct);
+            return Context.Set<TEntity>()
+                .SelectWith(request, RequestConfig.GetSelectorFor<TEntity>())
+                .SingleOrDefaultAsync(ct);
         }
 
         protected async Task<TEntity> UpdateEntity(TRequest request, TEntity entity, CancellationToken ct)
         {
+            await request.RunRequestHooks(RequestConfig.GetRequestHooks(), ct).Configure();
+
             var updator = RequestConfig.GetUpdatorFor<TEntity>();
             var data = RequestConfig.GetRequestItemSourceFor<TEntity>().ItemSource(request);
-
-            var requestHooks = RequestConfig.GetRequestHooks();
-            foreach (var hook in requestHooks)
-                await hook.Run(request, ct).Configure();
-
-            ct.ThrowIfCancellationRequested();
-
             entity = await updator(request, data, entity, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
-            entity = await Context.EntitySet<TEntity>().UpdateAsync(entity, ct).Configure();
+            entity = await Context.Set<TEntity>().UpdateAsync(entity, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
-            var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>();
-            foreach (var hook in entityHooks)
-                await hook.Run(request, entity, ct).Configure();
-
-            ct.ThrowIfCancellationRequested();
+            await request.RunEntityHooks(RequestConfig.GetEntityHooksFor<TEntity>(), entity, ct);
 
             await Context.ApplyChangesAsync(ct).Configure();
             ct.ThrowIfCancellationRequested();
@@ -146,11 +138,7 @@ namespace Turner.Infrastructure.Crud.Requests
                     result = await transform(entity, ct).Configure();
                     ct.ThrowIfCancellationRequested();
 
-                    var resultHooks = RequestConfig.GetResultHooks();
-                    foreach (var hook in resultHooks)
-                        result = (TOut)await hook.Run(request, result, ct).Configure();
-
-                    ct.ThrowIfCancellationRequested();
+                    result = await request.RunResultHooks(RequestConfig.GetResultHooks(), result, ct);
                 }
             }
 

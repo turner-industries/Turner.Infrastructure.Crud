@@ -1,27 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Turner.Infrastructure.Crud.Context;
 
-namespace Turner.Infrastructure.Crud.Context
+namespace Turner.Infrastructure.Crud.EntityFrameworkCore
 {
     public class EntityFrameworkContext : IEntityContext
     {
         private readonly DbContext _context;
+        private readonly IDataAgent _dataAgent;
 
-        public EntityFrameworkContext(DbContext context)
+        public EntityFrameworkContext(DbContext context, 
+            IDataAgent dataAgent)
         {
             _context = context;
+            _dataAgent = dataAgent;
         }
 
-        public virtual IEntitySet<TEntity> EntitySet<TEntity>()
+        public virtual EntitySet<TEntity> Set<TEntity>()
             where TEntity : class
-        {
-            return EntityFrameworkEntitySet<TEntity>.From(_context.Set<TEntity>());
-        }
+            => new EntityFrameworkEntitySet<TEntity>(_context.Set<TEntity>(), _dataAgent);
 
         public virtual async Task<int> ApplyChangesAsync(CancellationToken token = default(CancellationToken))
         {
@@ -30,26 +28,5 @@ namespace Turner.Infrastructure.Crud.Context
             token.ThrowIfCancellationRequested();
             return result;
         }
-
-        public virtual Task<T> SingleOrDefaultAsync<T>(IQueryable<T> entities,
-            CancellationToken token = default(CancellationToken))
-            => entities.SingleOrDefaultAsync(token);
-
-        public virtual Task<T> SingleOrDefaultAsync<T>(IQueryable<T> entities,
-            Expression<Func<T, bool>> predicate,
-            CancellationToken token = default(CancellationToken))
-            => entities.SingleOrDefaultAsync(predicate, token);
-
-        public virtual Task<List<T>> ToListAsync<T>(IQueryable<T> entities,
-            CancellationToken token = default(CancellationToken))
-            => entities.ToListAsync(token);
-
-        public virtual Task<T[]> ToArrayAsync<T>(IQueryable<T> entities,
-            CancellationToken token = default(CancellationToken))
-            => entities.ToArrayAsync(token);
-
-        public virtual Task<int> CountAsync<T>(IQueryable<T> entities,
-            CancellationToken token = default(CancellationToken))
-            => entities.CountAsync();
     }
 }

@@ -8,7 +8,8 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkCore
     {
         public void Run(Container container, Assembly[] assemblies, CrudOptions options)
         {
-            container.Register(typeof(IEntityContext), typeof(EntityFrameworkContext));
+            container.Register<IEntityContext, EntityFrameworkContext>();
+            container.Register<IDataAgent, EntityFrameworkDataAgent>();
         }
     }
 

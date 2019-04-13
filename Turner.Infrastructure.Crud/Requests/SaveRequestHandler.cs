@@ -4,6 +4,7 @@ using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Exceptions;
+using Turner.Infrastructure.Crud.Extensions;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -11,6 +12,7 @@ namespace Turner.Infrastructure.Crud.Requests
     internal abstract class SaveRequestHandlerBase<TRequest, TEntity>
         : CrudRequestHandler<TRequest, TEntity>
         where TEntity : class
+        where TRequest : ISaveRequest
     {
         protected readonly RequestOptions Options;
 
@@ -22,19 +24,14 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected Task<TEntity> GetEntity(TRequest request, CancellationToken ct)
         {
-            var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
-            var set = Context.EntitySet<TEntity>();
-            
-            return Context.SingleOrDefaultAsync(set, selector(request), ct);
+            return Context.Set<TEntity>()
+                .SelectWith(request, RequestConfig.GetSelectorFor<TEntity>())
+                .SingleOrDefaultAsync(ct);
         }
 
         protected async Task<TEntity> SaveEntity(TRequest request, TEntity entity, CancellationToken ct)
         {
-            var requestHooks = RequestConfig.GetRequestHooks();
-            foreach (var hook in requestHooks)
-                await hook.Run(request, ct).Configure();
-
-            ct.ThrowIfCancellationRequested();
+            await request.RunRequestHooks(RequestConfig.GetRequestHooks(), ct).Configure();
 
             var item = RequestConfig.GetRequestItemSourceFor<TEntity>().ItemSource(request);
 
@@ -42,29 +39,16 @@ namespace Turner.Infrastructure.Crud.Requests
             {
                 entity = await CreateEntity(request, item, ct).Configure();
                 ct.ThrowIfCancellationRequested();
-
-                var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>();
-                foreach (var hook in entityHooks)
-                    await hook.Run(request, entity, ct).Configure();
-
-                ct.ThrowIfCancellationRequested();
-
-                await Context.ApplyChangesAsync(ct).Configure();
             }
             else
             {
                 entity = await UpdateEntity(request, item, entity, ct).Configure();
                 ct.ThrowIfCancellationRequested();
-
-                var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>();
-                foreach (var hook in entityHooks)
-                    await hook.Run(request, entity, ct).Configure();
-
-                ct.ThrowIfCancellationRequested();
-
-                await Context.ApplyChangesAsync(ct).Configure();
             }
 
+            await request.RunEntityHooks(RequestConfig.GetEntityHooksFor<TEntity>(), entity, ct);
+
+            await Context.ApplyChangesAsync(ct).Configure();
             ct.ThrowIfCancellationRequested();
 
             return entity;
@@ -77,7 +61,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
             ct.ThrowIfCancellationRequested();
 
-            entity = await Context.EntitySet<TEntity>().CreateAsync(entity, ct).Configure();
+            entity = await Context.Set<TEntity>().CreateAsync(entity, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
             return entity;
@@ -90,7 +74,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
             ct.ThrowIfCancellationRequested();
 
-            entity = await Context.EntitySet<TEntity>().UpdateAsync(entity, ct).Configure();
+            entity = await Context.Set<TEntity>().UpdateAsync(entity, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
             return entity;
@@ -175,11 +159,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
                 ct.ThrowIfCancellationRequested();
 
-                var resultHooks = RequestConfig.GetResultHooks();
-                foreach (var hook in resultHooks)
-                    result = (TOut)await hook.Run(request, result, ct).Configure();
-
-                ct.ThrowIfCancellationRequested();
+                result = await request.RunResultHooks(RequestConfig.GetResultHooks(), result, ct);
             }
 
             return result.AsResponse();

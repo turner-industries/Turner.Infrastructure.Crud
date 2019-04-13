@@ -6,6 +6,7 @@ using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Exceptions;
+using Turner.Infrastructure.Crud.Extensions;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Requests
@@ -36,35 +37,26 @@ namespace Turner.Infrastructure.Crud.Requests
 
                 try
                 {
-                    var requestHooks = RequestConfig.GetRequestHooks();
-                    foreach (var hook in requestHooks)
-                        await hook.Run(request, ct).Configure();
-
-                    ct.ThrowIfCancellationRequested();
-
-                    var selector = RequestConfig.GetSelectorFor<TEntity>();
+                    await request.RunRequestHooks(RequestConfig.GetRequestHooks(), ct).Configure();
+                    
+                    var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>()(request).Compile();
                     var entities = Context
-                        .EntitySet<TEntity>()
-                        .AsQueryable();
+                        .Set<TEntity>()
+                        .FilterWith(request, RequestConfig.GetFiltersFor<TEntity>())
+                        .SortWith(request, RequestConfig.GetSorterFor<TEntity>());
 
-                    foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
-                        entities = filter.Filter(request, entities).Cast<TEntity>();
-
-                    var sorter = RequestConfig.GetSorterFor<TEntity>();
-                    entities = sorter?.Sort(request, entities).Cast<TEntity>() ?? entities;
-
-                    var totalItemCount = await Context.CountAsync(entities, ct).Configure();
+                    var totalItemCount = await entities.CountAsync(ct).Configure();
                     ct.ThrowIfCancellationRequested();
 
                     var pageSize = request.PageSize < 1 ? totalItemCount : request.PageSize;
                     var totalPageCount = totalItemCount == 0 ? 1 : (totalItemCount + pageSize - 1) / pageSize;
 
-                    var allItems = await Context.ToArrayAsync(entities, ct).Configure();
+                    var allItems = await entities.ToArrayAsync(ct).Configure();
                     ct.ThrowIfCancellationRequested();
 
                     var item = allItems
                         .Select((e, i) => new { Item = e, Index = i })
-                        .SingleOrDefault(x => selector.Get<TEntity>()(request).Compile()(x.Item));
+                        .SingleOrDefault(x => selector(x.Item));
 
                     var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
                     var resultItems = new List<TOut>();
@@ -91,12 +83,7 @@ namespace Turner.Infrastructure.Crud.Requests
                         pageNumber = 0;
                     }
 
-                    var resultHooks = RequestConfig.GetResultHooks();
-                    foreach (var hook in resultHooks)
-                        for (var i = 0; i < resultItems.Count; ++i)
-                            resultItems[i] = (TOut)await hook.Run(request, resultItems[i], ct).Configure();
-
-                    ct.ThrowIfCancellationRequested();
+                    resultItems = await request.RunResultHooks(RequestConfig.GetResultHooks(), resultItems, ct);
 
                     result = new PagedGetResult<TOut>
                     {
