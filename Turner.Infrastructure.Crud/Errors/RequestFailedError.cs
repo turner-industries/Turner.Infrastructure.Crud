@@ -1,4 +1,5 @@
 ﻿using System;
+using Turner.Infrastructure.Crud.Exceptions;
 
 namespace Turner.Infrastructure.Crud.Errors
 {
@@ -10,6 +11,13 @@ namespace Turner.Infrastructure.Crud.Errors
             Request = request;
             Reason = exception != null ? exception.Message : string.Empty;
         }
+
+        public static bool IsReturnedFor(Exception e)
+            => e is CrudRequestFailedException
+            || e is AggregateException;
+
+        public static RequestFailedError From(object request, Exception exception, object result = null)
+            => new RequestFailedError(request, exception, result);
 
         public object Request { get; }
 

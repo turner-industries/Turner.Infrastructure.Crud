@@ -14,7 +14,8 @@ namespace Turner.Infrastructure.Crud.Errors
 
     public class CrudErrorHandler : ICrudErrorHandler
     {
-        public const string GenericErrorMessage = "An error has occurred.";
+        public const string GenericErrorMessage = "An error occurred while processing the request.";
+        public const string CanceledErrorMessage = "The request was canceled while processing.";
 
         private readonly Dictionary<Type, Func<CrudError, Response>> _dispatchers;
 
@@ -22,8 +23,10 @@ namespace Turner.Infrastructure.Crud.Errors
         {
             _dispatchers = new Dictionary<Type, Func<CrudError, Response>>
             {
-                { typeof(RequestFailedError), e => HandleError((RequestFailedError) e) },
-                { typeof(FailedToFindError), e => HandleError((FailedToFindError) e) }
+                { typeof(RequestFailedError), e => HandleError((RequestFailedError)e) },
+                { typeof(FailedToFindError), e => HandleError((FailedToFindError)e) },
+                { typeof(RequestCanceledError), e => HandleError((RequestCanceledError)e) },
+                { typeof(HookFailedError), e => HandleError((HookFailedError)e) }
             };
         }
 
@@ -53,6 +56,16 @@ namespace Turner.Infrastructure.Crud.Errors
         }
         
         protected virtual Response HandleError(RequestFailedError error)
+        {
+            return Error.AsResponse(error.Reason);
+        }
+
+        protected virtual Response HandleError(RequestCanceledError error)
+        {
+            return Error.AsResponse(CanceledErrorMessage);
+        }
+
+        protected virtual Response HandleError(HookFailedError error)
         {
             return Error.AsResponse(error.Reason);
         }
