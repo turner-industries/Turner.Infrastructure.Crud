@@ -2,8 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using SimpleInjector;
@@ -61,24 +59,202 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
         }
 
         [Test]
-        public async Task Handle_CustomContext_DoesNotHaveErrors()
+        public void QueryProvider_OnCustomContext_IsAsyncQueryProvider()
         {
-            var request = new CreateRequest<User, UserDto, UserGetDto>(new UserDto
+            var query = Context.Set<User>() as IQueryable<User>;
+
+            Assert.IsTrue(typeof(IAsyncQueryProvider).IsAssignableFrom(query.Provider.GetType()));
+        }
+
+        [Test]
+        public void QueryProvider_OnCustomContext_IsAdaptedToAsync()
+        {
+            var query = Context.Set<User>() as IQueryable<User>;
+
+            Assert.IsAssignableFrom(typeof(AsyncQueryProviderExtensions.AsyncAdaptedQueryProvider),
+                query.Provider);
+        }
+
+        [Test]
+        public void Query_FromCustomContext_IsAsyncEnumerable()
+        {
+            var query = Context.Set<User>().Where(x => true);
+
+            Assert.IsTrue(typeof(IAsyncEnumerable<User>).IsAssignableFrom(query.GetType()));
+        }
+
+        [Test]
+        public async Task GetEnumerator_FromCustomContextQuery_AllowsIteration()
+        {
+            await Context.Set<User>().CreateAsync(new[]
             {
-                Name = "Test"
+                new User { Name = "User1" },
+                new User { Name = "User2" },
+                new User { Name = "User3" },
             });
 
-            await Mediator.HandleAsync(request);
+            var enumerator = Context.Set<User>().Where(x => x.Name.StartsWith("User")).GetEnumerator();
+            var results = new List<string>();
+
+            while (enumerator.MoveNext())
+                results.Add(enumerator.Current.Name);
+            
+            Assert.AreEqual(3, results.Count);
+            Assert.IsTrue(results.Contains("User1"));
+            Assert.IsTrue(results.Contains("User2"));
+            Assert.IsTrue(results.Contains("User3"));
+        }
+
+        [Test]
+        public async Task GetBoxedEnumerator_FromCustomContextQuery_AllowsIteration()
+        {
+            await Context.Set<User>().CreateAsync(new[]
+            {
+                new User { Name = "User1" },
+                new User { Name = "User2" },
+                new User { Name = "User3" },
+            });
+
+            IEnumerator enumerator = ((IQueryable)Context.Set<User>().Where(x => x.Name.StartsWith("User"))).GetEnumerator();
+            var results = new List<string>();
+
+            while (enumerator.MoveNext())
+                results.Add(((User)enumerator.Current).Name);
+
+            Assert.AreEqual(3, results.Count);
+            Assert.IsTrue(results.Contains("User1"));
+            Assert.IsTrue(results.Contains("User2"));
+            Assert.IsTrue(results.Contains("User3"));
+        }
+        
+        [Test]
+        public async Task Handle_OnCustomContext_CanProcessRequests()
+        {
+            var createRequest = new CreateRequest<User, UserDto, UserGetDto>(
+                new UserDto { Name = "Test" });
+
+            await Mediator.HandleAsync(createRequest);
             
             Assert.IsNotNull(Context.Set<User>());
 
             var users = await Context.Set<User>().CountAsync();
             Assert.AreEqual(1, users);
 
-            var user = await Mediator.HandleAsync(new GetByIdRequest<User, UserGetDto>(1));
+            var getRequest = new GetByIdRequest<User, UserGetDto>(1);
+            var user = await Mediator.HandleAsync(getRequest);
+
             Assert.IsNotNull(user);
             Assert.IsNotNull(user.Data);
-            Assert.AreEqual(request.Item.Name, user.Data.Name);
+            Assert.AreEqual(createRequest.Item.Name, user.Data.Name);
+        }
+
+        [Test]
+        public async Task FirstOrDefaultAsync_OnCustomContext_Succeeds()
+        {
+            Assert.IsNull(await Context.Set<User>().FirstOrDefaultAsync());
+
+            await Context.Set<User>().CreateAsync(new[]
+            {
+                new User { Name = "User1" },
+                new User { Name = "User2" },
+                new User { Name = "User3" },
+            });
+
+            var name = (await Context.Set<User>().FirstOrDefaultAsync())?.Name;
+            Assert.AreEqual("User1", name);
+
+            name = (await Context.Set<User>().FirstOrDefaultAsync(x => x.Name == "User2"))?.Name;
+            Assert.AreEqual("User2", name);
+            
+            Assert.IsNull(await Context.Set<User>().FirstOrDefaultAsync(x => x.Name == "NonExistent"));
+        }
+
+        [Test]
+        public async Task SingleOrDefaultAsync_OnCustomContext_Succeeds()
+        {
+            Assert.IsNull(await Context.Set<User>().SingleOrDefaultAsync());
+
+            await Context.Set<User>().CreateAsync(new User { Name = "User1" });
+
+            var name = (await Context.Set<User>().SingleOrDefaultAsync())?.Name;
+            Assert.AreEqual("User1", name);
+
+            await Context.Set<User>().CreateAsync(new[]
+            {
+                new User { Name = "User2" },
+                new User { Name = "User3" },
+            });
+
+            name = (await Context.Set<User>().SingleOrDefaultAsync(x => x.Name == "User2"))?.Name;
+            Assert.AreEqual("User2", name);
+
+            Assert.Throws(typeof(InvalidOperationException),
+                () => Context.Set<User>().SingleOrDefaultAsync());
+
+            Assert.Throws(typeof(InvalidOperationException),
+                () => Context.Set<User>().SingleOrDefaultAsync(x => x.Name.StartsWith("User")));
+        }
+
+        [Test]
+        public async Task CountAsync_OnCustomContext_Succeeds()
+        {
+            Assert.AreEqual(0, await Context.Set<User>().CountAsync());
+
+            await Context.Set<User>().CreateAsync(new[]
+            {
+                new User { Name = "User1" },
+                new User { Name = "User2" },
+                new User { Name = "AUser3" },
+            });
+
+            var count = await Context.Set<User>().CountAsync();
+            Assert.AreEqual(3, count);
+
+            count = await Context.Set<User>().CountAsync(x => x.Name.StartsWith("User"));
+            Assert.AreEqual(2, count);
+
+            count = await Context.Set<User>().CountAsync(x => x.Name == "NonExistent");
+            Assert.AreEqual(0, count);
+        }
+
+        [Test]
+        public async Task ToArrayAsync_OnCustomContext_Succeeds()
+        {
+            Assert.IsNull(await Context.Set<User>().FirstOrDefaultAsync());
+
+            await Context.Set<User>().CreateAsync(new[]
+            {
+                new User { Name = "User1" },
+                new User { Name = "User2" },
+                new User { Name = "User3" },
+            });
+
+            var results = await Context.Set<User>().ToArrayAsync();
+
+            Assert.AreEqual(3, results.Length);
+            Assert.IsTrue(results.Select(x => x.Name).Contains("User1"));
+            Assert.IsTrue(results.Select(x => x.Name).Contains("User2"));
+            Assert.IsTrue(results.Select(x => x.Name).Contains("User3"));
+        }
+
+        [Test]
+        public async Task ToListAsync_OnCustomContext_Succeeds()
+        {
+            Assert.IsNull(await Context.Set<User>().FirstOrDefaultAsync());
+
+            await Context.Set<User>().CreateAsync(new[]
+            {
+                new User { Name = "User1" },
+                new User { Name = "User2" },
+                new User { Name = "User3" },
+            });
+
+            var results = await Context.Set<User>().ToListAsync();
+
+            Assert.AreEqual(3, results.Count);
+            Assert.IsTrue(results.Select(x => x.Name).Contains("User1"));
+            Assert.IsTrue(results.Select(x => x.Name).Contains("User2"));
+            Assert.IsTrue(results.Select(x => x.Name).Contains("User3"));
         }
     }
 }
