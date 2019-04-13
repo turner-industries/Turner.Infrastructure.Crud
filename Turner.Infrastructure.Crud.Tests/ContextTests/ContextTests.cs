@@ -55,6 +55,8 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
             Mediator = _scope.GetInstance<IMediator>();
             Context = _scope.GetInstance<IEntityContext>();
 
+            InMemoryContext.Reset();
+
             Container = container;
         }
 

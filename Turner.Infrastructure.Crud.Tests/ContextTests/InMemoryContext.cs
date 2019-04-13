@@ -9,9 +9,14 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
 {
     public class InMemoryContext : IEntityContext
     {
-        private readonly Dictionary<Type, Tuple<IInMemorySet, IList>> _sets
+        private static readonly Dictionary<Type, Tuple<IInMemorySet, IList>> _sets
             = new Dictionary<Type, Tuple<IInMemorySet, IList>>();
         
+        internal static void Reset()
+        {
+            _sets.Clear();
+        }
+
         public Task<int> ApplyChangesAsync(CancellationToken token = default(CancellationToken))
             => Task.FromResult(0);
         
