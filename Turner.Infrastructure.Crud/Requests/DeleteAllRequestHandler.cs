@@ -33,7 +33,7 @@ namespace Turner.Infrastructure.Crud.Requests
             var entities = await GetEntities(request, ct);
             ct.ThrowIfCancellationRequested();
 
-            entities = await Context.EntitySet<TEntity>().DeleteAsync(entities, ct).Configure();
+            entities = await Context.Set<TEntity>().DeleteAsync(entities, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
             foreach (var entity in entities)
@@ -50,12 +50,12 @@ namespace Turner.Infrastructure.Crud.Requests
         
         private async Task<TEntity[]> GetEntities(TRequest request, CancellationToken ct)
         {
-            var entities = Context.EntitySet<TEntity>().AsQueryable();
+            var entities = Context.Set<TEntity>().AsQueryable();
 
             foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
                 entities = filter.Filter(request, entities).Cast<TEntity>();
 
-            return await Context.ToArrayAsync(entities, ct).Configure();
+            return await entities.ToArrayAsync().Configure();
         }
     }
 

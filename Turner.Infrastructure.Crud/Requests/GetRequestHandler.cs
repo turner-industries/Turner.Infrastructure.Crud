@@ -1,7 +1,7 @@
-﻿using AutoMapper.QueryableExtensions;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoMapper.QueryableExtensions;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Errors;
@@ -31,7 +31,7 @@ namespace Turner.Infrastructure.Crud.Requests
             {
                 var ct = cts.Token;
                 var failedToFind = false;
-
+                
                 try
                 {
                     var requestHooks = RequestConfig.GetRequestHooks();
@@ -40,7 +40,7 @@ namespace Turner.Infrastructure.Crud.Requests
                     ct.ThrowIfCancellationRequested();
 
                     var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
-                    var entities = Context.EntitySet<TEntity>().AsQueryable();
+                    var entities = Context.Set<TEntity>().AsQueryable();
                     var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
 
                     foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
@@ -48,8 +48,10 @@ namespace Turner.Infrastructure.Crud.Requests
 
                     if (Options.UseProjection)
                     {
-                        result = await Context
-                            .SingleOrDefaultAsync(entities.Where(selector(request)).ProjectTo<TOut>(), ct)
+                        result = await entities
+                            .Where(selector(request))
+                            .ProjectTo<TOut>()
+                            .SingleOrDefaultAsync(ct)
                             .Configure();
 
                         ct.ThrowIfCancellationRequested();
@@ -63,8 +65,8 @@ namespace Turner.Infrastructure.Crud.Requests
                     }
                     else
                     {
-                        var entity = await Context
-                            .SingleOrDefaultAsync(entities, selector(request), ct)
+                        var entity = await entities
+                            .SingleOrDefaultAsync(selector(request), ct)
                             .Configure();
 
                         ct.ThrowIfCancellationRequested();

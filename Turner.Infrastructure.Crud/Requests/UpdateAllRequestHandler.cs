@@ -53,7 +53,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 ct.ThrowIfCancellationRequested();
             }
 
-            entities = await Context.EntitySet<TEntity>().UpdateAsync(updatedEntities, ct).Configure();
+            entities = await Context.Set<TEntity>().UpdateAsync(updatedEntities, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
             var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>();
@@ -72,14 +72,14 @@ namespace Turner.Infrastructure.Crud.Requests
         private async Task<TEntity[]> GetEntities(TRequest request, CancellationToken ct)
         {
             var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
-            var entities = Context.EntitySet<TEntity>().AsQueryable();
+            var entities = Context.Set<TEntity>().AsQueryable();
             
             entities = entities.Where(selector(request));
             entities = RequestConfig
                 .GetFiltersFor<TEntity>()
                 .Aggregate(entities, (current, filter) => (IQueryable<TEntity>)filter.Filter(request, current));
 
-            return await Context.ToArrayAsync(entities, ct).Configure();
+            return await entities.ToArrayAsync(ct).Configure();
         }
     }
 

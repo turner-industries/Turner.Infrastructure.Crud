@@ -29,7 +29,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
             ct.ThrowIfCancellationRequested();
 
-            entity = await Context.EntitySet<TEntity>().CreateAsync(entity, ct).Configure();
+            entity = await Context.Set<TEntity>().CreateAsync(entity, ct).Configure();
 
             ct.ThrowIfCancellationRequested();
 

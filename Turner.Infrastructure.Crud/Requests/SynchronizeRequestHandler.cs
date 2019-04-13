@@ -1,10 +1,10 @@
-﻿using AutoMapper;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoMapper;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Mediator;
@@ -74,10 +74,11 @@ namespace Turner.Infrastructure.Crud.Requests
             return changedEntities;
         }
 
-        private Task DeleteEntities(TRequest request, CancellationToken ct)
+        private async Task DeleteEntities(TRequest request, CancellationToken ct)
         {
             var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
-            var entities = Context.EntitySet<TEntity>().AsQueryable();
+            var set = Context.Set<TEntity>();
+            var entities = set.AsQueryable();
 
             foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
                 entities = filter.Filter(request, entities).Cast<TEntity>();
@@ -87,19 +88,19 @@ namespace Turner.Infrastructure.Crud.Requests
                 Expression.NotEqual(where.Body, Expression.Constant(true)), 
                 where.Parameters);
 
-            entities = entities.Where(notWhere);
+            var deleteEntities = await entities.Where(notWhere).ToArrayAsync();
 
-            return Context.EntitySet<TEntity>().DeleteAsync(entities, ct);
+            await set.DeleteAsync(deleteEntities, ct);
         }
 
         private async Task<TEntity[]> GetEntities(TRequest request, CancellationToken ct)
         {
             var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
-            var entities = Context.EntitySet<TEntity>().AsQueryable();
+            var entities = Context.Set<TEntity>().AsQueryable();
             
             entities = entities.Where(selector(request));
 
-            return await Context.ToArrayAsync(entities, ct).Configure();
+            return await entities.ToArrayAsync(ct).Configure();
         }
 
         private async Task<TEntity[]> CreateEntities(TRequest request, 
@@ -116,7 +117,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 ct.ThrowIfCancellationRequested();
             }
 
-            var entities = await Context.EntitySet<TEntity>().CreateAsync(createdEntities, ct).Configure();
+            var entities = await Context.Set<TEntity>().CreateAsync(createdEntities, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
             return entities;
@@ -136,7 +137,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 ct.ThrowIfCancellationRequested();
             }
 
-            var entities = await Context.EntitySet<TEntity>().UpdateAsync(updatedEntities, ct).Configure();
+            var entities = await Context.Set<TEntity>().UpdateAsync(updatedEntities, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
             return entities;

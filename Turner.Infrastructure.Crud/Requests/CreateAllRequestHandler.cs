@@ -44,7 +44,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 ct.ThrowIfCancellationRequested();
             }
             
-            var entities = await Context.EntitySet<TEntity>().CreateAsync(newEntities, ct).Configure();
+            var entities = await Context.Set<TEntity>().CreateAsync(newEntities, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
             var entityHooks = RequestConfig.GetEntityHooksFor<TEntity>();

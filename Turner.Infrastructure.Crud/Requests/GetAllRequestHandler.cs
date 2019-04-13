@@ -1,8 +1,8 @@
-﻿using AutoMapper.QueryableExtensions;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoMapper.QueryableExtensions;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Errors;
@@ -38,7 +38,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
                 ct.ThrowIfCancellationRequested();
 
-                var entities = Context.EntitySet<TEntity>().AsQueryable();
+                var entities = Context.Set<TEntity>().AsQueryable();
 
                 foreach (var filter in RequestConfig.GetFiltersFor<TEntity>())
                     entities = filter.Filter(request, entities).Cast<TEntity>();
@@ -50,12 +50,12 @@ namespace Turner.Infrastructure.Crud.Requests
 
                 if (Options.UseProjection)
                 {
-                    items = await Context.ToListAsync(entities.ProjectTo<TOut>(), ct).Configure();
+                    items = await entities.ProjectTo<TOut>().ToListAsync(ct).Configure();
                     ct.ThrowIfCancellationRequested();
                 }
                 else
                 {
-                    var resultEntities = await Context.ToListAsync(entities, ct).Configure();
+                    var resultEntities = await entities.ToListAsync(ct).Configure();
                     ct.ThrowIfCancellationRequested();
 
                     items = new List<TOut>(await Task.WhenAll(resultEntities.Select(x => transform(x, ct))).Configure());

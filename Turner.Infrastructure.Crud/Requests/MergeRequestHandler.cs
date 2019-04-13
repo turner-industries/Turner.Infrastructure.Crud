@@ -1,9 +1,9 @@
-﻿using AutoMapper;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoMapper;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Mediator;
@@ -73,14 +73,14 @@ namespace Turner.Infrastructure.Crud.Requests
         private async Task<TEntity[]> GetEntities(TRequest request, CancellationToken ct)
         {
             var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>();
-            var entities = Context.EntitySet<TEntity>().AsQueryable();
+            var entities = Context.Set<TEntity>().AsQueryable();
 
             entities = entities.Where(selector(request));
             entities = RequestConfig
                 .GetFiltersFor<TEntity>()
                 .Aggregate(entities, (current, filter) => (IQueryable<TEntity>)filter.Filter(request, current));
 
-            return await Context.ToArrayAsync(entities, ct).Configure();
+            return await entities.ToArrayAsync(ct).Configure();
         }
 
         private async Task<TEntity[]> CreateEntities(TRequest request, 
@@ -97,7 +97,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 ct.ThrowIfCancellationRequested();
             }
 
-            var entities = await Context.EntitySet<TEntity>().CreateAsync(createdEntities, ct).Configure();
+            var entities = await Context.Set<TEntity>().CreateAsync(createdEntities, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
             return entities;
@@ -117,7 +117,7 @@ namespace Turner.Infrastructure.Crud.Requests
                 ct.ThrowIfCancellationRequested();
             }
 
-            var entities = await Context.EntitySet<TEntity>().UpdateAsync(updatedEntities, ct).Configure();
+            var entities = await Context.Set<TEntity>().UpdateAsync(updatedEntities, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
             return entities;
