@@ -209,13 +209,7 @@ namespace Turner.Infrastructure.Crud
 
             container.Register(typeof(PagedGetAllRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(PagedGetAllRequestHandler<,,>), IfNotHandled);
-
-            container.Register(typeof(PagedGetRequestHandler<,,>), assemblies);
-            container.RegisterConditional(typeof(IRequestHandler<,>), typeof(PagedGetRequestHandler<,,>), IfNotHandled);
-
-            container.Register(typeof(PagedFindRequestHandler<,,>), assemblies);
-            container.RegisterConditional(typeof(IRequestHandler<,>), typeof(PagedFindRequestHandler<,,>), IfNotHandled);
-
+            
             container.Register(typeof(UpdateRequestHandler<,>), assemblies);
             container.Register(typeof(UpdateRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(UpdateRequestHandler<,>), IfNotHandled);
