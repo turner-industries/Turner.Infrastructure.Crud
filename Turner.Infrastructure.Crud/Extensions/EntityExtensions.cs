@@ -1,12 +1,20 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.Exceptions;
 
 namespace Turner.Infrastructure.Crud.Extensions
 {
     internal static class EntityExtensions
     {
+        private const string GenericCreateResultError 
+            = "A request 'result creator' failed while processing the request.";
+
+        private static bool IsNonCancellationFailure(Exception e)
+            => !(e is OperationCanceledException);
+
         internal static async Task<TResult> CreateResult<TEntity, TResult>(this TEntity entity,
             ICrudRequestConfig config,
             CancellationToken token)
@@ -14,10 +22,20 @@ namespace Turner.Infrastructure.Crud.Extensions
         {
             var createResult = config.GetResultCreatorFor<TEntity, TResult>();
 
-            var result = await createResult(entity, token).Configure();
-            token.ThrowIfCancellationRequested();
+            try
+            {
+                var result = await createResult(entity, token).Configure();
+                token.ThrowIfCancellationRequested();
 
-            return result;
+                return result;
+            }
+            catch (Exception e) when (IsNonCancellationFailure(e))
+            {
+                throw new CrudCreateResultFailedException(GenericCreateResultError, e)
+                {
+                    EntityProperty = entity
+                };
+            }
         }
 
         internal static async Task<TResult[]> CreateResults<TEntity, TResult>(this TEntity[] entities,
@@ -27,10 +45,20 @@ namespace Turner.Infrastructure.Crud.Extensions
         {
             var createResult = config.GetResultCreatorFor<TEntity, TResult>();
 
-            var results = await Task.WhenAll(entities.Select(x => createResult(x, token))).Configure();
-            token.ThrowIfCancellationRequested();
-            
-            return results;
+            try
+            {
+                var results = await Task.WhenAll(entities.Select(x => createResult(x, token))).Configure();
+                token.ThrowIfCancellationRequested();
+
+                return results;
+            }
+            catch (Exception e) when (IsNonCancellationFailure(e))
+            {
+                throw new CrudCreateResultFailedException(GenericCreateResultError, e)
+                {
+                    EntityProperty = entities
+                };
+            }
         }
     }
 }

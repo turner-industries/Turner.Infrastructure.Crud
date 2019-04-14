@@ -11,11 +11,17 @@ namespace Turner.Infrastructure.Crud.Extensions
 {
     internal static class CrudRequestExtensions
     {
-        private static bool IsHookFailure(Exception e)
-            => !(e is OperationCanceledException);
+        private const string GenericCreateEntityError
+            = "A request 'entity creator' failed while processing the request.";
 
-        private static string HookFailureReason(string hookType)
+        private const string GenericUpdateEntityError
+            = "A request 'entity updator' failed while processing the request.";
+
+        private static string GenericHookError(string hookType)
             => $"A request '{hookType} hook' failed while processing the request.";
+
+        private static bool IsNonCancellationFailure(Exception e)
+            => !(e is OperationCanceledException);
 
         internal static async Task RunRequestHooks(this ICrudRequest request,
             ICrudRequestConfig config,
@@ -30,9 +36,9 @@ namespace Turner.Infrastructure.Crud.Extensions
                     await hook.Run(request, ct).Configure();
                     ct.ThrowIfCancellationRequested();
                 }
-                catch (Exception e) when (IsHookFailure(e))
+                catch (Exception e) when (IsNonCancellationFailure(e))
                 {
-                    throw new CrudHookFailedException(HookFailureReason("request"), e)
+                    throw new CrudHookFailedException(GenericHookError("request"), e)
                     {
                         HookProperty = hook
                     };
@@ -57,9 +63,9 @@ namespace Turner.Infrastructure.Crud.Extensions
                         items[i] = await hook.Run(request, items[i], ct).Configure();
                         ct.ThrowIfCancellationRequested();
                     }
-                    catch (Exception e) when (IsHookFailure(e))
+                    catch (Exception e) when (IsNonCancellationFailure(e))
                     {
-                        throw new CrudHookFailedException(HookFailureReason("item"), e)
+                        throw new CrudHookFailedException(GenericHookError("item"), e)
                         {
                             HookProperty = hook
                         };
@@ -85,9 +91,9 @@ namespace Turner.Infrastructure.Crud.Extensions
                     await hook.Run(request, entity, ct).Configure();
                     ct.ThrowIfCancellationRequested();
                 }
-                catch (Exception e) when (IsHookFailure(e))
+                catch (Exception e) when (IsNonCancellationFailure(e))
                 {
-                    throw new CrudHookFailedException(HookFailureReason("entity"), e)
+                    throw new CrudHookFailedException(GenericHookError("entity"), e)
                     {
                         HookProperty = hook
                     };
@@ -112,9 +118,9 @@ namespace Turner.Infrastructure.Crud.Extensions
                         await hook.Run(request, entity, ct).Configure();
                         ct.ThrowIfCancellationRequested();
                     }
-                    catch (Exception e) when (IsHookFailure(e))
+                    catch (Exception e) when (IsNonCancellationFailure(e))
                     {
-                        throw new CrudHookFailedException(HookFailureReason("entity"), e)
+                        throw new CrudHookFailedException(GenericHookError("entity"), e)
                         {
                             HookProperty = hook
                         };
@@ -137,9 +143,9 @@ namespace Turner.Infrastructure.Crud.Extensions
                     result = (T)await hook.Run(request, result, ct).Configure();
                     ct.ThrowIfCancellationRequested();
                 }
-                catch (Exception e) when (IsHookFailure(e))
+                catch (Exception e) when (IsNonCancellationFailure(e))
                 {
-                    throw new CrudHookFailedException(HookFailureReason("result"), e)
+                    throw new CrudHookFailedException(GenericHookError("result"), e)
                     {
                         HookProperty = hook
                     };
@@ -165,9 +171,9 @@ namespace Turner.Infrastructure.Crud.Extensions
                         results[i] = (T)await hook.Run(request, results[i], ct).Configure();
                         ct.ThrowIfCancellationRequested();
                     }
-                    catch (Exception e) when (IsHookFailure(e))
+                    catch (Exception e) when (IsNonCancellationFailure(e))
                     {
-                        throw new CrudHookFailedException(HookFailureReason("result"), e)
+                        throw new CrudHookFailedException(GenericHookError("result"), e)
                         {
                             HookProperty = hook
                         };
@@ -185,11 +191,21 @@ namespace Turner.Infrastructure.Crud.Extensions
             where TEntity : class
         {
             var creator = config.GetCreatorFor<TEntity>();
-            var entity = await creator(request, item, token).Configure();
 
-            token.ThrowIfCancellationRequested();
+            try
+            {
+                var entity = await creator(request, item, token).Configure();
+                token.ThrowIfCancellationRequested();
 
-            return entity;
+                return entity;
+            }
+            catch (Exception e) when (IsNonCancellationFailure(e))
+            {
+                throw new CrudCreateEntityFailedException(GenericCreateEntityError, e)
+                {
+                    ItemProperty = item
+                };
+            }
         }
 
         internal static async Task<TEntity[]> CreateEntities<TEntity>(this IBulkRequest request,
@@ -199,11 +215,21 @@ namespace Turner.Infrastructure.Crud.Extensions
             where TEntity : class
         {
             var creator = config.GetCreatorFor<TEntity>();
-            var entities = await Task.WhenAll(items.Select(x => creator(request, x, token))).Configure();
 
-            token.ThrowIfCancellationRequested();
+            try
+            {
+                var entities = await Task.WhenAll(items.Select(x => creator(request, x, token))).Configure();
+                token.ThrowIfCancellationRequested();
 
-            return entities;
+                return entities;
+            }
+            catch (Exception e) when (IsNonCancellationFailure(e))
+            {
+                throw new CrudCreateEntityFailedException(GenericCreateEntityError, e)
+                {
+                    ItemProperty = items
+                };
+            }
         }
 
         internal static async Task<TEntity> UpdateEntity<TEntity>(this ICrudRequest request,
@@ -214,12 +240,23 @@ namespace Turner.Infrastructure.Crud.Extensions
             where TEntity : class
         {
             var updator = config.GetUpdatorFor<TEntity>();
-            entity = await updator(request, item, entity, token).Configure();
 
-            token.ThrowIfCancellationRequested();
+            try
+            {
+                entity = await updator(request, item, entity, token).Configure();
+                token.ThrowIfCancellationRequested();
 
-            return entity;
-        }
+                return entity;
+            }
+            catch (Exception e) when(IsNonCancellationFailure(e))
+            {
+                throw new CrudUpdateEntityFailedException(GenericUpdateEntityError, e)
+                {
+                    ItemProperty = item,
+                    EntityProperty = entity
+                };
+            }
+    }
 
         internal static async Task<TEntity[]> UpdateEntities<TEntity>(this IBulkRequest request,
             ICrudRequestConfig config,
@@ -228,11 +265,22 @@ namespace Turner.Infrastructure.Crud.Extensions
             where TEntity : class
         {
             var updator = config.GetUpdatorFor<TEntity>();
-            var entities = await Task.WhenAll(items.Select(x => updator(request, x.Item1, x.Item2, token))).Configure();
 
-            token.ThrowIfCancellationRequested();
+            try
+            {
+                var entities = await Task.WhenAll(items.Select(x => updator(request, x.Item1, x.Item2, token))).Configure();
+                token.ThrowIfCancellationRequested();
 
-            return entities;
+                return entities;
+            }
+            catch (Exception e) when (IsNonCancellationFailure(e))
+            {
+                throw new CrudUpdateEntityFailedException(GenericUpdateEntityError, e)
+                {
+                    ItemProperty = items.Select(x => x.Item1).ToArray(),
+                    EntityProperty = items.Select(x => x.Item2).ToArray()
+                };
+            }
         }
     }
 }

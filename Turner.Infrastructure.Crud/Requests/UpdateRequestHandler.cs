@@ -1,9 +1,7 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
-using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Exceptions;
 using Turner.Infrastructure.Crud.Extensions;
 using Turner.Infrastructure.Mediator;
@@ -20,7 +18,7 @@ namespace Turner.Infrastructure.Crud.Requests
         {
         }
         
-        protected async Task<(TEntity, bool)> UpdateEntity(TRequest request, CancellationToken ct)
+        protected async Task<TEntity> UpdateEntity(TRequest request, CancellationToken ct)
         {
             await request.RunRequestHooks(RequestConfig, ct).Configure();
 
@@ -33,9 +31,7 @@ namespace Turner.Infrastructure.Crud.Requests
             
             ct.ThrowIfCancellationRequested();
 
-            var found = entity != null;
-
-            if (found)
+            if (entity != null)
             {
                 entity = await request.UpdateEntity(RequestConfig, item, entity, ct).Configure();
 
@@ -45,11 +41,14 @@ namespace Turner.Infrastructure.Crud.Requests
                 await request.RunEntityHooks<TEntity>(RequestConfig, entity, ct).Configure();
 
                 await Context.ApplyChangesAsync(ct).Configure();
+                ct.ThrowIfCancellationRequested();
+            }
+            else if (RequestConfig.ErrorConfig.FailedToFindInUpdateIsError)
+            {
+                throw new CrudFailedToFindException { EntityTypeProperty = typeof(TEntity) };
             }
 
-            ct.ThrowIfCancellationRequested();
-
-            return (entity, found);
+            return entity;
         }
     }
 
@@ -64,33 +63,9 @@ namespace Turner.Infrastructure.Crud.Requests
         {
         }
 
-        public async Task<Response> HandleAsync(TRequest request)
+        public Task<Response> HandleAsync(TRequest request)
         {
-            using (var cts = new CancellationTokenSource())
-            {
-                var ct = cts.Token;
-                
-                try
-                {
-                    (_, var found) = await UpdateEntity(request, ct).Configure();
-                    if (!found && RequestConfig.ErrorConfig.FailedToFindInUpdateIsError)
-                        return ErrorDispatcher.Dispatch(new FailedToFindError(request, typeof(TEntity)));
-                }
-                catch (Exception e) when (RequestFailedError.IsReturnedFor(e))
-                {
-                    return ErrorDispatcher.Dispatch(RequestFailedError.From(request, e));
-                }
-                catch (Exception e) when (RequestCanceledError.IsReturnedFor(e))
-                {
-                    return ErrorDispatcher.Dispatch(RequestCanceledError.From(request, e));
-                }
-                catch (Exception e) when (HookFailedError.IsReturnedFor(e))
-                {
-                    return ErrorDispatcher.Dispatch(HookFailedError.From(request, e));
-                }
-            }
-
-            return Response.Success();
+            return HandleWithErrorsAsync(request, (_, token) => (Task)UpdateEntity(request, token));
         }
     }
 
@@ -105,38 +80,18 @@ namespace Turner.Infrastructure.Crud.Requests
         {
         }
 
-        public async Task<Response<TOut>> HandleAsync(TRequest request)
+        public Task<Response<TOut>> HandleAsync(TRequest request)
         {
-            var result = default(TOut);
+            return HandleWithErrorsAsync(request, HandleAsync);
+        }
 
-            using (var cts = new CancellationTokenSource())
-            {
-                var ct = cts.Token;
-                
-                try
-                {
-                    var (entity, found) = await UpdateEntity(request, ct).Configure();
-                    if (!found && RequestConfig.ErrorConfig.FailedToFindInUpdateIsError)
-                        return ErrorDispatcher.Dispatch<TOut>(new FailedToFindError(request, typeof(TEntity)));
+        public async Task<TOut> HandleAsync(TRequest request, CancellationToken token)
+        {
+            var entity = await UpdateEntity(request, token).Configure();
+            var tOut = await entity.CreateResult<TEntity, TOut>(RequestConfig, token).Configure();
+            var result = await request.RunResultHooks(RequestConfig, tOut, token).Configure();
 
-                    var tOut = await entity.CreateResult<TEntity, TOut>(RequestConfig, ct).Configure();
-                    result = await request.RunResultHooks(RequestConfig, tOut, ct).Configure();
-                }
-                catch (Exception e) when (RequestFailedError.IsReturnedFor(e))
-                {
-                    return ErrorDispatcher.Dispatch<TOut>(RequestFailedError.From(request, e, result));
-                }
-                catch (Exception e) when (RequestCanceledError.IsReturnedFor(e))
-                {
-                    return ErrorDispatcher.Dispatch<TOut>(RequestCanceledError.From(request, e, result));
-                }
-                catch (Exception e) when (HookFailedError.IsReturnedFor(e))
-                {
-                    return ErrorDispatcher.Dispatch<TOut>(HookFailedError.From(request, e, result));
-                }
-            }
-
-            return result.AsResponse();
+            return result;
         }
     }
 }

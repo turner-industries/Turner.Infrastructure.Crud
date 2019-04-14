@@ -1,4 +1,5 @@
 ﻿using System;
+using Turner.Infrastructure.Crud.Exceptions;
 
 namespace Turner.Infrastructure.Crud.Errors
 {
@@ -6,11 +7,22 @@ namespace Turner.Infrastructure.Crud.Errors
     {
         public const string DefaultReason = "Failed to find entity.";
 
-        public FailedToFindError(object request, Type tEntity, object result = null)
-            : base(request, null, result)
+        public FailedToFindError(object request, Type tEntity)
+            : base(request, null)
         {
             EntityType = tEntity;
             Reason = DefaultReason;
+        }
+
+        public new static bool IsReturnedFor(Exception e)
+            => e is CrudFailedToFindException;
+
+        public new static FailedToFindError From(object request, Exception exception)
+        {
+            if (exception is CrudFailedToFindException cftfException)
+                return new FailedToFindError(request, cftfException.EntityTypeProperty);
+
+            return new FailedToFindError(request, null);
         }
 
         public Type EntityType { get; }

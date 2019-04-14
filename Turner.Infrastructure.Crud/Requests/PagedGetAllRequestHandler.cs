@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
-using Turner.Infrastructure.Crud.Errors;
+using Turner.Infrastructure.Crud.Exceptions;
 using Turner.Infrastructure.Crud.Extensions;
 using Turner.Infrastructure.Mediator;
 
@@ -23,102 +23,84 @@ namespace Turner.Infrastructure.Crud.Requests
             Options = RequestConfig.GetOptionsFor<TEntity>();
         }
 
-        public async Task<Response<PagedGetAllResult<TOut>>> HandleAsync(TRequest request)
+        public Task<Response<PagedGetAllResult<TOut>>> HandleAsync(TRequest request)
         {
-            PagedGetAllResult<TOut> result = null;
-
-            using (var cts = new CancellationTokenSource())
-            {
-                var ct = cts.Token;
-
-                try
-                {
-                    await request.RunRequestHooks(RequestConfig, ct).Configure();
-                    
-                    var entities = Context
-                        .Set<TEntity>()
-                        .FilterWith(request, RequestConfig)
-                        .SortWith(request, RequestConfig);
-                    
-                    var totalItemCount = await entities.CountAsync(ct).Configure();
-                    ct.ThrowIfCancellationRequested();
-
-                    var pageSize = request.PageSize < 1 ? totalItemCount : request.PageSize;
-                    var totalPageCount = totalItemCount == 0 ? 1 : (totalItemCount + pageSize - 1) / pageSize;
-                    var pageNumber = Math.Max(1, Math.Min(request.PageNumber, totalPageCount));
-                    var startIndex = (pageNumber - 1) * pageSize;
-
-                    entities = entities.Skip(startIndex).Take(pageSize);
-
-                    var (tOuts, found) = await FindEntities(request, entities, ct).Configure();
-                    if (!found && RequestConfig.ErrorConfig.FailedToFindInGetAllIsError)
-                    {
-                        var errorResult = new PagedGetAllResult<TOut>(tOuts, pageNumber, pageSize, totalPageCount, totalItemCount);
-                        var error = new FailedToFindError(request, typeof(TEntity), errorResult);
-
-                        return ErrorDispatcher.Dispatch<PagedGetAllResult<TOut>>(error);
-                    }
-
-                    var items = await request.RunResultHooks(RequestConfig, tOuts, ct).Configure();
-                    
-                    result = new PagedGetAllResult<TOut>(items, pageNumber, pageSize, totalPageCount, totalItemCount);
-                }
-                catch (Exception e) when (RequestFailedError.IsReturnedFor(e))
-                {
-                    return ErrorDispatcher.Dispatch<PagedGetAllResult<TOut>>(RequestFailedError.From(request, e, result));
-                }
-                catch (Exception e) when (RequestCanceledError.IsReturnedFor(e))
-                {
-                    return ErrorDispatcher.Dispatch<PagedGetAllResult<TOut>>(RequestCanceledError.From(request, e, result));
-                }
-                catch (Exception e) when (HookFailedError.IsReturnedFor(e))
-                {
-                    return ErrorDispatcher.Dispatch<PagedGetAllResult<TOut>>(HookFailedError.From(request, e, result));
-                }
-            }
-
-            return result.AsResponse();
+            return HandleWithErrorsAsync(request, HandleAsync);
         }
 
-        private async Task<(TOut[], bool)> FindEntities(TRequest request, IQueryable<TEntity> entities, CancellationToken ct)
+        public async Task<PagedGetAllResult<TOut>> HandleAsync(TRequest request, CancellationToken token)
         {
-            var result = Array.Empty<TOut>();
-            
+            await request.RunRequestHooks(RequestConfig, token).Configure();
+                    
+            var entities = Context
+                .Set<TEntity>()
+                .FilterWith(request, RequestConfig)
+                .SortWith(request, RequestConfig);
+                    
+            var totalItemCount = await entities.CountAsync(token).Configure();
+            token.ThrowIfCancellationRequested();
+
+            var pageSize = request.PageSize < 1 ? totalItemCount : request.PageSize;
+            var totalPageCount = totalItemCount == 0 ? 1 : (totalItemCount + pageSize - 1) / pageSize;
+            var pageNumber = Math.Max(1, Math.Min(request.PageNumber, totalPageCount));
+            var startIndex = (pageNumber - 1) * pageSize;
+
+            entities = entities.Skip(startIndex).Take(pageSize);
+
+            var items = await GetItems(request, entities, token).Configure();
+                    
+            return new PagedGetAllResult<TOut>(items, pageNumber, pageSize, totalPageCount, totalItemCount);
+        }
+
+        private async Task<TOut[]> GetItems(TRequest request, IQueryable<TEntity> entities, CancellationToken token)
+        {
+            var tOuts = Array.Empty<TOut>();
+
             if (Options.UseProjection)
             {
-                result = await entities.ProjectToArrayAsync<TEntity, TOut>(ct).Configure();
-                ct.ThrowIfCancellationRequested();
+                tOuts = await entities.ProjectToArrayAsync<TEntity, TOut>(token).Configure();
+                token.ThrowIfCancellationRequested();
+
+                if (tOuts.Length == 0)
+                {
+                    if (RequestConfig.ErrorConfig.FailedToFindInGetAllIsError)
+                        throw new CrudFailedToFindException { EntityTypeProperty = typeof(TEntity) };
+
+                    var defaultEntity = RequestConfig.GetDefaultFor<TEntity>();
+                    if (defaultEntity != null)
+                    {
+                        tOuts = new TOut[]
+                        {
+                            await defaultEntity.CreateResult<TEntity, TOut>(RequestConfig, token).Configure()
+                        };
+                    }
+                }
             }
             else
             {
-                var resultEntities = await entities.ToArrayAsync(ct).Configure();
-                ct.ThrowIfCancellationRequested();
+                var resultEntities = await entities.ToArrayAsync(token).Configure();
+                token.ThrowIfCancellationRequested();
 
-                await request.RunEntityHooks<TEntity>(RequestConfig, entities, ct).Configure();
-
-                result = await resultEntities.CreateResults<TEntity, TOut>(RequestConfig, ct).Configure();
-                ct.ThrowIfCancellationRequested();
-            }
-
-            var found = result.Length > 0;
-
-            if (!found)
-            {
-                var defaultValue = RequestConfig.GetDefaultFor<TEntity>();
-                if (defaultValue != null)
+                if (resultEntities.Length == 0)
                 {
-                    result = new[]
-                    {
-                        await defaultValue
-                            .CreateResult<TEntity, TOut>(RequestConfig, ct)
-                            .Configure()
-                    };
+                    if (RequestConfig.ErrorConfig.FailedToFindInGetAllIsError)
+                        throw new CrudFailedToFindException { EntityTypeProperty = typeof(TEntity) };
+
+                    var defaultEntity = RequestConfig.GetDefaultFor<TEntity>();
+                    if (defaultEntity != null)
+                        resultEntities = new TEntity[] { RequestConfig.GetDefaultFor<TEntity>() };
                 }
+
+                await request.RunEntityHooks<TEntity>(RequestConfig, entities, token).Configure();
+
+                tOuts = await resultEntities.CreateResults<TEntity, TOut>(RequestConfig, token).Configure();
             }
 
-            ct.ThrowIfCancellationRequested();
+            token.ThrowIfCancellationRequested();
 
-            return (result, found);
+            var items = await request.RunResultHooks(RequestConfig, tOuts, token).Configure();
+
+            return items;
         }
     }
 }
