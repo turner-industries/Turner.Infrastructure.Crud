@@ -133,6 +133,37 @@ namespace Turner.Infrastructure.Crud.Tests
         }
     }
 
+    [TestFixture]
+    public class TestTypeErrorHandlerTests : BaseUnitTest
+    {
+        public static ErrorTypeTestHandler TypeTestHandler { get; }
+            = new ErrorTypeTestHandler();
+
+        [Test]
+        public async Task Handle_WithHookFailure_DispatchesHookFailedError()
+        {
+            TypeTestHandler.Clear();
+
+            var request = new HookFailureTestRequest();
+            await Mediator.HandleAsync(request);
+
+            Assert.AreEqual(typeof(HookFailedError), TypeTestHandler.LastErrorType);
+            Assert.AreEqual("HookTest", TypeTestHandler.LastError);
+        }
+
+        [Test]
+        public async Task Handle_WithCancelation_DispatchesRequestCanceledError()
+        {
+            TypeTestHandler.Clear();
+
+            var request = new RequestCanceledTestRequest();
+            await Mediator.HandleAsync(request);
+
+            Assert.AreEqual(typeof(RequestCanceledError), TypeTestHandler.LastErrorType);
+            Assert.AreEqual("CancelTest", TypeTestHandler.LastError);
+        }
+    }
+
     [DoNotValidate]
     public class UseDefaultErrorHandler
         : IGetRequest<NonEntity, NonEntity>
@@ -186,5 +217,80 @@ namespace Turner.Infrastructure.Crud.Tests
                 .SelectWith(b => b.Single("Id"))
                 .UseErrorHandlerFactory(() => new TestErrorHandler());
         }
+    }
+
+    [DoNotValidate]
+    public class HookFailureTestRequest
+        : IGetRequest<NonEntity, NonEntity>
+    {
+        public int Id { get; set; }
+    }
+
+    public class HookFailureTestProfile
+        : CrudRequestProfile<HookFailureTestRequest>
+    {
+        public HookFailureTestProfile()
+        {
+            ForEntity<NonEntity>()
+                .UseKeys("Id")
+                .UseErrorHandlerFactory(() => TestTypeErrorHandlerTests.TypeTestHandler)
+                .AddEntityHook((r, e) => throw new InvalidOperationException("HookTest"));
+        }
+    }
+
+    [DoNotValidate]
+    public class RequestCanceledTestRequest
+        : IGetRequest<NonEntity, NonEntity>
+    {
+        public int Id { get; set; }
+    }
+
+    public class RequestCanceledTestProfile
+        : CrudRequestProfile<RequestCanceledTestRequest>
+    {
+        public RequestCanceledTestProfile()
+        {
+            AddRequestHook(r => throw new OperationCanceledException("CancelTest"));
+
+            ForEntity<NonEntity>()
+                .UseKeys("Id")
+                .UseErrorHandlerFactory(() => TestTypeErrorHandlerTests.TypeTestHandler);
+        }
+    }
+
+    public class ErrorTypeTestHandler : CrudErrorHandler
+    {
+        public Type LastErrorType { get; private set; }
+
+        public string LastError { get; private set; }
+
+        public void Clear()
+        {
+            LastErrorType = null;
+            LastError = null;
+        }
+
+        private Response Handle(CrudError error)
+        {
+            LastErrorType = error.GetType();
+            LastError = error.Exception?.Message;
+            
+            return Response.Success();
+        }
+
+        protected override Response HandleError(FailedToFindError error)
+            => Handle(error);
+
+        protected override Response HandleError(CrudError error)
+            => Handle(error);
+
+        protected override Response HandleError(HookFailedError error)
+            => Handle(error);
+
+        protected override Response HandleError(RequestCanceledError error)
+            => Handle(error);
+
+        protected override Response HandleError(RequestFailedError error)
+            => Handle(error);
     }
 }
