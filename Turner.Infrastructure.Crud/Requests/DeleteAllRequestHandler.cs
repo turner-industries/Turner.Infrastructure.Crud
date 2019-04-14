@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
+using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Extensions;
 using Turner.Infrastructure.Mediator;
 
@@ -24,29 +24,26 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity[]> DeleteEntities(TRequest request, CancellationToken ct)
         {
-            await request.RunRequestHooks(RequestConfig.GetRequestHooks(), ct).Configure();
+            await request.RunRequestHooks(RequestConfig, ct).Configure();
 
             ct.ThrowIfCancellationRequested();
 
-            var entities = await GetEntities(request, ct);
+            var entities = await Context.Set<TEntity>()
+                .FilterWith(request, RequestConfig)
+                .ToArrayAsync(ct)
+                .Configure();
+
             ct.ThrowIfCancellationRequested();
 
             entities = await Context.Set<TEntity>().DeleteAsync(entities, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
-            await request.RunEntityHooks(RequestConfig.GetEntityHooksFor<TEntity>(), entities, ct);
+            await request.RunEntityHooks<TEntity>(RequestConfig, entities, ct).Configure();
 
             await Context.ApplyChangesAsync(ct).Configure();
             ct.ThrowIfCancellationRequested();
 
             return entities;
-        }
-        
-        private Task<TEntity[]> GetEntities(TRequest request, CancellationToken ct)
-        {
-            return Context.Set<TEntity>()
-                .FilterWith(request, RequestConfig.GetFiltersFor<TEntity>())
-                .ToArrayAsync(ct);
         }
     }
 
@@ -64,8 +61,27 @@ namespace Turner.Infrastructure.Crud.Requests
         public async Task<Response> HandleAsync(TRequest request)
         {
             using (var cts = new CancellationTokenSource())
-                await DeleteEntities(request, cts.Token).Configure();
-            
+            {
+                var ct = cts.Token;
+
+                try
+                {
+                    await DeleteEntities(request, ct).Configure();
+                }
+                catch (Exception e) when (RequestFailedError.IsReturnedFor(e))
+                {
+                    return ErrorDispatcher.Dispatch(RequestFailedError.From(request, e));
+                }
+                catch (Exception e) when (RequestCanceledError.IsReturnedFor(e))
+                {
+                    return ErrorDispatcher.Dispatch(RequestCanceledError.From(request, e));
+                }
+                catch (Exception e) when (HookFailedError.IsReturnedFor(e))
+                {
+                    return ErrorDispatcher.Dispatch(HookFailedError.From(request, e));
+                }
+            }
+
             return Response.Success();
         }
     }
@@ -83,22 +99,32 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response<DeleteAllResult<TOut>>> HandleAsync(TRequest request)
         {
-            DeleteAllResult<TOut> result;
+            DeleteAllResult<TOut> result = null;
 
             using (var cts = new CancellationTokenSource())
             {
                 var ct = cts.Token;
-                
-                var entities = await DeleteEntities(request, ct).Configure();
-                ct.ThrowIfCancellationRequested();
 
-                var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
-                var items = new List<TOut>(await Task.WhenAll(entities.Select(x => transform(x, ct))).Configure());
-                ct.ThrowIfCancellationRequested();
+                try
+                {
+                    var entities = await DeleteEntities(request, ct).Configure();
+                    var tOuts = await entities.CreateResults<TEntity, TOut>(RequestConfig, ct).Configure();
+                    var items = await request.RunResultHooks(RequestConfig, tOuts, ct).Configure();
 
-                items = await request.RunResultHooks(RequestConfig.GetResultHooks(), items, ct);
-
-                result = new DeleteAllResult<TOut>(items);
+                    result = new DeleteAllResult<TOut>(items);
+                }
+                catch (Exception e) when (RequestFailedError.IsReturnedFor(e))
+                {
+                    return ErrorDispatcher.Dispatch<DeleteAllResult<TOut>>(RequestFailedError.From(request, e, result));
+                }
+                catch (Exception e) when (RequestCanceledError.IsReturnedFor(e))
+                {
+                    return ErrorDispatcher.Dispatch<DeleteAllResult<TOut>>(RequestCanceledError.From(request, e, result));
+                }
+                catch (Exception e) when (HookFailedError.IsReturnedFor(e))
+                {
+                    return ErrorDispatcher.Dispatch<DeleteAllResult<TOut>>(HookFailedError.From(request, e, result));
+                }
             }
 
             return result.AsResponse();

@@ -1,7 +1,9 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
+using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Extensions;
 using Turner.Infrastructure.Mediator;
 
@@ -19,20 +21,15 @@ namespace Turner.Infrastructure.Crud.Requests
 
         protected async Task<TEntity> CreateEntity(TRequest request, CancellationToken ct)
         {
-            await request.RunRequestHooks(RequestConfig.GetRequestHooks(), ct).Configure();
-
-            ct.ThrowIfCancellationRequested();
-
-            var data = RequestConfig.GetRequestItemSourceFor<TEntity>().ItemSource(request);
-            var creator = RequestConfig.GetCreatorFor<TEntity>();
-
-            var entity = await creator(request, data, ct).Configure();
-            ct.ThrowIfCancellationRequested();
+            await request.RunRequestHooks(RequestConfig, ct).Configure();
+            
+            var item = RequestConfig.GetRequestItemSourceFor<TEntity>().ItemSource(request);
+            var entity = await request.CreateEntity<TEntity>(RequestConfig, item, ct).Configure();
 
             entity = await Context.Set<TEntity>().CreateAsync(entity, ct).Configure();
             ct.ThrowIfCancellationRequested();
-
-            await request.RunEntityHooks(RequestConfig.GetEntityHooksFor<TEntity>(), entity, ct);
+            
+            await request.RunEntityHooks<TEntity>(RequestConfig, entity, ct).Configure();
 
             await Context.ApplyChangesAsync(ct).Configure();
             ct.ThrowIfCancellationRequested();
@@ -56,7 +53,26 @@ namespace Turner.Infrastructure.Crud.Requests
         public async Task<Response> HandleAsync(TRequest request)
         {
             using (var cts = new CancellationTokenSource())
-                await CreateEntity(request, cts.Token).Configure();
+            {
+                var ct = cts.Token;
+
+                try
+                {
+                    await CreateEntity(request, ct).Configure();
+                }
+                catch (Exception e) when (RequestFailedError.IsReturnedFor(e))
+                {
+                    return ErrorDispatcher.Dispatch(RequestFailedError.From(request, e));
+                }
+                catch (Exception e) when (RequestCanceledError.IsReturnedFor(e))
+                {
+                    return ErrorDispatcher.Dispatch(RequestCanceledError.From(request, e));
+                }
+                catch (Exception e) when (HookFailedError.IsReturnedFor(e))
+                {
+                    return ErrorDispatcher.Dispatch(HookFailedError.From(request, e));
+                }
+            }
 
             return Response.Success();
         }
@@ -76,21 +92,33 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response<TOut>> HandleAsync(TRequest request)
         {
+            var result = default(TOut);
+
             using (var cts = new CancellationTokenSource())
             {
                 var ct = cts.Token;
 
-                var entity = await CreateEntity(request, ct).Configure();
-                ct.ThrowIfCancellationRequested();
-
-                var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
-                var result = await transform(entity, ct).Configure();
-                ct.ThrowIfCancellationRequested();
-
-                result = await request.RunResultHooks(RequestConfig.GetResultHooks(), result, ct);
-
-                return result.AsResponse();
+                try
+                {
+                    var entity = await CreateEntity(request, ct).Configure();
+                    var tOut = await entity.CreateResult<TEntity, TOut>(RequestConfig, ct).Configure();
+                    result = await request.RunResultHooks(RequestConfig, tOut, ct).Configure();
+                }
+                catch (Exception e) when (RequestFailedError.IsReturnedFor(e))
+                {
+                    return ErrorDispatcher.Dispatch<TOut>(RequestFailedError.From(request, e, result));
+                }
+                catch (Exception e) when (RequestCanceledError.IsReturnedFor(e))
+                {
+                    return ErrorDispatcher.Dispatch<TOut>(RequestCanceledError.From(request, e, result));
+                }
+                catch (Exception e) when (HookFailedError.IsReturnedFor(e))
+                {
+                    return ErrorDispatcher.Dispatch<TOut>(HookFailedError.From(request, e, result));
+                }
             }
+
+            return result.AsResponse();
         }
     }
 }

@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
+using Turner.Infrastructure.Crud.Configuration;
 
 namespace Turner.Infrastructure.Crud.Extensions
 {
@@ -7,27 +7,33 @@ namespace Turner.Infrastructure.Crud.Extensions
     {
         internal static IQueryable<TEntity> FilterWith<TEntity>(this IQueryable<TEntity> entities,
             object request, 
-            IEnumerable<IBoxedFilter> filters)
+            ICrudRequestConfig config)
             where TEntity : class
         {
+            var filters = config.GetFiltersFor<TEntity>();
+
             return filters.Aggregate(entities, (current, filter)
                 => filter.Filter(request, current).Cast<TEntity>());
         }
 
         internal static IQueryable<TEntity> SortWith<TEntity>(this IQueryable<TEntity> entities,
             object request,
-            IBoxedSorter sorter)
+            ICrudRequestConfig config)
             where TEntity : class
         {
+            var sorter = config.GetSorterFor<TEntity>();
+
             return sorter?.Sort(request, entities).Cast<TEntity>() ?? entities;
         }
 
         internal static IQueryable<TEntity> SelectWith<TEntity>(this IQueryable<TEntity> entities,
             object request,
-            ISelector selector)
+            ICrudRequestConfig config)
             where TEntity : class
         {
-            return entities.Where(selector.Get<TEntity>()(request));
+            var selector = config.GetSelectorFor<TEntity>().Get<TEntity>();
+
+            return entities.Where(selector(request));
         }
     }
 }

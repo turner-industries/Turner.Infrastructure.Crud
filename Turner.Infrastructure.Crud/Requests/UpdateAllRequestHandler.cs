@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
+using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Extensions;
 using Turner.Infrastructure.Mediator;
 
@@ -24,45 +26,34 @@ namespace Turner.Infrastructure.Crud.Requests
         
         protected async Task<TEntity[]> UpdateEntities(TRequest request, CancellationToken ct)
         {
-            await request.RunRequestHooks(RequestConfig.GetRequestHooks(), ct).Configure();
+            await request.RunRequestHooks(RequestConfig, ct).Configure();
 
-            var entities = await GetEntities(request, ct).Configure();
+            var itemSource = RequestConfig.GetRequestItemSourceFor<TEntity>();
+            var items = ((IEnumerable<object>)itemSource.ItemSource(request)).ToArray();
+
+            items = await request.RunItemHooks<TEntity>(RequestConfig, items, ct).Configure();
+
+            var entities = await Context.Set<TEntity>()
+                .FilterWith(request, RequestConfig)
+                .SelectWith(request, RequestConfig)
+                .ToArrayAsync(ct)
+                .Configure();
+
             ct.ThrowIfCancellationRequested();
 
-            var data = RequestConfig.GetRequestItemSourceFor<TEntity>();
-            var items = ((IEnumerable<object>)data.ItemSource(request)).ToArray();
+            var joinedItems = RequestConfig.Join(items, entities);
 
-            items = await request.RunItemHooks(RequestConfig.GetItemHooksFor<TEntity>(), items, ct);
-
-            var updator = RequestConfig.GetUpdatorFor<TEntity>();
-
-            var updatedEntities = new List<TEntity>(entities.Length);
-            foreach (var item in RequestConfig.Join(items, entities))
-            {
-                if (item.Item1 == null || item.Item2 == null)
-                    continue;
-
-                updatedEntities.Add(await updator(request, item.Item1, item.Item2, ct).Configure());
-                ct.ThrowIfCancellationRequested();
-            }
+            var updatedEntities = await request.UpdateEntities(RequestConfig, joinedItems, ct).Configure();
 
             entities = await Context.Set<TEntity>().UpdateAsync(updatedEntities, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
-            await request.RunEntityHooks(RequestConfig.GetEntityHooksFor<TEntity>(), updatedEntities, ct);
+            await request.RunEntityHooks<TEntity>(RequestConfig, entities, ct).Configure();
             
             await Context.ApplyChangesAsync(ct).Configure();
             ct.ThrowIfCancellationRequested();
 
             return entities;
-        }
-
-        private Task<TEntity[]> GetEntities(TRequest request, CancellationToken ct)
-        {
-            return Context.Set<TEntity>()
-                .FilterWith(request, RequestConfig.GetFiltersFor<TEntity>())
-                .SelectWith(request, RequestConfig.GetSelectorFor<TEntity>())
-                .ToArrayAsync(ct);
         }
     }
 
@@ -81,7 +72,26 @@ namespace Turner.Infrastructure.Crud.Requests
         public async Task<Response> HandleAsync(TRequest request)
         {
             using (var cts = new CancellationTokenSource())
-                await UpdateEntities(request, cts.Token).Configure();
+            {
+                var ct = cts.Token;
+
+                try
+                {
+                    await UpdateEntities(request, ct).Configure();
+                }
+                catch (Exception e) when (RequestFailedError.IsReturnedFor(e))
+                {
+                    return ErrorDispatcher.Dispatch(RequestFailedError.From(request, e));
+                }
+                catch (Exception e) when (RequestCanceledError.IsReturnedFor(e))
+                {
+                    return ErrorDispatcher.Dispatch(RequestCanceledError.From(request, e));
+                }
+                catch (Exception e) when (HookFailedError.IsReturnedFor(e))
+                {
+                    return ErrorDispatcher.Dispatch(HookFailedError.From(request, e));
+                }
+            }
 
             return Response.Success();
         }
@@ -101,22 +111,32 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public async Task<Response<UpdateAllResult<TOut>>> HandleAsync(TRequest request)
         {
-            UpdateAllResult<TOut> result;
+            UpdateAllResult<TOut> result = null;
 
             using (var cts = new CancellationTokenSource())
             {
                 var ct = cts.Token;
 
-                var entities = await UpdateEntities(request, ct).Configure();
-                ct.ThrowIfCancellationRequested();
+                try
+                {
+                    var entities = await UpdateEntities(request, ct).Configure();
+                    var tOuts = await entities.CreateResults<TEntity, TOut>(RequestConfig, ct).Configure();
+                    var items = await request.RunResultHooks(RequestConfig, tOuts, ct).Configure();
 
-                var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
-                var items = new List<TOut>(await Task.WhenAll(entities.Select(x => transform(x, ct))));
-                ct.ThrowIfCancellationRequested();
-
-                items = await request.RunResultHooks(RequestConfig.GetResultHooks(), items, ct);
-
-                result = new UpdateAllResult<TOut>(items);
+                    result = new UpdateAllResult<TOut>(items);
+                }
+                catch (Exception e) when (RequestFailedError.IsReturnedFor(e))
+                {
+                    return ErrorDispatcher.Dispatch<UpdateAllResult<TOut>>(RequestFailedError.From(request, e, result));
+                }
+                catch (Exception e) when (RequestCanceledError.IsReturnedFor(e))
+                {
+                    return ErrorDispatcher.Dispatch<UpdateAllResult<TOut>>(RequestCanceledError.From(request, e, result));
+                }
+                catch (Exception e) when (HookFailedError.IsReturnedFor(e))
+                {
+                    return ErrorDispatcher.Dispatch<UpdateAllResult<TOut>>(HookFailedError.From(request, e, result));
+                }
             }
 
             return result.AsResponse();

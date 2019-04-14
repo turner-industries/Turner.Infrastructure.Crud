@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Turner.Infrastructure.Mediator;
 // ReSharper disable UnusedTypeParameter
 
@@ -17,9 +18,9 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         public List<TOut> Items { get; }
 
-        public GetAllResult(List<TOut> items)
+        public GetAllResult(IEnumerable<TOut> items)
         {
-            Items = items;
+            Items = items.ToList();
         }
     }
 }

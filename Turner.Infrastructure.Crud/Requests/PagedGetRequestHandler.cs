@@ -37,13 +37,13 @@ namespace Turner.Infrastructure.Crud.Requests
 
                 try
                 {
-                    await request.RunRequestHooks(RequestConfig.GetRequestHooks(), ct).Configure();
+                    await request.RunRequestHooks(RequestConfig, ct).Configure();
                     
                     var selector = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>()(request).Compile();
                     var entities = Context
                         .Set<TEntity>()
-                        .FilterWith(request, RequestConfig.GetFiltersFor<TEntity>())
-                        .SortWith(request, RequestConfig.GetSorterFor<TEntity>());
+                        .FilterWith(request, RequestConfig)
+                        .SortWith(request, RequestConfig);
 
                     var totalItemCount = await entities.CountAsync(ct).Configure();
                     ct.ThrowIfCancellationRequested();
@@ -83,7 +83,7 @@ namespace Turner.Infrastructure.Crud.Requests
                         pageNumber = 0;
                     }
 
-                    resultItems = await request.RunResultHooks(RequestConfig.GetResultHooks(), resultItems, ct);
+                    resultItems = await request.RunResultHooks(RequestConfig, resultItems, ct).Configure();
 
                     result = new PagedGetResult<TOut>
                     {

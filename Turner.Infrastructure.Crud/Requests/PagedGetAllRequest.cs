@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Turner.Infrastructure.Mediator;
 // ReSharper disable UnusedTypeParameter
 
@@ -25,9 +26,9 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public int TotalItemCount { get; }
 
-        public PagedGetAllResult(List<TOut> items, int pageNumber, int pageSize, int pageCount, int totalCount)
+        public PagedGetAllResult(IEnumerable<TOut> items, int pageNumber, int pageSize, int pageCount, int totalCount)
         {
-            Items = items;
+            Items = items.ToList();
             PageNumber = pageNumber;
             PageSize = pageSize;
             PageCount = pageCount;

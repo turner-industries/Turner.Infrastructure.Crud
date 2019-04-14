@@ -37,11 +37,11 @@ namespace Turner.Infrastructure.Crud.Requests
 
                 try
                 {
-                    await request.RunRequestHooks(RequestConfig.GetRequestHooks(), ct).Configure();
+                    await request.RunRequestHooks(RequestConfig, ct).Configure();
 
                     var entities = Context.Set<TEntity>()
-                        .FilterWith(request, RequestConfig.GetFiltersFor<TEntity>())
-                        .SortWith(request, RequestConfig.GetSorterFor<TEntity>());
+                        .FilterWith(request, RequestConfig)
+                        .SortWith(request, RequestConfig);
                     
                     var totalItemCount = await entities.CountAsync(ct).Configure();
                     ct.ThrowIfCancellationRequested();
@@ -62,7 +62,7 @@ namespace Turner.Infrastructure.Crud.Requests
                         var resultItem = await transform(item.Item, ct).Configure();
                         ct.ThrowIfCancellationRequested();
 
-                        resultItem = await request.RunResultHooks(RequestConfig.GetResultHooks(), resultItem, ct);
+                        resultItem = await request.RunResultHooks(RequestConfig, resultItem, ct).Configure();
 
                         result = new PagedFindResult<TOut>
                         {
@@ -80,7 +80,7 @@ namespace Turner.Infrastructure.Crud.Requests
                         var resultItem = await transform(RequestConfig.GetDefaultFor<TEntity>(), ct).Configure();
                         ct.ThrowIfCancellationRequested();
 
-                        resultItem = await request.RunResultHooks(RequestConfig.GetResultHooks(), resultItem, ct);
+                        resultItem = await request.RunResultHooks(RequestConfig, resultItem, ct).Configure();
 
                         result = new PagedFindResult<TOut>
                         {
