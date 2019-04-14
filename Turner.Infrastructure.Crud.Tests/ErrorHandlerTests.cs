@@ -140,6 +140,19 @@ namespace Turner.Infrastructure.Crud.Tests
             = new ErrorTypeTestHandler();
 
         [Test]
+        public async Task Handle_WithFindFailure_DispatchesFailedToFindError()
+        {
+            TypeTestHandler.Clear();
+
+            var request = new FindFailureTestRequest();
+            await Mediator.HandleAsync(request);
+
+            Assert.NotNull(TypeTestHandler.LastError);
+            Assert.AreEqual(typeof(FailedToFindError), TypeTestHandler.LastError.GetType());
+            Assert.IsNull(TypeTestHandler.LastError.Exception);
+        }
+
+        [Test]
         public async Task Handle_WithHookFailure_DispatchesHookFailedError()
         {
             TypeTestHandler.Clear();
@@ -147,8 +160,51 @@ namespace Turner.Infrastructure.Crud.Tests
             var request = new HookFailureTestRequest();
             await Mediator.HandleAsync(request);
 
-            Assert.AreEqual(typeof(HookFailedError), TypeTestHandler.LastErrorType);
-            Assert.AreEqual("HookTest", TypeTestHandler.LastError);
+            Assert.NotNull(TypeTestHandler.LastError);
+            Assert.AreEqual(typeof(HookFailedError), TypeTestHandler.LastError.GetType());
+            Assert.AreEqual("HookTest", TypeTestHandler.LastErrorMessage);
+        }
+
+        [Test]
+        public async Task Handle_WithCreateResultFailure_DispatchesCreateResultFailedError()
+        {
+            TypeTestHandler.Clear();
+
+            var request = new CreateResultFailureTestRequest();
+            await Mediator.HandleAsync(request);
+
+            Assert.NotNull(TypeTestHandler.LastError);
+            Assert.AreEqual(typeof(CreateResultFailedError), TypeTestHandler.LastError.GetType());
+            Assert.AreEqual("CreateResultTest", TypeTestHandler.LastErrorMessage);
+        }
+
+        [Test]
+        public async Task Handle_WithCreateEntityFailure_DispatchesCreateResultFailedError()
+        {
+            TypeTestHandler.Clear();
+
+            var request = new CreateEntityFailureTestRequest();
+            await Mediator.HandleAsync(request);
+
+            Assert.NotNull(TypeTestHandler.LastError);
+            Assert.AreEqual(typeof(CreateEntityFailedError), TypeTestHandler.LastError.GetType());
+            Assert.AreEqual("CreateEntityTest", TypeTestHandler.LastErrorMessage);
+        }
+
+        [Test]
+        public async Task Handle_WithUpdateEntityFailure_DispatchesCreateResultFailedError()
+        {
+            TypeTestHandler.Clear();
+
+            var entity = Context.Set<NonEntity>().Add(new NonEntity()).Entity;
+            await Context.SaveChangesAsync();
+
+            var request = new UpdateEntityFailureTestRequest { Id = entity.Id };
+            await Mediator.HandleAsync(request);
+
+            Assert.NotNull(TypeTestHandler.LastError);
+            Assert.AreEqual(typeof(UpdateEntityFailedError), TypeTestHandler.LastError.GetType());
+            Assert.AreEqual("UpdateEntityTest", TypeTestHandler.LastErrorMessage);
         }
 
         [Test]
@@ -156,11 +212,12 @@ namespace Turner.Infrastructure.Crud.Tests
         {
             TypeTestHandler.Clear();
 
-            var request = new RequestCanceledTestRequest();
+            var request = new RequestCanceledTestRequest { Items = new[] { 1, 2, 3 } };
             await Mediator.HandleAsync(request);
 
-            Assert.AreEqual(typeof(RequestCanceledError), TypeTestHandler.LastErrorType);
-            Assert.AreEqual("CancelTest", TypeTestHandler.LastError);
+            Assert.NotNull(TypeTestHandler.LastError);
+            Assert.AreEqual(typeof(RequestCanceledError), TypeTestHandler.LastError.GetType());
+            Assert.AreEqual("CancelTest", TypeTestHandler.LastErrorMessage);
         }
     }
 
@@ -220,6 +277,27 @@ namespace Turner.Infrastructure.Crud.Tests
     }
 
     [DoNotValidate]
+    public class FindFailureTestRequest
+        : IGetRequest<NonEntity, NonEntity>
+    {
+        public int Id { get; set; }
+    }
+
+    public class FindFailureTestProfile
+        : CrudRequestProfile<FindFailureTestRequest>
+    {
+        public FindFailureTestProfile()
+        {
+            ConfigureErrors(config => config.FailedToFindInGetIsError = true);
+
+            ForEntity<NonEntity>()
+                .UseKeys("Id")
+                .UseErrorHandlerFactory(() => TestTypeErrorHandlerTests.TypeTestHandler)
+                .AddEntityHook((r, e) => throw new InvalidOperationException("FindTest"));
+        }
+    }
+
+    [DoNotValidate]
     public class HookFailureTestRequest
         : IGetRequest<NonEntity, NonEntity>
     {
@@ -231,6 +309,8 @@ namespace Turner.Infrastructure.Crud.Tests
     {
         public HookFailureTestProfile()
         {
+            ConfigureErrors(config => config.FailedToFindInGetIsError = false);
+
             ForEntity<NonEntity>()
                 .UseKeys("Id")
                 .UseErrorHandlerFactory(() => TestTypeErrorHandlerTests.TypeTestHandler)
@@ -239,58 +319,136 @@ namespace Turner.Infrastructure.Crud.Tests
     }
 
     [DoNotValidate]
-    public class RequestCanceledTestRequest
+    public class CreateResultFailureTestRequest
         : IGetRequest<NonEntity, NonEntity>
     {
         public int Id { get; set; }
     }
 
-    public class RequestCanceledTestProfile
-        : CrudRequestProfile<RequestCanceledTestRequest>
+    public class CreateResultFailureTestProfile
+        : CrudRequestProfile<CreateResultFailureTestRequest>
     {
-        public RequestCanceledTestProfile()
+        public CreateResultFailureTestProfile()
         {
-            AddRequestHook(r => throw new OperationCanceledException("CancelTest"));
+            NonEntity createResult(NonEntity _) 
+                => throw new InvalidOperationException("CreateResultTest");
+
+            ConfigureErrors(config => config.FailedToFindInGetIsError = false);
 
             ForEntity<NonEntity>()
                 .UseKeys("Id")
+                .UseErrorHandlerFactory(() => TestTypeErrorHandlerTests.TypeTestHandler)
+                .CreateResultWith(createResult);
+        }
+    }
+
+    [DoNotValidate]
+    public class CreateEntityFailureTestRequest
+        : ICreateRequest<NonEntity, NonEntity>
+    {
+        public int Id { get; set; }
+    }
+
+    public class CreateEntityFailureTestProfile
+        : CrudRequestProfile<CreateEntityFailureTestRequest>
+    {
+        public CreateEntityFailureTestProfile()
+        {
+            Func<CreateEntityFailureTestRequest, NonEntity> createEntity
+                = r => throw new InvalidOperationException("CreateEntityTest");
+            
+            ForEntity<NonEntity>()
+                .UseErrorHandlerFactory(() => TestTypeErrorHandlerTests.TypeTestHandler)
+                .CreateEntityWith(createEntity);
+        }
+    }
+
+    [DoNotValidate]
+    public class UpdateEntityFailureTestRequest
+        : IUpdateRequest<NonEntity, NonEntity>
+    {
+        public int Id { get; set; }
+    }
+
+    public class UpdateEntityFailureTestProfile
+        : CrudRequestProfile<UpdateEntityFailureTestRequest>
+    {
+        public UpdateEntityFailureTestProfile()
+        {
+            Func<UpdateEntityFailureTestRequest, NonEntity, NonEntity> updateEntity
+                = (r, e) => throw new InvalidOperationException("UpdateEntityTest");
+            
+            ForEntity<NonEntity>()
+                .UseKeys("Id")
+                .UseErrorHandlerFactory(() => TestTypeErrorHandlerTests.TypeTestHandler)
+                .UpdateEntityWith(updateEntity);
+        }
+    }
+
+    [DoNotValidate]
+    public class RequestCanceledTestRequest
+        : ICreateAllRequest<NonEntity, NonEntity>
+    {
+        public int[] Items { get; set; } = Array.Empty<int>();
+    }
+
+    public class RequestCanceledTestProfile
+        : CrudBulkRequestProfile<RequestCanceledTestRequest, int>
+    {
+        public RequestCanceledTestProfile()
+        {
+            Func<int, NonEntity> createEntity 
+                = i => throw new OperationCanceledException("CancelTest");
+
+            ForEntity<NonEntity>()
+                .WithRequestItems(x => x.Items)
+                .CreateEntityWith(createEntity)
                 .UseErrorHandlerFactory(() => TestTypeErrorHandlerTests.TypeTestHandler);
         }
     }
 
     public class ErrorTypeTestHandler : CrudErrorHandler
     {
-        public Type LastErrorType { get; private set; }
+        public CrudError LastError { get; private set; }
 
-        public string LastError { get; private set; }
+        public string LastErrorMessage { get; private set; }
 
         public void Clear()
         {
-            LastErrorType = null;
             LastError = null;
+            LastErrorMessage = null;
         }
 
-        private Response Handle(CrudError error)
+        private Response GenericHandle(CrudError error)
         {
-            LastErrorType = error.GetType();
-            LastError = error.Exception?.Message;
+            LastError = error;
+            LastErrorMessage = error.Exception?.Message;
             
             return Response.Success();
         }
 
         protected override Response HandleError(FailedToFindError error)
-            => Handle(error);
+            => GenericHandle(error);
 
         protected override Response HandleError(CrudError error)
-            => Handle(error);
+            => GenericHandle(error);
 
         protected override Response HandleError(HookFailedError error)
-            => Handle(error);
+            => GenericHandle(error);
 
         protected override Response HandleError(RequestCanceledError error)
-            => Handle(error);
+            => GenericHandle(error);
 
         protected override Response HandleError(RequestFailedError error)
-            => Handle(error);
+            => GenericHandle(error);
+
+        protected override Response HandleError(CreateEntityFailedError error)
+            => GenericHandle(error);
+
+        protected override Response HandleError(UpdateEntityFailedError error)
+            => GenericHandle(error);
+
+        protected override Response HandleError(CreateResultFailedError error)
+            => GenericHandle(error);
     }
 }

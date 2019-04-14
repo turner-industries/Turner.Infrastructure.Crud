@@ -353,9 +353,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
 
             Assert.IsTrue(response.HasErrors);
             Assert.AreEqual("Failed to find entity.", response.Errors[0].ErrorMessage);
-            Assert.IsNotNull(response.Data);
-            Assert.AreEqual(1, response.Data.Items.Count);
-            Assert.AreEqual("DefaultUser", response.Data.Items[0].Name);
+            Assert.IsNull(response.Data);
         }
 
         [Test]
@@ -378,8 +376,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
 
             Assert.IsTrue(response.HasErrors);
             Assert.AreEqual("Failed to find entity.", response.Errors[0].ErrorMessage);
-            Assert.IsNotNull(response.Data);
-            Assert.AreEqual(0, response.Data.Items.Count);
+            Assert.IsNull(response.Data);
         }
 
         [Test]
