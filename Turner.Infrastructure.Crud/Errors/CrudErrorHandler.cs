@@ -14,7 +14,8 @@ namespace Turner.Infrastructure.Crud.Errors
 
     public class CrudErrorHandler : ICrudErrorHandler
     {
-        public const string GenericErrorMessage = "An error has occurred.";
+        public const string GenericErrorMessage = "An error occurred while processing the request.";
+        public const string CanceledErrorMessage = "The request was canceled while processing.";
 
         private readonly Dictionary<Type, Func<CrudError, Response>> _dispatchers;
 
@@ -22,8 +23,13 @@ namespace Turner.Infrastructure.Crud.Errors
         {
             _dispatchers = new Dictionary<Type, Func<CrudError, Response>>
             {
-                { typeof(RequestFailedError), e => HandleError((RequestFailedError) e) },
-                { typeof(FailedToFindError), e => HandleError((FailedToFindError) e) }
+                { typeof(RequestFailedError), e => HandleError((RequestFailedError)e) },
+                { typeof(FailedToFindError), e => HandleError((FailedToFindError)e) },
+                { typeof(RequestCanceledError), e => HandleError((RequestCanceledError)e) },
+                { typeof(HookFailedError), e => HandleError((HookFailedError)e) },
+                { typeof(CreateEntityFailedError), e => HandleError((CreateEntityFailedError)e) },
+                { typeof(UpdateEntityFailedError), e => HandleError((UpdateEntityFailedError)e) },
+                { typeof(CreateResultFailedError), e => HandleError((CreateResultFailedError)e) }
             };
         }
 
@@ -40,7 +46,7 @@ namespace Turner.Infrastructure.Crud.Errors
             return new Response<TResult>
             {
                 Errors = Handle(error).Errors.ToList(),
-                Data = (TResult) error.Result
+                Data = default(TResult)
             };
         }
 
@@ -53,13 +59,24 @@ namespace Turner.Infrastructure.Crud.Errors
         }
         
         protected virtual Response HandleError(RequestFailedError error)
-        {
-            return Error.AsResponse(error.Reason);
-        }
+            => Error.AsResponse(error.Reason);
         
+        protected virtual Response HandleError(RequestCanceledError error)
+            => Error.AsResponse(CanceledErrorMessage);
+
         protected virtual Response HandleError(FailedToFindError error)
-        {
-            return Error.AsResponse(error.Reason);
-        }
+            => Error.AsResponse(error.Reason);
+        
+        protected virtual Response HandleError(HookFailedError error)
+            => Error.AsResponse(error.Reason);
+
+        protected virtual Response HandleError(CreateEntityFailedError error)
+            => Error.AsResponse(error.Reason);
+
+        protected virtual Response HandleError(UpdateEntityFailedError error)
+            => Error.AsResponse(error.Reason);
+
+        protected virtual Response HandleError(CreateResultFailedError error)
+            => Error.AsResponse(error.Reason);
     }
 }

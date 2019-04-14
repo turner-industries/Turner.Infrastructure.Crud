@@ -27,9 +27,9 @@ namespace Turner.Infrastructure.Crud.Errors
             return Handler.Handle(new CrudError(exception));
         }
 
-        public Response<TResult> Dispatch<TResult>(Exception exception, TResult result = default(TResult))
+        public Response<TResult> Dispatch<TResult>(Exception exception)
         {
-            return Handler.Handle<TResult>(new CrudError(exception, result));
+            return Handler.Handle<TResult>(new CrudError(exception));
         }
     }
 }

@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper.QueryableExtensions;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
-using Turner.Infrastructure.Crud.Errors;
+using Turner.Infrastructure.Crud.Exceptions;
 using Turner.Infrastructure.Crud.Extensions;
 using Turner.Infrastructure.Mediator;
 
@@ -25,77 +23,84 @@ namespace Turner.Infrastructure.Crud.Requests
             Options = RequestConfig.GetOptionsFor<TEntity>();
         }
 
-        public async Task<Response<PagedGetAllResult<TOut>>> HandleAsync(TRequest request)
+        public Task<Response<PagedGetAllResult<TOut>>> HandleAsync(TRequest request)
         {
-            PagedGetAllResult<TOut> result;
+            return HandleWithErrorsAsync(request, HandleAsync);
+        }
 
-            using (var cts = new CancellationTokenSource())
+        public async Task<PagedGetAllResult<TOut>> HandleAsync(TRequest request, CancellationToken token)
+        {
+            await request.RunRequestHooks(RequestConfig, token).Configure();
+                    
+            var entities = Context
+                .Set<TEntity>()
+                .FilterWith(request, RequestConfig)
+                .SortWith(request, RequestConfig);
+                    
+            var totalItemCount = await entities.CountAsync(token).Configure();
+            token.ThrowIfCancellationRequested();
+
+            var pageSize = request.PageSize < 1 ? totalItemCount : request.PageSize;
+            var totalPageCount = totalItemCount == 0 ? 1 : (totalItemCount + pageSize - 1) / pageSize;
+            var pageNumber = Math.Max(1, Math.Min(request.PageNumber, totalPageCount));
+            var startIndex = (pageNumber - 1) * pageSize;
+
+            entities = entities.Skip(startIndex).Take(pageSize);
+
+            var items = await GetItems(request, entities, token).Configure();
+                    
+            return new PagedGetAllResult<TOut>(items, pageNumber, pageSize, totalPageCount, totalItemCount);
+        }
+
+        private async Task<TOut[]> GetItems(TRequest request, IQueryable<TEntity> entities, CancellationToken token)
+        {
+            var tOuts = Array.Empty<TOut>();
+
+            if (Options.UseProjection)
             {
-                var ct = cts.Token;
-                List<TOut> items;
+                tOuts = await entities.ProjectToArrayAsync<TEntity, TOut>(token).Configure();
+                token.ThrowIfCancellationRequested();
 
-                await request.RunRequestHooks(RequestConfig.GetRequestHooks(), ct).Configure();
-
-                var entities = Context
-                    .Set<TEntity>()
-                    .FilterWith(request, RequestConfig.GetFiltersFor<TEntity>())
-                    .SortWith(request, RequestConfig.GetSorterFor<TEntity>());
-
-                var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
-                
-                var totalItemCount = await entities.CountAsync(ct).Configure();
-                ct.ThrowIfCancellationRequested();
-
-                var pageSize = request.PageSize < 1 ? totalItemCount : request.PageSize;
-                var totalPageCount = totalItemCount == 0 ? 1 : (totalItemCount + pageSize - 1) / pageSize;
-                var pageNumber = Math.Max(1, Math.Min(request.PageNumber, totalPageCount));
-                var startIndex = (pageNumber - 1) * pageSize;
-
-                entities = entities
-                    .Skip(startIndex)
-                    .Take(pageSize);
-
-                if (Options.UseProjection)
+                if (tOuts.Length == 0)
                 {
-                    items = await entities
-                        .ProjectTo<TOut>()
-                        .ToListAsync(ct)
-                        .Configure();
-
-                    ct.ThrowIfCancellationRequested();
-                }
-                else
-                {
-                    var resultEntities = await entities.ToListAsync(ct).Configure();
-                    ct.ThrowIfCancellationRequested();
-
-                    items = new List<TOut>(await Task.WhenAll(resultEntities.Select(x => transform(x, ct))).Configure());
-                    ct.ThrowIfCancellationRequested();
-                }
-
-                if (items.Count == 0)
-                {
-                    var defaultValue = RequestConfig.GetDefaultFor<TEntity>();
-                    if (defaultValue != null)
-                        items.Add(await transform(defaultValue, ct).Configure());
-
                     if (RequestConfig.ErrorConfig.FailedToFindInGetAllIsError)
+                        throw new CrudFailedToFindException { EntityTypeProperty = typeof(TEntity) };
+
+                    var defaultEntity = RequestConfig.GetDefaultFor<TEntity>();
+                    if (defaultEntity != null)
                     {
-                        var errorResult = new PagedGetAllResult<TOut>(items, pageNumber, pageSize, totalPageCount, totalItemCount);
-                        var error = new FailedToFindError(request, typeof(TEntity), errorResult);
-
-                        return ErrorDispatcher.Dispatch<PagedGetAllResult<TOut>>(error);
+                        tOuts = new TOut[]
+                        {
+                            await defaultEntity.CreateResult<TEntity, TOut>(RequestConfig, token).Configure()
+                        };
                     }
+                }
+            }
+            else
+            {
+                var resultEntities = await entities.ToArrayAsync(token).Configure();
+                token.ThrowIfCancellationRequested();
 
-                    ct.ThrowIfCancellationRequested();
+                if (resultEntities.Length == 0)
+                {
+                    if (RequestConfig.ErrorConfig.FailedToFindInGetAllIsError)
+                        throw new CrudFailedToFindException { EntityTypeProperty = typeof(TEntity) };
+
+                    var defaultEntity = RequestConfig.GetDefaultFor<TEntity>();
+                    if (defaultEntity != null)
+                        resultEntities = new TEntity[] { RequestConfig.GetDefaultFor<TEntity>() };
                 }
 
-                items = await request.RunResultHooks(RequestConfig.GetResultHooks(), items, ct);
+                await request.RunEntityHooks<TEntity>(RequestConfig, entities, token).Configure();
 
-                result = new PagedGetAllResult<TOut>(items, pageNumber, pageSize, totalPageCount, totalItemCount);
+                tOuts = await resultEntities.CreateResults<TEntity, TOut>(RequestConfig, token).Configure();
             }
 
-            return result.AsResponse();
+            token.ThrowIfCancellationRequested();
+
+            var items = await request.RunResultHooks(RequestConfig, tOuts, token).Configure();
+
+            return items;
         }
     }
 }

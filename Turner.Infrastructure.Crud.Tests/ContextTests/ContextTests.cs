@@ -55,6 +55,8 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
             Mediator = _scope.GetInstance<IMediator>();
             Context = _scope.GetInstance<IEntityContext>();
 
+            InMemoryContext.Reset();
+
             Container = container;
         }
 
@@ -196,6 +198,32 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
         }
 
         [Test]
+        public async Task ProjectSingleOrDefaultAsync_OnCustomContext_Succeeds()
+        {
+            Assert.IsNull(await Context.Set<User>().ProjectSingleOrDefaultAsync<User, PUser>());
+
+            await Context.Set<User>().CreateAsync(new User { Name = "User1" });
+
+            var name = (await Context.Set<User>().ProjectSingleOrDefaultAsync<User, PUser>())?.Name;
+            Assert.AreEqual("User1", name);
+
+            await Context.Set<User>().CreateAsync(new[]
+            {
+                new User { Name = "User2" },
+                new User { Name = "User3" },
+            });
+
+            name = (await Context.Set<User>().ProjectSingleOrDefaultAsync<User, PUser>(x => x.Name == "User2"))?.Name;
+            Assert.AreEqual("User2", name);
+
+            Assert.Throws(typeof(InvalidOperationException),
+                () => Context.Set<User>().ProjectSingleOrDefaultAsync<User, PUser>());
+
+            Assert.Throws(typeof(InvalidOperationException),
+                () => Context.Set<User>().ProjectSingleOrDefaultAsync<User, PUser>(x => x.Name.StartsWith("User")));
+        }
+
+        [Test]
         public async Task CountAsync_OnCustomContext_Succeeds()
         {
             Assert.AreEqual(0, await Context.Set<User>().CountAsync());
@@ -220,8 +248,6 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
         [Test]
         public async Task ToArrayAsync_OnCustomContext_Succeeds()
         {
-            Assert.IsNull(await Context.Set<User>().FirstOrDefaultAsync());
-
             await Context.Set<User>().CreateAsync(new[]
             {
                 new User { Name = "User1" },
@@ -232,6 +258,25 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
             var results = await Context.Set<User>().ToArrayAsync();
 
             Assert.AreEqual(3, results.Length);
+            Assert.IsTrue(results.Select(x => x.Name).Contains("User1"));
+            Assert.IsTrue(results.Select(x => x.Name).Contains("User2"));
+            Assert.IsTrue(results.Select(x => x.Name).Contains("User3"));
+        }
+
+        [Test]
+        public async Task ProjectToArrayAsync_OnCustomContext_Succeeds()
+        {
+            await Context.Set<User>().CreateAsync(new[]
+            {
+                new User { Name = "User1" },
+                new User { Name = "User2" },
+                new User { Name = "User3" },
+            });
+
+            var results = await Context.Set<User>().ProjectToArrayAsync<User, PUser>();
+
+            Assert.AreEqual(3, results.Length);
+            Assert.AreEqual(typeof(PUser[]), results.GetType());
             Assert.IsTrue(results.Select(x => x.Name).Contains("User1"));
             Assert.IsTrue(results.Select(x => x.Name).Contains("User2"));
             Assert.IsTrue(results.Select(x => x.Name).Contains("User3"));
@@ -255,6 +300,30 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
             Assert.IsTrue(results.Select(x => x.Name).Contains("User1"));
             Assert.IsTrue(results.Select(x => x.Name).Contains("User2"));
             Assert.IsTrue(results.Select(x => x.Name).Contains("User3"));
+        }
+
+        [Test]
+        public async Task ProjectToListAsync_OnCustomContext_Succeeds()
+        {
+            await Context.Set<User>().CreateAsync(new[]
+            {
+                new User { Name = "User1" },
+                new User { Name = "User2" },
+                new User { Name = "User3" },
+            });
+
+            var results = await Context.Set<User>().ProjectToListAsync<User, PUser>();
+
+            Assert.AreEqual(3, results.Count);
+            Assert.AreEqual(typeof(List<PUser>), results.GetType());
+            Assert.IsTrue(results.Select(x => x.Name).Contains("User1"));
+            Assert.IsTrue(results.Select(x => x.Name).Contains("User2"));
+            Assert.IsTrue(results.Select(x => x.Name).Contains("User3"));
+        }
+
+        private class PUser
+        {
+            public string Name { get; set; }
         }
     }
 }

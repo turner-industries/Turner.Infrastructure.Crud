@@ -1,11 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper.QueryableExtensions;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
-using Turner.Infrastructure.Crud.Errors;
+using Turner.Infrastructure.Crud.Exceptions;
 using Turner.Infrastructure.Crud.Extensions;
 using Turner.Infrastructure.Mediator;
 
@@ -24,63 +22,66 @@ namespace Turner.Infrastructure.Crud.Requests
             Options = RequestConfig.GetOptionsFor<TEntity>();
         }
 
-        public async Task<Response<GetAllResult<TOut>>> HandleAsync(TRequest request)
+        public Task<Response<GetAllResult<TOut>>> HandleAsync(TRequest request)
         {
-            GetAllResult<TOut> result;
+            return HandleWithErrorsAsync(request, HandleAsync);
+        }
 
-            using (var cts = new CancellationTokenSource())
+        private async Task<GetAllResult<TOut>> HandleAsync(TRequest request, CancellationToken token)
+        {
+            await request.RunRequestHooks(RequestConfig, token).Configure();
+
+            var entities = Context.Set<TEntity>()
+                .FilterWith(request, RequestConfig)
+                .SortWith(request, RequestConfig);
+            
+            var tOuts = Array.Empty<TOut>();
+
+            if (Options.UseProjection)
             {
-                var ct = cts.Token;
-                List<TOut> items;
-
-                await request.RunRequestHooks(RequestConfig.GetRequestHooks(), ct).Configure();
-
-                ct.ThrowIfCancellationRequested();
-
-                var entities = Context.Set<TEntity>()
-                    .FilterWith(request, RequestConfig.GetFiltersFor<TEntity>())
-                    .SortWith(request, RequestConfig.GetSorterFor<TEntity>());
-
-                var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
-
-                if (Options.UseProjection)
+                tOuts = await entities.ProjectToArrayAsync<TEntity, TOut>(token).Configure();
+                token.ThrowIfCancellationRequested();
+                
+                if (tOuts.Length == 0)
                 {
-                    items = await entities.ProjectTo<TOut>().ToListAsync(ct).Configure();
-                    ct.ThrowIfCancellationRequested();
-                }
-                else
-                {
-                    var resultEntities = await entities.ToListAsync(ct).Configure();
-                    ct.ThrowIfCancellationRequested();
-
-                    items = new List<TOut>(await Task.WhenAll(resultEntities.Select(x => transform(x, ct))).Configure());
-                    ct.ThrowIfCancellationRequested();
-                }
-
-                if (items.Count == 0)
-                {
-                    var defaultValue = RequestConfig.GetDefaultFor<TEntity>();
-                    if (defaultValue != null)
-                    {
-                        items.Add(await transform(defaultValue, ct).Configure());
-                        ct.ThrowIfCancellationRequested();
-                    }
-
                     if (RequestConfig.ErrorConfig.FailedToFindInGetAllIsError)
-                    {
-                        var errorResult = new GetAllResult<TOut>(items);
-                        var error = new FailedToFindError(request, typeof(TEntity), errorResult);
+                        throw new CrudFailedToFindException { EntityTypeProperty = typeof(TEntity) };
 
-                        return ErrorDispatcher.Dispatch<GetAllResult<TOut>>(error);
+                    var defaultEntity = RequestConfig.GetDefaultFor<TEntity>();
+                    if (defaultEntity != null)
+                    {
+                        tOuts = new TOut[] 
+                        {
+                            await defaultEntity.CreateResult<TEntity, TOut>(RequestConfig, token).Configure()
+                        };
                     }
                 }
+            }
+            else
+            {
+                var resultEntities = await entities.ToArrayAsync(token).Configure();
+                token.ThrowIfCancellationRequested();
 
-                items = await request.RunResultHooks(RequestConfig.GetResultHooks(), items, ct);
+                if (resultEntities.Length == 0)
+                {
+                    if (RequestConfig.ErrorConfig.FailedToFindInGetAllIsError)
+                        throw new CrudFailedToFindException { EntityTypeProperty = typeof(TEntity) };
 
-                result = new GetAllResult<TOut>(items);
+                    var defaultEntity = RequestConfig.GetDefaultFor<TEntity>();
+                    if (defaultEntity != null)
+                        resultEntities = new TEntity[] { RequestConfig.GetDefaultFor<TEntity>() };
+                }
+
+                await request.RunEntityHooks<TEntity>(RequestConfig, entities, token).Configure();
+
+                tOuts = await resultEntities.CreateResults<TEntity, TOut>(RequestConfig, token).Configure();
             }
 
-            return result.AsResponse();
+            token.ThrowIfCancellationRequested();
+
+            var items = await request.RunResultHooks(RequestConfig, tOuts, token).Configure();
+
+            return new GetAllResult<TOut>(items); 
         }
     }
 }

@@ -1,9 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper.QueryableExtensions;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
-using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Exceptions;
 using Turner.Infrastructure.Crud.Extensions;
 using Turner.Infrastructure.Mediator;
@@ -23,75 +21,59 @@ namespace Turner.Infrastructure.Crud.Requests
             Options = RequestConfig.GetOptionsFor<TEntity>();
         }
 
-        public async Task<Response<TOut>> HandleAsync(TRequest request)
+        public Task<Response<TOut>> HandleAsync(TRequest request)
         {
-            TOut result;
+            return HandleWithErrorsAsync(request, HandleAsync);
+        }
 
-            using (var cts = new CancellationTokenSource())
+        private async Task<TOut> HandleAsync(TRequest request, CancellationToken token)
+        {
+            await request.RunRequestHooks(RequestConfig, token).Configure();
+
+            var entities = Context.Set<TEntity>()
+                .FilterWith(request, RequestConfig)
+                .SelectWith(request, RequestConfig);
+
+            var result = default(TOut);
+
+            if (Options.UseProjection)
             {
-                var ct = cts.Token;
-                var failedToFind = false;
+                result = await entities.ProjectSingleOrDefaultAsync<TEntity, TOut>(token).Configure();
+                token.ThrowIfCancellationRequested();
                 
-                try
+                if (result == null)
                 {
-                    await request.RunRequestHooks(RequestConfig.GetRequestHooks(), ct).Configure();
+                    if (RequestConfig.ErrorConfig.FailedToFindInGetIsError)
+                        throw new CrudFailedToFindException { EntityTypeProperty = typeof(TEntity) };
 
-                    var transform = RequestConfig.GetResultCreatorFor<TEntity, TOut>();
-
-                    var entities = Context.Set<TEntity>()
-                        .FilterWith(request, RequestConfig.GetFiltersFor<TEntity>())
-                        .SelectWith(request, RequestConfig.GetSelectorFor<TEntity>());
-                    
-                    if (Options.UseProjection)
-                    {
-                        result = await entities
-                            .ProjectTo<TOut>()
-                            .SingleOrDefaultAsync(ct)
-                            .Configure();
-
-                        ct.ThrowIfCancellationRequested();
-
-                        if (result == null)
-                        {
-                            failedToFind = true;
-                            result = await transform(RequestConfig.GetDefaultFor<TEntity>(), ct).Configure();
-                            ct.ThrowIfCancellationRequested();
-                        }
-                    }
-                    else
-                    {
-                        var entity = await entities
-                            .SingleOrDefaultAsync(ct)
-                            .Configure();
-
-                        ct.ThrowIfCancellationRequested();
-
-                        if (entity == null)
-                        {
-                            failedToFind = true;
-                            entity = RequestConfig.GetDefaultFor<TEntity>();
-                        }
-
-                        result = await transform(entity, ct).Configure();
-                        ct.ThrowIfCancellationRequested();
-                    }
+                    result = await RequestConfig.GetDefaultFor<TEntity>()
+                        .CreateResult<TEntity, TOut>(RequestConfig, token)
+                        .Configure();
                 }
-                catch (CrudRequestFailedException e)
+            }
+            else
+            {
+                var entity = await entities.SingleOrDefaultAsync(token).Configure();
+                token.ThrowIfCancellationRequested();
+
+                if (entity == null)
                 {
-                    var error = new RequestFailedError(request, e);
-                    return ErrorDispatcher.Dispatch<TOut>(error);
+                    if (RequestConfig.ErrorConfig.FailedToFindInGetIsError)
+                        throw new CrudFailedToFindException { EntityTypeProperty = typeof(TEntity) };
+
+                    entity = RequestConfig.GetDefaultFor<TEntity>();
                 }
 
-                if (failedToFind && RequestConfig.ErrorConfig.FailedToFindInGetIsError)
-                {
-                    var error = new FailedToFindError(request, typeof(TEntity), result);
-                    return ErrorDispatcher.Dispatch<TOut>(error);
-                }
+                await request.RunEntityHooks<TEntity>(RequestConfig, entity, token).Configure();
 
-                result = await request.RunResultHooks(RequestConfig.GetResultHooks(), result, ct);
+                result = await entity
+                    .CreateResult<TEntity, TOut>(RequestConfig, token)
+                    .Configure();
             }
 
-            return result.AsResponse();
+            token.ThrowIfCancellationRequested();
+            
+            return await request.RunResultHooks(RequestConfig, result, token).Configure();
         }
     }
 }

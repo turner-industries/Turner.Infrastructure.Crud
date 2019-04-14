@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoMapper.QueryableExtensions;
 using Turner.Infrastructure.Crud.Exceptions;
 
 namespace Turner.Infrastructure.Crud.Context
@@ -40,6 +41,15 @@ namespace Turner.Infrastructure.Crud.Context
             CancellationToken token = default(CancellationToken))
             => ExecuteAsync<TSource, TSource>("SingleOrDefaultPredicate", source, predicate, token);
 
+        public static Task<TResult> ProjectSingleOrDefaultAsync<TSource, TResult>(this IQueryable<TSource> source,
+            CancellationToken token = default(CancellationToken))
+            => source.ProjectTo<TResult>().SingleOrDefaultAsync(token);
+
+        public static Task<TResult> ProjectSingleOrDefaultAsync<TSource, TResult>(this IQueryable<TSource> source,
+            Expression<Func<TResult, bool>> predicate,
+            CancellationToken token = default(CancellationToken))
+            => source.ProjectTo<TResult>().SingleOrDefaultAsync(predicate, token);
+
         public static Task<int> CountAsync<TSource>(this IQueryable<TSource> source,
             CancellationToken token = default(CancellationToken))
             => ExecuteAsync<TSource, int>("Count", source, token);
@@ -53,10 +63,18 @@ namespace Turner.Infrastructure.Crud.Context
             CancellationToken token = default(CancellationToken))
             => source.AsAsyncEnumerable().ToList(token);
 
+        public static Task<List<TResult>> ProjectToListAsync<TSource, TResult>(this IQueryable<TSource> source,
+            CancellationToken token = default(CancellationToken))
+            => source.ProjectTo<TResult>().ToListAsync(token);
+
         public static Task<TSource[]> ToArrayAsync<TSource>(this IQueryable<TSource> source,
             CancellationToken token = default(CancellationToken))
             => source.AsAsyncEnumerable().ToArray(token);
-        
+
+        public static Task<TResult[]> ProjectToArrayAsync<TSource, TResult>(this IQueryable<TSource> source,
+            CancellationToken token = default(CancellationToken))
+            => source.ProjectTo<TResult>().ToArrayAsync(token);
+
         private static Task<TResult> ExecuteAsync<TSource, TResult>(string methodName,
             IQueryable<TSource> source,
             CancellationToken token = default(CancellationToken))
