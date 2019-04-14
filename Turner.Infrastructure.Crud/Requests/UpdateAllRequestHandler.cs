@@ -41,7 +41,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
             ct.ThrowIfCancellationRequested();
 
-            var joinedItems = RequestConfig.Join(items, entities);
+            var joinedItems = RequestConfig.Join(items, entities).Where(x => x.Item2 != null);
 
             var updatedEntities = await request.UpdateEntities(RequestConfig, joinedItems, ct).Configure();
 

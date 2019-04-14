@@ -37,6 +37,8 @@ namespace Turner.Infrastructure.Crud.Requests
 
             if (found)
             {
+                entity = await request.UpdateEntity(RequestConfig, item, entity, ct).Configure();
+
                 entity = await Context.Set<TEntity>().UpdateAsync(entity, ct).Configure();
                 ct.ThrowIfCancellationRequested();
 
