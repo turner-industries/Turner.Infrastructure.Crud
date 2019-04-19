@@ -16,7 +16,7 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
 
         public int Id { get; set; } = 1;
         
-        public InMemorySet(InMemoryContext context, List<TEntity> items, InMemoryDataAgent dataAgent)
+        public InMemorySet(List<TEntity> items, InMemoryDataAgent dataAgent)
             : base(CreateEntityQueryable(items), dataAgent)
         {
             Items = items;

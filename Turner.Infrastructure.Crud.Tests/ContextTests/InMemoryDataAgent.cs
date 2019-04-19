@@ -50,7 +50,7 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
             var set = entitySet as InMemorySet<TEntity>;
             var result = entities.ToArray();
 
-            foreach (var entity in entities)
+            foreach (var entity in result)
             {
                 if (entity is IEntity entityWithId)
                     entityWithId.Id = set.Id++;

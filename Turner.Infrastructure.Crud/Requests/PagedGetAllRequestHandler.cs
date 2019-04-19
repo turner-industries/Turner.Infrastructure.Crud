@@ -45,6 +45,9 @@ namespace Turner.Infrastructure.Crud.Requests
             var pageNumber = Math.Max(1, Math.Min(request.PageNumber, totalPageCount));
             var startIndex = (pageNumber - 1) * pageSize;
 
+            if (totalItemCount == 0)
+                return new PagedGetAllResult<TOut>(Array.Empty<TOut>(), 1, pageSize, 1, 0);
+            
             entities = entities.Skip(startIndex).Take(pageSize);
 
             var items = await GetItems(request, entities, token).Configure();
