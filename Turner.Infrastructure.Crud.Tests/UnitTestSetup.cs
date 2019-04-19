@@ -33,8 +33,6 @@ namespace Turner.Infrastructure.Crud.Tests
 
             container.ConfigureMediator(assemblies);
             
-            container.RegisterInstance(new FakeInjectable { Value = 1 });
-
             Crud.CreateInitializer(container, assemblies)
                 .ValidateAllRequests(false)
                 .UseFluentValidation()
