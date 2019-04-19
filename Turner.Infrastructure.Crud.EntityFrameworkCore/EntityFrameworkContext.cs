@@ -24,8 +24,8 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkCore
         public virtual async Task<int> ApplyChangesAsync(CancellationToken token = default(CancellationToken))
         {
             var result = await _context.SaveChangesAsync(token).ConfigureAwait(false);
-
             token.ThrowIfCancellationRequested();
+
             return result;
         }
     }
