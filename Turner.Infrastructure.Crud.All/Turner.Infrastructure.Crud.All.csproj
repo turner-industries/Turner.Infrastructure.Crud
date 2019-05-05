@@ -8,7 +8,7 @@
     <Description>Adds all common configurations to Turner.Infrastructure.Crud.  For documentation or support, head to the github page: https://github.com/turner-industries/Turner.Infrastructure.Crud/wiki</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/turner-industries/Turner.Infrastructure.Crud</PackageProjectUrl>
-    <Version>2.0.0</Version>
+    <Version>2.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
