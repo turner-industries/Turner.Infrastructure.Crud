@@ -9,8 +9,16 @@ namespace Turner.Infrastructure.Crud
         where TEntity : class
     {
         private readonly List<TableSortControl> _controls = new List<TableSortControl>();
+
         private readonly Dictionary<TControl, TableSortOperation> _columns =
             new Dictionary<TControl, TableSortOperation>();
+
+        private readonly TControl _defaultColumn;
+
+        internal TableSorter(TControl defaultColumn)
+        {
+            _defaultColumn = defaultColumn;
+        }
 
         internal void AddControl(Func<TRequest, TControl> getControl, Func<TRequest, SortDirection> getSortDirection)
         {
@@ -51,14 +59,19 @@ namespace Turner.Infrastructure.Crud
 
         public IOrderedQueryable<TEntity> Sort(TRequest request, IQueryable<TEntity> queryable)
         {
-            if (_controls.Count == 0)
-                return null;
+            TableSortOperation sortOperation = null;
 
             var value = _controls[0].Control(request);
             var direction = _controls[0].Direction(request);
 
-            if (value == null || !_columns.TryGetValue(value, out var sortOperation))
-                return null;
+            if (value == null || !_columns.TryGetValue(value, out sortOperation))
+            {
+                if (_defaultColumn != null)
+                    _columns.TryGetValue(_defaultColumn, out sortOperation);
+            }
+
+            if (sortOperation == null)
+                return _columns.Values.First().CreateSort(true, SortDirection.Default)(queryable);
 
             var sort = sortOperation.CreateSort(true, direction);
             var result = sort(queryable);
