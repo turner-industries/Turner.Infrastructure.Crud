@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Turner.Infrastructure.Crud.Configuration.Builders.Filter;
 using Turner.Infrastructure.Crud.Configuration.Builders.Select;
 using Turner.Infrastructure.Crud.Configuration.Builders.Sort;
 using Turner.Infrastructure.Crud.Errors;
@@ -146,15 +145,6 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return (TBuilder)this;
         }
         
-        public TBuilder FilterWith(
-            Action<FilterBuilder<TRequest, TEntity>> build)
-        {
-            var builder = new FilterBuilder<TRequest, TEntity>();
-            build(builder);
-
-            return AddRequestFilter(builder.Build());
-        }
-        
         public TBuilder FilterWith<TFilter, TBaseRequest, TBaseEntity>()
             where TBaseEntity : class
             where TFilter : IFilter<TBaseRequest, TBaseEntity>
@@ -188,18 +178,18 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return AddRequestFilter(InstanceFilterFactory.From(filter));
         }
 
-        public TBuilder FilterUsing<TBaseRequest>(
+        public TBuilder FilterWith<TBaseRequest>(
             Func<TBaseRequest, IQueryable<TEntity>, IQueryable<TEntity>> filterFunc)
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(FilterUsing), typeof(TBaseRequest), typeof(TRequest));
+                throw new ContravarianceException(nameof(FilterWith), typeof(TBaseRequest), typeof(TRequest));
 
             return AddRequestFilter(FunctionFilterFactory.From(filterFunc));
         }
 
-        public TBuilder FilterUsing(
+        public TBuilder FilterWith(
             Func<TRequest, IQueryable<TEntity>, IQueryable<TEntity>> filterFunc)
-            => FilterUsing<TRequest>(filterFunc);
+            => FilterWith<TRequest>(filterFunc);
 
         public TBuilder SortWith(
             Action<SortBuilder<TRequest, TEntity>> build)
