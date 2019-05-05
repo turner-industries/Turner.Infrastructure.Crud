@@ -9,9 +9,11 @@ namespace Turner.Infrastructure.Crud.Requests
     public class SaveRequest<TEntity, TIn> : ISaveRequest<TEntity>
         where TEntity : class
     {
-        public SaveRequest(TIn item) { Item = item; }
+        public TIn Item { get; set; }
 
-        public TIn Item { get; }
+        public SaveRequest() { }
+
+        public SaveRequest(TIn item) { Item = item; }
     }
 
     public class SaveRequestProfile<TEntity, TIn>
@@ -30,9 +32,11 @@ namespace Turner.Infrastructure.Crud.Requests
     public class SaveRequest<TEntity, TIn, TOut> : ISaveRequest<TEntity, TOut>
         where TEntity : class
     {
-        public SaveRequest(TIn item) { Item = item; }
+        public TIn Item { get; set; }
 
-        public TIn Item { get; }
+        public SaveRequest() { }
+
+        public SaveRequest(TIn item) { Item = item; }
     }
 
     public class SaveRequestProfile<TEntity, TIn, TOut>
@@ -52,15 +56,17 @@ namespace Turner.Infrastructure.Crud.Requests
         : ISaveRequest<TEntity, TOut>
         where TEntity : class
     {
+        public TKey Key { get; set; }
+
+        public TIn Item { get; set; }
+
+        public SaveRequest() { }
+
         public SaveRequest(TKey key, TIn item)
         {
             Key = key;
             Item = item;
         }
-
-        public TKey Key { get; }
-
-        public TIn Item { get; }
     }
 
     public class SaveRequestProfile<TEntity, TKey, TIn, TOut>

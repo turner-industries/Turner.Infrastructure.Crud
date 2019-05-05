@@ -19,9 +19,9 @@ namespace Turner.Infrastructure.Crud.Requests
     {
     }
 
-    public class SynchronizeResult<TOut>
+    public class SynchronizeResult<TOut> : IResultCollection<TOut>
     {
-        public List<TOut> Items { get; }
+        public List<TOut> Items { get; set; }
 
         public SynchronizeResult(IEnumerable<TOut> items)
         {

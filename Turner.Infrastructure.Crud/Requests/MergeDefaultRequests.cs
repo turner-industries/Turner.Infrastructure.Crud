@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using AutoMapper;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Validation;
 
@@ -9,18 +8,22 @@ namespace Turner.Infrastructure.Crud.Requests
     public class MergeRequest<TEntity, TIn> : IMergeRequest<TEntity>
         where TEntity : class
     {
-        public MergeRequest(List<TIn> items) { Items = items; }
+        public List<TIn> Items { get; set; } = new List<TIn>();
 
-        public List<TIn> Items { get; }
+        public MergeRequest() { }
+
+        public MergeRequest(List<TIn> items) { Items = items; }
     }
     
     [MaybeValidate]
     public class MergeRequest<TEntity, TIn, TOut> : IMergeRequest<TEntity, TOut>
         where TEntity : class
     {
-        public MergeRequest(List<TIn> items) { Items = items; }
+        public List<TIn> Items { get; set; } = new List<TIn>();
 
-        public List<TIn> Items { get; }
+        public MergeRequest() { }
+
+        public MergeRequest(List<TIn> items) { Items = items; }
     }
 
     [MaybeValidate]

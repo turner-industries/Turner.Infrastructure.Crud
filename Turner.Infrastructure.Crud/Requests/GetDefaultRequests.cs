@@ -8,9 +8,11 @@ namespace Turner.Infrastructure.Crud.Requests
     public class GetRequest<TEntity, TKey, TOut> : IGetRequest<TEntity, TOut>
         where TEntity : class
     {
-        public GetRequest(TKey key) { Key = key; }
+        public TKey Key { get; set; }
 
-        public TKey Key { get; }
+        public GetRequest() { }
+
+        public GetRequest(TKey key) { Key = key; }
     }
 
     public class GetRequestProfile<TEntity, TKey, TOut>

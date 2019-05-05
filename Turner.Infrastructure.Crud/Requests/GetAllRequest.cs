@@ -14,9 +14,9 @@ namespace Turner.Infrastructure.Crud.Requests
     {
     }
     
-    public class GetAllResult<TOut>
+    public class GetAllResult<TOut> : IResultCollection<TOut>
     {
-        public List<TOut> Items { get; }
+        public List<TOut> Items { get; set; }
 
         public GetAllResult(IEnumerable<TOut> items)
         {

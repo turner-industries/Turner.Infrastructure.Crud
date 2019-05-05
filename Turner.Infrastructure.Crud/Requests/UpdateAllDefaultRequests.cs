@@ -8,18 +8,18 @@ namespace Turner.Infrastructure.Crud.Requests
     public class UpdateAllRequest<TEntity, TIn> : IUpdateAllRequest<TEntity>
         where TEntity : class
     {
-        public UpdateAllRequest(List<TIn> items) { Items = items; }
+        public List<TIn> Items { get; set; }
 
-        public List<TIn> Items { get; }
+        public UpdateAllRequest(List<TIn> items) { Items = items; }
     }
 
     [MaybeValidate]
     public class UpdateAllRequest<TEntity, TIn, TOut> : IUpdateAllRequest<TEntity, TOut>
         where TEntity : class
     {
-        public UpdateAllRequest(List<TIn> items) { Items = items; }
+        public List<TIn> Items { get; set; }
 
-        public List<TIn> Items { get; }
+        public UpdateAllRequest(List<TIn> items) { Items = items; }
     }
     
     [MaybeValidate]

@@ -3,36 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Turner.Infrastructure.Crud.Configuration.Builders;
 using Turner.Infrastructure.Crud.Exceptions;
-using Turner.Infrastructure.Crud.Requests;
 
 namespace Turner.Infrastructure.Crud.Configuration
 {
-    public abstract class CrudRequestProfile
-    {
-        public abstract Type RequestType { get; }
-        
-        internal abstract void Inherit(IEnumerable<CrudRequestProfile> profile);
-
-        internal abstract ICrudRequestConfig BuildConfiguration();
-
-        internal abstract void Apply<TRequestConfig>(CrudRequestConfig<TRequestConfig> config);
-    }
-    
-    public abstract class CrudRequestProfileCommon<TRequest> 
+    public abstract class UniversalRequestProfile<TRequest>
         : CrudRequestProfile
-        where TRequest : ICrudRequest
     {
-        internal readonly Dictionary<Type, ICrudRequestEntityConfigBuilder> _requestEntityBuilders
-            = new Dictionary<Type, ICrudRequestEntityConfigBuilder>();
-
-        private List<CrudRequestProfile> _inheritProfiles 
+        private List<CrudRequestProfile> _inheritProfiles
             = new List<CrudRequestProfile>();
 
-        private Action<CrudRequestOptionsConfig> _optionsConfig;
-        private Action<CrudRequestErrorConfig> _errorConfig;
- 
         protected internal readonly List<IRequestHookFactory> RequestHooks
             = new List<IRequestHookFactory>();
 
@@ -50,7 +30,7 @@ namespace Turner.Infrastructure.Crud.Configuration
         {
             var config = (CrudRequestConfig<TRequest>)Activator.CreateInstance(
                 typeof(CrudRequestConfig<>).MakeGenericType(typeof(TRequest)));
-            
+
             foreach (var profile in _inheritProfiles)
                 profile.Apply(config);
 
@@ -59,21 +39,8 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         internal override void Apply<TConfigRequest>(CrudRequestConfig<TConfigRequest> config)
         {
-            if (_optionsConfig != null)
-            {
-                var options = new CrudRequestOptionsConfig();
-                _optionsConfig(options);
-                config.SetOptions(options);
-            }
-            
             config.AddRequestHooks(RequestHooks);
-
             config.AddResultHooks(ResultHooks);
-            
-            ApplyErrorConfig(config);
-
-            foreach (var builder in _requestEntityBuilders.Values)
-                builder.Build(config);
         }
 
         protected void AddRequestHook<THook, TBaseRequest>()
@@ -143,70 +110,9 @@ namespace Turner.Infrastructure.Crud.Configuration
         {
             ResultHooks.Add(FunctionResultHookFactory.From(hook));
         }
-
-        protected void ConfigureOptions(Action<CrudRequestOptionsConfig> config)
-        {
-            _optionsConfig = config;
-        }
-
-        protected void ConfigureErrors(Action<CrudRequestErrorConfig> config)
-        {
-            _errorConfig = config;
-        }
-        
-        private void ApplyErrorConfig<TPerspective>(CrudRequestConfig<TPerspective> config)
-        {
-            var errorConfig = new CrudRequestErrorConfig();
-            _errorConfig?.Invoke(errorConfig);
-
-            if (errorConfig.FailedToFindInGetIsError.HasValue)
-                config.ErrorConfig.FailedToFindInGetIsError = errorConfig.FailedToFindInGetIsError.Value;
-
-            if (errorConfig.FailedToFindInGetAllIsError.HasValue)
-                config.ErrorConfig.FailedToFindInGetAllIsError = errorConfig.FailedToFindInGetAllIsError.Value;
-
-            if (errorConfig.FailedToFindInFindIsError.HasValue)
-                config.ErrorConfig.FailedToFindInFindIsError = errorConfig.FailedToFindInFindIsError.Value;
-
-            if (errorConfig.FailedToFindInUpdateIsError.HasValue)
-                config.ErrorConfig.FailedToFindInUpdateIsError = errorConfig.FailedToFindInUpdateIsError.Value;
-
-            if (errorConfig.FailedToFindInDeleteIsError.HasValue)
-                config.ErrorConfig.FailedToFindInDeleteIsError = errorConfig.FailedToFindInDeleteIsError.Value;
-
-            if (errorConfig.ErrorHandlerFactory != null)
-                config.ErrorConfig.SetErrorHandler(errorConfig.ErrorHandlerFactory);
-        }
     }
-    
-    public abstract class CrudRequestProfile<TRequest>
-        : CrudRequestProfileCommon<TRequest>
-        where TRequest : ICrudRequest
-    {
-        public CrudRequestProfile()
-        {
-            if (typeof(IBulkRequest).IsAssignableFrom(typeof(TRequest)))
-            {
-                var message =
-                    $"Unable to build configuration for request '{typeof(TRequest)}'." +
-                    $"This request type should define a 'CrudBulkRequestProfile'.";
 
-                throw new BadCrudConfigurationException(message);
-            }
-        }
-
-        protected CrudRequestEntityConfigBuilder<TRequest, TEntity> ForEntity<TEntity>()
-            where TEntity : class
-        {
-            var builder = new CrudRequestEntityConfigBuilder<TRequest, TEntity>();
-            _requestEntityBuilders[typeof(TEntity)] = builder;
-
-            return builder;
-        }
-    }
-    
-    public class DefaultCrudRequestProfile<TRequest> : CrudRequestProfile<TRequest>
-        where TRequest : ICrudRequest
+    public class DefaultUniversalRequestProfile<TRequest> : UniversalRequestProfile<TRequest>
     {
     }
 }

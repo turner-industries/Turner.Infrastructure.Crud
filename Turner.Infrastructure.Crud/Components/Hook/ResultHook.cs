@@ -6,6 +6,8 @@ namespace Turner.Infrastructure.Crud
 {
     public interface IBoxedResultHook
     {
+        Type ResultType { get; }
+
         Task<object> Run(object request, object result, CancellationToken ct = default(CancellationToken));
     }
 
@@ -19,8 +21,11 @@ namespace Turner.Infrastructure.Crud
     {
         private readonly Func<object, object, CancellationToken, Task<object>> _hookFunc;
 
-        public FunctionResultHook(Func<object, object, CancellationToken, Task<object>> hookFunc)
+        public Type ResultType { get; }
+
+        public FunctionResultHook(Type resultType, Func<object, object, CancellationToken, Task<object>> hookFunc)
         {
+            ResultType = resultType;
             _hookFunc = hookFunc;
         }
 
@@ -31,16 +36,16 @@ namespace Turner.Infrastructure.Crud
     public class FunctionResultHookFactory : IResultHookFactory
     {
         private readonly IBoxedResultHook _hook;
-
-        private FunctionResultHookFactory(Func<object, object, CancellationToken, Task<object>> hook)
+        
+        private FunctionResultHookFactory(Type resultType, Func<object, object, CancellationToken, Task<object>> hook)
         {
-            _hook = new FunctionResultHook(hook);
+            _hook = new FunctionResultHook(resultType, hook);
         }
 
         internal static FunctionResultHookFactory From<TRequest, TResult>(
             Func<TRequest, TResult, CancellationToken, Task<TResult>> hook)
         {
-            return new FunctionResultHookFactory(
+            return new FunctionResultHookFactory(typeof(TResult),
                 (request, result, ct) => hook((TRequest)request, (TResult)result, ct)
                     .ContinueWith(t => (object)t.Result));
         }
@@ -49,6 +54,7 @@ namespace Turner.Infrastructure.Crud
             Func<TRequest, TResult, TResult> hook)
         {
             return new FunctionResultHookFactory(
+                typeof(TResult),
                 (request, result, ct) => 
                 {
                     if (ct.IsCancellationRequested)
@@ -77,8 +83,10 @@ namespace Turner.Infrastructure.Crud
         {
             return new InstanceResultHookFactory(
                 hook,
-                new FunctionResultHook((request, result, ct) 
-                    => hook.Run((TRequest)request, (TResult)result, ct).ContinueWith(t => (object)t.Result)));
+                new FunctionResultHook(typeof(TResult), 
+                    (request, result, ct) => hook
+                        .Run((TRequest)request, (TResult)result, ct)
+                        .ContinueWith(t => (object)t.Result)));
         }
 
         public IBoxedResultHook Create() => _adaptedInstance;
@@ -107,7 +115,7 @@ namespace Turner.Infrastructure.Crud
                 () =>
                 {
                     var instance = (IResultHook<TRequest, TResult>)s_serviceFactory(typeof(THook));
-                    return new FunctionResultHook((request, result, ct) 
+                    return new FunctionResultHook(typeof(TResult), (request, result, ct) 
                         => instance.Run((TRequest)request, (TResult)result, ct).ContinueWith(t => (object)t.Result));
                 });
         }

@@ -9,9 +9,9 @@ namespace Turner.Infrastructure.Crud.Requests
     public class UpdateRequest<TEntity, TIn> : IUpdateRequest<TEntity>
         where TEntity : class
     {
-        public UpdateRequest(TIn item) { Item = item; }
+        public TIn Item { get; set; }
 
-        public TIn Item { get; }
+        public UpdateRequest(TIn item) { Item = item; }
     }
 
     public class UpdateRequestProfile<TEntity, TIn>
@@ -29,9 +29,9 @@ namespace Turner.Infrastructure.Crud.Requests
     public class UpdateRequest<TEntity, TIn, TOut> : IUpdateRequest<TEntity, TOut>
         where TEntity : class
     {
-        public UpdateRequest(TIn item) { Item = item; }
+        public TIn Item { get; set; }
 
-        public TIn Item { get; }
+        public UpdateRequest(TIn item) { Item = item; }
     }
 
     public class UpdateRequestProfile<TEntity, TIn, TOut>
@@ -50,9 +50,9 @@ namespace Turner.Infrastructure.Crud.Requests
         : IUpdateRequest<TEntity, TOut>
         where TEntity : class
     {
-        public TKey Key { get; }
+        public TKey Key { get; set; }
 
-        public TIn Item { get; }
+        public TIn Item { get; set; }
 
         public UpdateRequest(TKey key, TIn item)
         {

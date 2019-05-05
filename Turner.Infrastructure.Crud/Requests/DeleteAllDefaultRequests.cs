@@ -9,9 +9,11 @@ namespace Turner.Infrastructure.Crud.Requests
     public class DeleteAllRequest<TEntity, TKey> : IDeleteAllRequest<TEntity>
         where TEntity : class
     {
-        public DeleteAllRequest(List<TKey> keys) { Keys = keys; }
+        public List<TKey> Keys { get; set; } = new List<TKey>();
 
-        public List<TKey> Keys { get; }
+        public DeleteAllRequest() { }
+
+        public DeleteAllRequest(List<TKey> keys) { Keys = keys; }
     }
 
     [MaybeValidate]

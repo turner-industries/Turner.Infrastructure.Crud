@@ -93,10 +93,10 @@ namespace Turner.Infrastructure.Crud.Requests
         public async Task<UpdateAllResult<TOut>> HandleAsync(TRequest request, CancellationToken token)
         {
             var entities = await UpdateEntities(request, token).Configure();
-            var tOuts = await entities.CreateResults<TEntity, TOut>(RequestConfig, token).Configure();
-            var items = await request.RunResultHooks(RequestConfig, tOuts, token).Configure();
+            var items = await entities.CreateResults<TEntity, TOut>(RequestConfig, token).Configure();
+            var result = new UpdateAllResult<TOut>(items);
 
-            return new UpdateAllResult<TOut>(items);
+            return await request.RunResultHooks(RequestConfig, result, token).Configure();
         }
     }
 }
