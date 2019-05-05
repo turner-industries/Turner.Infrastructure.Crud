@@ -19,9 +19,9 @@ namespace Turner.Infrastructure.Crud.Requests
     {
     }
 
-    public class DeleteAllResult<TOut>
+    public class DeleteAllResult<TOut> : IResultCollection<TOut>
     {
-        public List<TOut> Items { get; }
+        public List<TOut> Items { get; set; }
 
         public DeleteAllResult(IEnumerable<TOut> items)
         {

@@ -45,26 +45,32 @@ namespace Turner.Infrastructure.Crud.Requests
             var pageNumber = Math.Max(1, Math.Min(request.PageNumber, totalPageCount));
             var startIndex = (pageNumber - 1) * pageSize;
 
-            if (totalItemCount == 0)
-                return new PagedGetAllResult<TOut>(Array.Empty<TOut>(), 1, pageSize, 1, 0);
-            
-            entities = entities.Skip(startIndex).Take(pageSize);
+            PagedGetAllResult<TOut> result;
 
-            var items = await GetItems(request, entities, token).Configure();
-                    
-            return new PagedGetAllResult<TOut>(items, pageNumber, pageSize, totalPageCount, totalItemCount);
+            if (totalItemCount != 0)
+            {
+                entities = entities.Skip(startIndex).Take(pageSize);
+                var items = await GetItems(request, entities, token).Configure();
+                result = new PagedGetAllResult<TOut>(items, pageNumber, pageSize, totalPageCount, totalItemCount);
+            }
+            else
+            {
+                result = new PagedGetAllResult<TOut>(Array.Empty<TOut>(), 1, pageSize, 1, 0);
+            }
+
+            return await request.RunResultHooks(RequestConfig, result, token).Configure();
         }
 
         private async Task<TOut[]> GetItems(TRequest request, IQueryable<TEntity> entities, CancellationToken token)
         {
-            var tOuts = Array.Empty<TOut>();
+            var items = Array.Empty<TOut>();
 
             if (Options.UseProjection)
             {
-                tOuts = await entities.ProjectToArrayAsync<TEntity, TOut>(token).Configure();
+                items = await entities.ProjectToArrayAsync<TEntity, TOut>(token).Configure();
                 token.ThrowIfCancellationRequested();
 
-                if (tOuts.Length == 0)
+                if (items.Length == 0)
                 {
                     if (RequestConfig.ErrorConfig.FailedToFindInGetAllIsError)
                         throw new CrudFailedToFindException { EntityTypeProperty = typeof(TEntity) };
@@ -72,7 +78,7 @@ namespace Turner.Infrastructure.Crud.Requests
                     var defaultEntity = RequestConfig.GetDefaultFor<TEntity>();
                     if (defaultEntity != null)
                     {
-                        tOuts = new TOut[]
+                        items = new TOut[]
                         {
                             await defaultEntity.CreateResult<TEntity, TOut>(RequestConfig, token).Configure()
                         };
@@ -96,12 +102,10 @@ namespace Turner.Infrastructure.Crud.Requests
 
                 await request.RunEntityHooks<TEntity>(RequestConfig, entities, token).Configure();
 
-                tOuts = await resultEntities.CreateResults<TEntity, TOut>(RequestConfig, token).Configure();
+                items = await resultEntities.CreateResults<TEntity, TOut>(RequestConfig, token).Configure();
             }
 
             token.ThrowIfCancellationRequested();
-
-            var items = await request.RunResultHooks(RequestConfig, tOuts, token).Configure();
 
             return items;
         }

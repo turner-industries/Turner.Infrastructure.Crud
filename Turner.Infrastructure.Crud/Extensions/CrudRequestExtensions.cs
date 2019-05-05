@@ -45,7 +45,7 @@ namespace Turner.Infrastructure.Crud.Extensions
                 }
             }
         }
-
+        
         internal static async Task<object[]> RunItemHooks<TEntity>(this IBulkRequest request,
             ICrudRequestConfig config,
             object[] items,
@@ -140,7 +140,11 @@ namespace Turner.Infrastructure.Crud.Extensions
             {
                 try
                 {
-                    result = (T)await hook.Run(request, result, ct).Configure();
+                    if (typeof(T).IsAssignableFrom(hook.ResultType))
+                        result = (T)await hook.Run(request, result, ct).Configure();
+                    else
+                        result = await ResultHookAdapter.Adapt(hook, request, result, ct).Configure();
+
                     ct.ThrowIfCancellationRequested();
                 }
                 catch (Exception e) when (IsNonCancellationFailure(e))
@@ -154,36 +158,7 @@ namespace Turner.Infrastructure.Crud.Extensions
 
             return result;
         }
-
-        internal static async Task<T[]> RunResultHooks<T>(this ICrudRequest request,
-            ICrudRequestConfig config,
-            T[] results,
-            CancellationToken ct)
-        {
-            var hooks = config.GetResultHooks();
-
-            foreach (var hook in hooks)
-            {
-                for (var i = 0; i < results.Length; ++i)
-                {
-                    try
-                    {
-                        results[i] = (T)await hook.Run(request, results[i], ct).Configure();
-                        ct.ThrowIfCancellationRequested();
-                    }
-                    catch (Exception e) when (IsNonCancellationFailure(e))
-                    {
-                        throw new CrudHookFailedException(GenericHookError("result"), e)
-                        {
-                            HookProperty = hook
-                        };
-                    }
-                }
-            }
-
-            return results;
-        }
-
+        
         internal static async Task<TEntity> CreateEntity<TEntity>(this ICrudRequest request,
             ICrudRequestConfig config,
             object item,

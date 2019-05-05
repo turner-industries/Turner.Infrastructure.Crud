@@ -44,9 +44,10 @@ namespace Turner.Infrastructure.Crud
 
             _tasks.AddRange(new ICrudInitializationTask[]
             {
-                new CrudErrorHandlingInitializer(),
+                new UniversalRequestInitializer(),
                 new CrudValidationInitializer(),
-                new CrudRequestInitializer()
+                new CrudRequestInitializer(),
+                new CrudErrorHandlingInitializer(),
             });
         }
 
@@ -244,6 +245,39 @@ namespace Turner.Infrastructure.Crud
             container.Register(typeof(SynchronizeRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(SynchronizeRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(SynchronizeRequestHandler<,,>), IfNotHandled);
+        }
+    }
+
+    internal class UniversalRequestInitializer : ICrudInitializationTask
+    {
+        public void Run(Container container, Assembly[] assemblies, CrudOptions options)
+        {
+            var universalProfiles = assemblies
+                .SelectMany(x => x.GetExportedTypes())
+                .Where(x => !x.IsAbstract &&
+                            x.BaseType != null &&
+                            x.BaseType.IsGenericType &&
+                            x.BaseType.GetGenericTypeDefinition() == typeof(UniversalRequestProfile<>))
+                .ToArray();
+
+            bool ShouldDecorate(DecoratorPredicateContext context)
+            {
+                var tRequest = context.ServiceType.GetGenericArguments()[0];
+
+                foreach (var type in tRequest.BuildTypeHierarchyUp())
+                {
+                    if (type.GetInterface(typeof(ICrudRequest).Name) != null)
+                        return false;
+
+                    if (universalProfiles.Any(x => x.BaseType.GetGenericArguments()[0] == type))
+                        return true;
+                }
+
+                return false;
+            }
+
+            container.RegisterDecorator(typeof(IRequestHandler<>), typeof(UniversalRequestDecorator<>), ShouldDecorate);
+            container.RegisterDecorator(typeof(IRequestHandler<,>), typeof(UniversalRequestDecorator<,>), ShouldDecorate);
         }
     }
 

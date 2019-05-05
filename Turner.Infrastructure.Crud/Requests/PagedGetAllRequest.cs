@@ -14,9 +14,9 @@ namespace Turner.Infrastructure.Crud.Requests
     {
     }
 
-    public class PagedGetAllResult<TOut>
+    public class PagedGetAllResult<TOut> : IResultCollection<TOut>
     {
-        public List<TOut> Items { get; }
+        public List<TOut> Items { get; set; }
 
         public int PageNumber { get; }
 

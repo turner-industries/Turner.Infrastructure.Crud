@@ -8,18 +8,18 @@ namespace Turner.Infrastructure.Crud.Requests
     public class SynchronizeRequest<TEntity, TIn> : ISynchronizeRequest<TEntity>
         where TEntity : class
     {
-        public SynchronizeRequest(List<TIn> items) { Items = items; }
+        public List<TIn> Items { get; set; } = new List<TIn>();
 
-        public List<TIn> Items { get; }
+        public SynchronizeRequest(List<TIn> items) { Items = items; }
     }
 
     [MaybeValidate]
     public class SynchronizeRequest<TEntity, TIn, TOut> : ISynchronizeRequest<TEntity, TOut>
         where TEntity : class
     {
-        public SynchronizeRequest(List<TIn> items) { Items = items; }
+        public List<TIn> Items { get; set; } = new List<TIn>();
 
-        public List<TIn> Items { get; }
+        public SynchronizeRequest(List<TIn> items) { Items = items; }
     }
 
     [MaybeValidate]

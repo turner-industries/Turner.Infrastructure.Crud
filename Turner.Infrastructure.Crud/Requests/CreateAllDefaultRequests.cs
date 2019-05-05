@@ -9,9 +9,11 @@ namespace Turner.Infrastructure.Crud.Requests
     public class CreateAllRequest<TEntity, TIn> : ICreateAllRequest<TEntity>
         where TEntity : class
     {
-        public CreateAllRequest(List<TIn> items) { Items = items; }
+        public List<TIn> Items { get; set; } = new List<TIn>();
 
-        public List<TIn> Items { get; }
+        public CreateAllRequest() { }
+
+        public CreateAllRequest(List<TIn> items) { Items = items; }
     }
 
     public class CreateAllRequestProfile<TEntity, TIn>
@@ -30,9 +32,11 @@ namespace Turner.Infrastructure.Crud.Requests
     public class CreateAllRequest<TEntity, TIn, TOut> : ICreateAllRequest<TEntity, TOut>
         where TEntity : class
     {
-        public CreateAllRequest(List<TIn> items) { Items = items; }
+        public List<TIn> Items { get; set; } = new List<TIn>();
 
-        public List<TIn> Items { get; }
+        public CreateAllRequest() { }
+
+        public CreateAllRequest(List<TIn> items) { Items = items; }
     }
 
     public class CreateAllRequestProfile<TEntity, TIn, TOut>

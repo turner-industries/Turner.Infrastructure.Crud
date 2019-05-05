@@ -19,9 +19,9 @@ namespace Turner.Infrastructure.Crud.Requests
     {
     }
 
-    public class MergeResult<TOut>
+    public class MergeResult<TOut> : IResultCollection<TOut>
     {
-        public List<TOut> Items { get; }
+        public List<TOut> Items { get; set; }
 
         public MergeResult(IEnumerable<TOut> items)
         {

@@ -71,7 +71,11 @@ namespace Turner.Infrastructure.Crud.Tests
                 return Task.CompletedTask;
             });
 
-            AddResultHook<string>((r, t) => "t1/");
+            AddResultHook<CreateAllResult<string>>((r, t) =>
+            {
+                return new CreateAllResult<string>(t.Items.Select(x => "t1/"));
+            });
+
             AddResultHook<string>((r, t) => Task.FromResult(t + "t2/"));
 
             ForEntity<IHookEntity>()

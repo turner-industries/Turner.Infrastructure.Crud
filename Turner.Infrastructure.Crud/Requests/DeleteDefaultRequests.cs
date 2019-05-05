@@ -8,9 +8,11 @@ namespace Turner.Infrastructure.Crud.Requests
     public class DeleteRequest<TEntity, TKey> : IDeleteRequest<TEntity>
         where TEntity : class
     {
-        public DeleteRequest(TKey key) { Key = key; }
+        public TKey Key { get; set; }
 
-        public TKey Key { get; }
+        public DeleteRequest() { }
+
+        public DeleteRequest(TKey key) { Key = key; }
     }
 
     public class DeleteRequestProfile<TEntity, TKey>
@@ -27,9 +29,9 @@ namespace Turner.Infrastructure.Crud.Requests
     public class DeleteRequest<TEntity, TKey, TOut> : IDeleteRequest<TEntity, TOut>
         where TEntity : class
     {
-        public DeleteRequest(TKey key) { Key = key; }
+        public TKey Key { get; set; }
 
-        public TKey Key { get; }
+        public DeleteRequest(TKey key) { Key = key; }
     }
 
     public class DeleteRequestProfile<TEntity, TKey, TOut>

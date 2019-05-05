@@ -145,10 +145,10 @@ namespace Turner.Infrastructure.Crud.Requests
         public async Task<SynchronizeResult<TOut>> HandleAsync(TRequest request, CancellationToken token)
         {
             var entities = await SynchronizeEntities(request, token).Configure();
-            var tOuts = await entities.CreateResults<TEntity, TOut>(RequestConfig, token).Configure();
-            var items = await request.RunResultHooks(RequestConfig, tOuts, token).Configure();
+            var items = await entities.CreateResults<TEntity, TOut>(RequestConfig, token).Configure();
+            var result = new SynchronizeResult<TOut>(items);
 
-            return new SynchronizeResult<TOut>(items);
+            return await request.RunResultHooks(RequestConfig, result, token).Configure();
         }
     }
 }

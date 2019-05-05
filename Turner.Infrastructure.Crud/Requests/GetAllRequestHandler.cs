@@ -35,14 +35,14 @@ namespace Turner.Infrastructure.Crud.Requests
                 .FilterWith(request, RequestConfig)
                 .SortWith(request, RequestConfig);
             
-            var tOuts = Array.Empty<TOut>();
+            var items = Array.Empty<TOut>();
 
             if (Options.UseProjection)
             {
-                tOuts = await entities.ProjectToArrayAsync<TEntity, TOut>(token).Configure();
+                items = await entities.ProjectToArrayAsync<TEntity, TOut>(token).Configure();
                 token.ThrowIfCancellationRequested();
                 
-                if (tOuts.Length == 0)
+                if (items.Length == 0)
                 {
                     if (RequestConfig.ErrorConfig.FailedToFindInGetAllIsError)
                         throw new CrudFailedToFindException { EntityTypeProperty = typeof(TEntity) };
@@ -50,7 +50,7 @@ namespace Turner.Infrastructure.Crud.Requests
                     var defaultEntity = RequestConfig.GetDefaultFor<TEntity>();
                     if (defaultEntity != null)
                     {
-                        tOuts = new TOut[] 
+                        items = new TOut[] 
                         {
                             await defaultEntity.CreateResult<TEntity, TOut>(RequestConfig, token).Configure()
                         };
@@ -74,14 +74,14 @@ namespace Turner.Infrastructure.Crud.Requests
 
                 await request.RunEntityHooks<TEntity>(RequestConfig, entities, token).Configure();
 
-                tOuts = await resultEntities.CreateResults<TEntity, TOut>(RequestConfig, token).Configure();
+                items = await resultEntities.CreateResults<TEntity, TOut>(RequestConfig, token).Configure();
             }
 
             token.ThrowIfCancellationRequested();
 
-            var items = await request.RunResultHooks(RequestConfig, tOuts, token).Configure();
+            var result = new GetAllResult<TOut>(items); 
 
-            return new GetAllResult<TOut>(items); 
+            return await request.RunResultHooks(RequestConfig, result, token).Configure();
         }
     }
 }
