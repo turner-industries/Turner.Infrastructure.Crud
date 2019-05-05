@@ -47,8 +47,8 @@ namespace Turner.Infrastructure.Crud
 
             if (_default != null)
                 return _default.Sort(request, queryable);
-
-            return null;
+            
+            return _cases.Values.First().Sort(request, queryable);
         }
     }
 }

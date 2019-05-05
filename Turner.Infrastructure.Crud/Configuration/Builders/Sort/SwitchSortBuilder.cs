@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using Turner.Infrastructure.Crud.Exceptions;
 using Turner.Infrastructure.Crud.Extensions;
 
 namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
@@ -51,6 +52,13 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
 
             if (_default != null)
                 sorter.Default(_default.Build());
+
+            if (_default == null && _cases.Count == 0)
+            {
+                throw new BadCrudConfigurationException(
+                    $"Switch sorting was set for request '{typeof(TRequest)}' and entity '{typeof(TEntity)}'" +
+                    ", but no cases were defined.");
+            }
 
             return InstanceSorterFactory.From(sorter);
         }

@@ -41,8 +41,7 @@ namespace Turner.Infrastructure.Crud
 
         public IOrderedQueryable<TEntity> Sort(TRequest request, IQueryable<TEntity> queryable)
         {
-            if (_firstSortFunc == null ||
-                (_predicate != null && !_predicate(request)))
+            if (_firstSortFunc == null || (_predicate != null && !_predicate(request)))
                 return null;
             
             var result = _firstSortFunc(queryable) as IOrderedQueryable<TEntity>;
@@ -66,14 +65,16 @@ namespace Turner.Infrastructure.Crud
         
         public IOrderedQueryable<TEntity> Sort(TRequest request, IQueryable<TEntity> queryable)
         {
+            IOrderedQueryable<TEntity> result;
+
             foreach (var operation in _operations)
             {
-                var result = operation.Sort(request, queryable);
+                result = operation.Sort(request, queryable);
                 if (result != null)
                     return result;
             }
-
-            return null;
+            
+            return queryable as IOrderedQueryable<TEntity>;
         }
     }
 }

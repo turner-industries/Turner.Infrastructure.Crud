@@ -22,6 +22,8 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
         private readonly Dictionary<TControl, IEntityExpressionHolder> _columns =
             new Dictionary<TControl, IEntityExpressionHolder>();
 
+        private TControl _defaultColumn;
+
         public TableSortBuilder<TRequest, TEntity, TControl> WithControl(
             Func<TRequest, TControl> getControlValue,
             Func<TRequest, SortDirection> getDirectionValue)
@@ -32,25 +34,19 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             return this;
         }
 
+        public TableSortBuilder<TRequest, TEntity, TControl> WithControl<TDirection>(
+            Func<TRequest, TControl> getControlValue,
+            Func<TRequest, TDirection> getDirectionValue)
+            => ForwardWithControl(getControlValue, getDirectionValue);
+
         public TableSortBuilder<TRequest, TEntity, TControl> WithControl(
             Func<TRequest, TControl> getControlValue,
             SortDirection directionValue)
-        {
-            return WithControl(getControlValue, r => directionValue);
-        }
+            => WithControl(getControlValue, r => directionValue);
 
-        public TableSortBuilder<TRequest, TEntity, TControl> WithControl(string controlProperty, SortDirection directionValue)
-        {
-            var requestParam = Expression.Parameter(typeof(TRequest));
-            var controlProp = Expression.PropertyOrField(requestParam, controlProperty)
-                ?? throw new ArgumentException(nameof(controlProperty));
-
-            var readPropExpr = Expression.Lambda<Func<TRequest, TControl>>(controlProp, requestParam);
-
-            return WithControl(readPropExpr.Compile(), directionValue);
-        }
-
-        public TableSortBuilder<TRequest, TEntity, TControl> WithControl(string controlProperty, string directionProperty)
+        public TableSortBuilder<TRequest, TEntity, TControl> WithControl(
+            string controlProperty, 
+            string directionProperty)
         {
             var requestExpr = Expression.Parameter(typeof(TRequest));
 
@@ -68,29 +64,48 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             var fwdMethod = fwdMethodInfo.MakeGenericMethod(dirProp.Type);
 
             return (TableSortBuilder<TRequest, TEntity, TControl>)
-                fwdMethod.Invoke(this, new object[] { readPropExpr.Compile(), directionProperty });
+                fwdMethod.Invoke(this, new object[] { readPropExpr.Compile(), Expression.Lambda(dirProp, requestExpr).Compile() });
         }
 
-        private TableSortBuilder<TRequest, TEntity, TControl> ForwardWithControl<TDirection>(Func<TRequest, TControl> getControlValue, string directionProperty)
+        public TableSortBuilder<TRequest, TEntity, TControl> WithControl(
+            string controlProperty, 
+            SortDirection directionValue)
         {
-            var requestExpr = Expression.Parameter(typeof(TRequest));
-            var dirProp = Expression.PropertyOrField(requestExpr, directionProperty);
-            var readDirExpr = Expression.Lambda<Func<TRequest, TDirection>>(dirProp, requestExpr);
-            var readDir = readDirExpr.Compile();
+            var requestParam = Expression.Parameter(typeof(TRequest));
+            var controlProp = Expression.PropertyOrField(requestParam, controlProperty)
+                ?? throw new ArgumentException(nameof(controlProperty));
 
-            return WithControl(getControlValue,
-                request =>
-                {
-                    if (Enum.TryParse<SortDirection>(Convert.ToString(readDir(request)), out var direction))
-                        return direction;
+            var readPropExpr = Expression.Lambda<Func<TRequest, TControl>>(controlProp, requestParam);
 
-                    return SortDirection.Default;
-                });
+            return WithControl(readPropExpr.Compile(), directionValue);
         }
-        
+
+        private TableSortBuilder<TRequest, TEntity, TControl> ForwardWithControl<TDirection>(
+            Func<TRequest, TControl> getControlValue, 
+            Func<TRequest, TDirection> getDirectionValue)
+        {
+            _controls.Add(getControlValue ?? throw new ArgumentNullException(nameof(getControlValue)));
+
+            _directions.Add(request =>
+            {
+                if (Enum.TryParse<SortDirection>(Convert.ToString(getDirectionValue(request)), out var direction))
+                    return direction;
+
+                return SortDirection.Default;
+            });
+
+            return this;
+        }
+
         public TableSortBuilder<TRequest, TEntity, TControl> OnProperty<TKey>(
             TControl controlValue,
             Expression<Func<TEntity, TKey>> clause)
+            => OnProperty(controlValue, clause, false);
+
+        public TableSortBuilder<TRequest, TEntity, TControl> OnProperty<TKey>(
+            TControl controlValue,
+            Expression<Func<TEntity, TKey>> clause,
+            bool asDefault)
         {
             if (controlValue == null)
                 throw new ArgumentNullException(nameof(controlValue));
@@ -98,10 +113,21 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             _columns[controlValue] = new EntityExpressionHolder<TKey>(
                 clause ?? throw new ArgumentNullException(nameof(clause)));
 
+            if (asDefault)
+                _defaultColumn = controlValue;
+
             return this;
         }
 
-        public TableSortBuilder<TRequest, TEntity, TControl> OnProperty(TControl controlValue, string entityProperty)
+        public TableSortBuilder<TRequest, TEntity, TControl> OnProperty(
+            TControl controlValue, 
+            string entityProperty)
+            => OnProperty(controlValue, entityProperty, false);
+
+        public TableSortBuilder<TRequest, TEntity, TControl> OnProperty(
+            TControl controlValue, 
+            string entityProperty,
+            bool asDefault)
         {
             if (controlValue == null)
                 throw new ArgumentNullException(nameof(controlValue));
@@ -116,21 +142,77 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             var fwdMethod = fwdMethodInfo.MakeGenericMethod(entityProp.Type);
 
             return (TableSortBuilder<TRequest, TEntity, TControl>)
-                fwdMethod.Invoke(this, new object[] { controlValue, entityProperty });
+                fwdMethod.Invoke(this, new object[] { controlValue, entityProperty, asDefault });
         }
 
         public TableSortBuilder<TRequest, TEntity, TControl> OnAnyProperty()
+            => OnAnyProperty(default(TControl));
+
+        public TableSortBuilder<TRequest, TEntity, TControl> OnAnyProperty<TProperty>(Expression<Func<TEntity, TProperty>> defaultProperty)
         {
+            if (!(defaultProperty.Body is MemberExpression memberExpression))
+                throw new ArgumentException($"Expression '{defaultProperty}' refers to a method, not a property.");
+            
+            if (!(memberExpression.Member is PropertyInfo propertyInfo))
+                throw new ArgumentException($"Expression '{defaultProperty}' refers to a field, not a property.");
+
+            if (typeof(TEntity) != propertyInfo.ReflectedType && !typeof(TEntity).IsSubclassOf(propertyInfo.ReflectedType))
+                throw new ArgumentException($"Expression '{defaultProperty}' refers to a property that is not from type {typeof(TEntity)}.");
+
+            var properties = GetSafeEntityProperties();
+            var onAnyPropertyMethod = typeof(TableSortBuilder<TRequest, TEntity, TControl>)
+                .GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .Single(x => x.Name == "OnAnyProperty" && !x.IsGenericMethodDefinition && x.GetParameters().Length == 1);
+
             if (typeof(int).IsAssignableFrom(typeof(TControl)))
             {
-                var properties = typeof(TEntity).GetProperties();
-                for (int i = 0; i < properties.Length; ++i)
-                    AddPropertyColumn(properties[i], Expression.Constant(i));
+                return (TableSortBuilder<TRequest, TEntity, TControl>)
+                    onAnyPropertyMethod.Invoke(this, new object[] { Array.IndexOf(properties, propertyInfo) });
             }
             else if (typeof(string).IsAssignableFrom(typeof(TControl)))
             {
-                foreach (var property in typeof(TEntity).GetProperties())
+                return (TableSortBuilder<TRequest, TEntity, TControl>)
+                    onAnyPropertyMethod.Invoke(this, new object[] { propertyInfo.Name });
+            }
+
+            throw new BadCrudConfigurationException("'OnAnyProperty' may only be used with int and string controls (TControl)");
+        }
+
+        public TableSortBuilder<TRequest, TEntity, TControl> OnAnyProperty(TControl defaultValue)
+        {
+            if (typeof(int).IsAssignableFrom(typeof(TControl)))
+            {
+                var properties = GetSafeEntityProperties();
+                for (int i = 0; i < properties.Length; ++i)
+                    AddPropertyColumn(properties[i], Expression.Constant(i));
+
+                var defaultAsInt = defaultValue as int?;
+                if (defaultAsInt.Value < 0 || defaultAsInt.Value >= properties.Length)
+                {
+                    throw new BadCrudConfigurationException(
+                        $"The default table sort property index '{defaultValue}' " +
+                        $"for request '{typeof(TRequest)}' and entity '{typeof(TEntity)}' " +
+                        "is outside of the range of properties for the entity.");
+                }
+
+                _defaultColumn = defaultValue;
+            }
+            else if (typeof(string).IsAssignableFrom(typeof(TControl)))
+            {
+                var properties = GetSafeEntityProperties();
+                foreach (var property in properties)
                     AddPropertyColumn(property, Expression.Constant(property.Name));
+
+                var defaultAsString = defaultValue as string;
+                if (defaultAsString != null && !properties.Any(x => x.Name == defaultAsString))
+                {
+                    throw new BadCrudConfigurationException(
+                        $"The default table sort property '{defaultValue}' " +
+                        $"for request '{typeof(TRequest)}' and entity '{typeof(TEntity)}' " +
+                        "is not a valid property name for the entity.");
+                }
+
+                _defaultColumn = defaultValue;
             }
             else
             {
@@ -140,14 +222,29 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             return this;
         }
 
+        private PropertyInfo[] GetSafeEntityProperties()
+        {
+            var properties = typeof(TEntity).GetProperties();
+            if (properties.Length == 0)
+            {
+                throw new BadCrudConfigurationException(
+                    $"OnAnyProperty was called for request '{typeof(TRequest)}' and entity '{typeof(TEntity)}'" +
+                    ", but no properties are declared for the entity.");
+            }
+
+            return properties;
+        }
+
         private TableSortBuilder<TRequest, TEntity, TControl> ForwardOnProperty<TKey>(
-            TControl controlValue, string entityProperty)
+            TControl controlValue, 
+            string entityProperty, 
+            bool asDefault)
         {
             var entityParam = Expression.Parameter(typeof(TEntity));
             var entityProp = Expression.PropertyOrField(entityParam, entityProperty);
             var readPropExpr = Expression.Lambda<Func<TEntity, TKey>>(entityProp, entityParam);
 
-            return OnProperty(controlValue, readPropExpr);
+            return OnProperty(controlValue, readPropExpr, asDefault);
         }
 
         private void AddPropertyColumn(PropertyInfo property, ConstantExpression key)
@@ -169,7 +266,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
 
         internal override ISorterFactory Build()
         {
-            var sorter = new TableSorter<TRequest, TEntity, TControl>();
+            var sorter = new TableSorter<TRequest, TEntity, TControl>(_defaultColumn);
 
             _controls
                 .Zip(_directions, (c, d) => new { Control = c, Direction = d })
@@ -178,6 +275,20 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
 
             foreach (var (k, v) in _columns)
                 v.Build(sorter, k);
+
+            if (_controls.Count == 0)
+            {
+                throw new BadCrudConfigurationException(
+                    $"Table sorting was set for request '{typeof(TRequest)}' and entity '{typeof(TEntity)}'" +
+                    ", but no controls were defined.");
+            }
+
+            if (_defaultColumn == null && _columns.Count == 0)
+            {
+                throw new BadCrudConfigurationException(
+                    $"Table sorting was set for request '{typeof(TRequest)}' and entity '{typeof(TEntity)}'" +
+                    ", but no table properties were defined.");
+            }
 
             return InstanceSorterFactory.From(sorter);
         }

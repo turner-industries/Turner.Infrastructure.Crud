@@ -1,6 +1,6 @@
-﻿using NUnit.Framework;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Tests.Fakes;
@@ -142,6 +142,72 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.AreEqual("FUser", response.Data.Items[3].Name);
             Assert.AreEqual("DUser", response.Data.Items[4].Name);
             Assert.AreEqual("BUser", response.Data.Items[5].Name);
+        }
+
+        [Test]
+        public async Task Handle_GetAllSwitchSortedUsersWithoutDefaultRequest_WithBadCase_ReturnsAllEntitiesSortedByFirstCase()
+        {
+            await SeedSortEntities();
+
+            var request = new GetAllSwitchSortedUsersWithoutDefault { Case = "BadCase" };
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(6, response.Data.Items.Count);
+            Assert.AreEqual("AUser", response.Data.Items[0].Name);
+            Assert.AreEqual("BUser", response.Data.Items[1].Name);
+            Assert.AreEqual("CUser", response.Data.Items[2].Name);
+            Assert.AreEqual("DUser", response.Data.Items[3].Name);
+            Assert.AreEqual("EUser", response.Data.Items[4].Name);
+            Assert.AreEqual("FUser", response.Data.Items[5].Name);
+        }
+
+        [Test]
+        public async Task Handle_GetAllTableSortedUsersWithDefaultRequest_WithBadCase_ReturnsAllEntitiesSortedByDefault()
+        {
+            await SeedSortEntities();
+
+            var request = new GetAllTableSortedUsers
+            {
+                PrimaryColumn = "BadProperty"
+            };
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(6, response.Data.Items.Count);
+            Assert.AreEqual("AUser", response.Data.Items[0].Name);
+            Assert.AreEqual("BUser", response.Data.Items[1].Name);
+            Assert.AreEqual("CUser", response.Data.Items[2].Name);
+            Assert.AreEqual("DUser", response.Data.Items[3].Name);
+            Assert.AreEqual("EUser", response.Data.Items[4].Name);
+            Assert.AreEqual("FUser", response.Data.Items[5].Name);
+        }
+
+        [Test]
+        public async Task Handle_GetAllTableSortedUsersWithoutDefaultRequest_WithBadCase_ReturnsAllEntitiesSortedByFirstProperty()
+        {
+            await SeedSortEntities();
+
+            var request = new GetAllTableSortedUsersWithoutDefault
+            {
+                Column = "BadProperty"
+            };
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Data);
+            Assert.AreEqual(6, response.Data.Items.Count);
+            Assert.AreEqual("AUser", response.Data.Items[0].Name);
+            Assert.AreEqual("BUser", response.Data.Items[1].Name);
+            Assert.AreEqual("CUser", response.Data.Items[2].Name);
+            Assert.AreEqual("DUser", response.Data.Items[3].Name);
+            Assert.AreEqual("EUser", response.Data.Items[4].Name);
+            Assert.AreEqual("FUser", response.Data.Items[5].Name);
         }
 
         [Test]
@@ -489,12 +555,47 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
                     .ForDefault().SortBy(user => user.IsDeleted).ThenBy("Name").Descending());
         }
     }
-    
+
+    public class GetAllSwitchSortedUsersWithoutDefault : IGetAllRequest<User, UserGetDto>
+    {
+        public string Case { get; set; }
+    }
+
+    public class GetAllSwitchSortedUsersWithoutDefaultProfile : CrudRequestProfile<GetAllSwitchSortedUsersWithoutDefault>
+    {
+        public GetAllSwitchSortedUsersWithoutDefaultProfile()
+        {
+            ForEntity<User>()
+                .SortWith(builder => builder
+                    .AsSwitch(x => x.Case)
+                    .ForCase("Name").SortBy("Name"));
+        }
+    }
+
+    public class GetAllTableSortedUsersWithoutDefault : IGetAllRequest<User, UserGetDto>
+    {
+        public string Column { get; set; }
+    }
+
+    public class GetAllTableSortedUsersWithoutDefaultProfile
+        : CrudRequestProfile<GetAllTableSortedUsersWithoutDefault>
+    {
+        public GetAllTableSortedUsersWithoutDefaultProfile()
+        {
+            ForEntity<User>()
+                .SortWith(builder => builder
+                    .AsTable<string>()
+                    .WithControl(r => r.Column, SortDirection.Ascending)
+                    .OnProperty(UsersSortColumn.Name, "Name"));
+        }
+    }
+
     public class GetAllTableSortedUsers : IGetAllRequest<User, UserGetDto>
     {
         public string PrimaryColumn { get; set; }
+
         public string SecondaryColumn { get; set; }
-        
+
         public int SecondaryDirection { get; set; }
     }
     
@@ -508,8 +609,8 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
                     .AsTable<string>()
                     .WithControl(r => r.PrimaryColumn, SortDirection.Ascending)
                     .WithControl("SecondaryColumn", "SecondaryDirection")
-                    .OnProperty(UsersSortColumn.Name, "Name")
-                    .OnProperty(UsersSortColumn.IsDeleted, user => user.IsDeleted));
+                    .OnProperty(UsersSortColumn.IsDeleted, user => user.IsDeleted)
+                    .OnProperty(UsersSortColumn.Name, "Name", true));
         }
     }
     
@@ -627,4 +728,5 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         }
     }
 }
+ 
  

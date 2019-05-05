@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Turner.Infrastructure.Crud.Exceptions;
 
 namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
 {
@@ -34,6 +35,13 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
 
         internal override ISorterFactory Build()
         {
+            if (_operations.Count == 0)
+            {
+                throw new BadCrudConfigurationException(
+                    $"Basic sorting was set for request '{typeof(TRequest)}' and entity '{typeof(TEntity)}'" +
+                    ", but no sort operation was defined.");
+            }
+
             var instance = new BasicSorter<TRequest, TEntity>(_operations.Select(builder => builder.Build()).ToList());
 
             return InstanceSorterFactory.From(instance);
