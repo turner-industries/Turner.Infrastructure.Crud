@@ -39,6 +39,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
             var entities = await Context.Set<TEntity>()
                 .SelectWith(request, RequestConfig)
+                .FilterWith(request, RequestConfig)
                 .ToArrayAsync(ct)
                 .Configure();
 
