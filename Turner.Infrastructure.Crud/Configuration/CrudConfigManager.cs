@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -9,18 +10,14 @@ namespace Turner.Infrastructure.Crud.Configuration
 {
     public class CrudConfigManager
     {
-        private readonly Assembly[] _profileAssemblies;
-        
-        private readonly Dictionary<Type, ICrudRequestConfig> _requestConfigs
-            = new Dictionary<Type, ICrudRequestConfig>();
+        private readonly ConcurrentDictionary<Type, ICrudRequestConfig> _requestConfigs
+            = new ConcurrentDictionary<Type, ICrudRequestConfig>();
 
         private readonly Type[] _allProfiles;
 
         public CrudConfigManager(params Assembly[] profileAssemblies)
         {
-            _profileAssemblies = profileAssemblies;
-
-            _allProfiles = _profileAssemblies
+            _allProfiles = profileAssemblies
                 .SelectMany(x => x.GetExportedTypes())
                 .Where(x =>
                     x.BaseType != null &&
@@ -31,35 +28,36 @@ namespace Turner.Infrastructure.Crud.Configuration
                 .ToArray();
         }
 
-        public ICrudRequestConfig GetRequestConfigFor<TRequest>() 
+        public ICrudRequestConfig GetRequestConfigFor<TRequest>()
             => BuildRequestConfigFor(typeof(TRequest));
 
-        public ICrudRequestConfig GetRequestConfigFor(Type tRequest) 
+        public ICrudRequestConfig GetRequestConfigFor(Type tRequest)
             => BuildRequestConfigFor(tRequest);
-        
+
         private IEnumerable<Type> FindRequestProfilesFor(Type tRequest)
         {
+            // ReSharper disable once PossibleNullReferenceException
             Type GetProfileRequestType(Type tProfile) => tProfile.BaseType.GenericTypeArguments[0];
 
             bool IsGenericallyCompatible(Type first, Type second)
             {
                 var firstArgs = first.GetGenericArguments();
                 var secondArgs = second.GetGenericArguments();
-                
+
                 return firstArgs.Length == secondArgs.Length &&
-                    firstArgs
-                        .Zip(secondArgs, (a, b) => new Tuple<Type, Type>(a, b))
-                        .All(x => x.Item2.IsGenericParameter || x.Item1 == x.Item2);
+                       firstArgs
+                           .Zip(secondArgs, (a, b) => new Tuple<Type, Type>(a, b))
+                           .All(x => x.Item2.IsGenericParameter || x.Item1 == x.Item2);
             }
 
             Type InstantiateProfile(Type tProfile)
             {
                 if (!tProfile.IsGenericTypeDefinition)
                     return tProfile;
-                
+
                 var argMap = GetProfileRequestType(tProfile)
                     .GetGenericArguments()
-                    .Zip(tRequest.GetGenericArguments(), 
+                    .Zip(tRequest.GetGenericArguments(),
                         (a, b) => new Tuple<Type, Type>(a, a.IsGenericParameter ? b : null))
                     .Where(x => x.Item2 != null)
                     .ToDictionary(x => x.Item1, x => x.Item2);
@@ -89,7 +87,7 @@ namespace Turner.Infrastructure.Crud.Configuration
                     GetProfileRequestType(x).IsGenericType &&
                     GetProfileRequestType(x).GetGenericTypeDefinition() == requestDefinition &&
                     IsGenericallyCompatible(tRequest, GetProfileRequestType(x)))
-                .OrderBy(x => 
+                .OrderBy(x =>
                     GetProfileRequestType(x).GetGenericArguments().Count(y => !y.IsGenericParameter))
                 .Select(InstantiateProfile);
         }
@@ -102,7 +100,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             var tProfile = typeof(IBulkRequest).IsAssignableFrom(tRequest)
                 ? typeof(DefaultBulkCrudRequestProfile<>).MakeGenericType(tRequest)
                 : typeof(DefaultCrudRequestProfile<>).MakeGenericType(tRequest);
-            
+
             var profile = (CrudRequestProfile)Activator.CreateInstance(tProfile);
 
             profile.Inherit(tRequest
@@ -130,10 +128,11 @@ namespace Turner.Infrastructure.Crud.Configuration
         {
             if (_requestConfigs.TryGetValue(tRequest, out var config))
                 return config;
-            
+
             config = GetRequestProfileFor(tRequest).BuildConfiguration();
 
-            _requestConfigs[tRequest] = config;
+            if (!_requestConfigs.TryAdd(tRequest, config))
+                throw new Exception($"Failed to cache the configuration for {tRequest}.");
 
             return config;
         }
