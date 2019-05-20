@@ -7,14 +7,20 @@ using Turner.Infrastructure.Crud.Tests.Fakes;
 
 namespace Turner.Infrastructure.Crud.Tests.ContextTests
 {
-    public class InMemoryDataAgent : IDataAgent
+    public class InMemoryDataAgent
+        : ICreateDataAgent, 
+          IUpdateDataAgent, 
+          IDeleteDataAgent, 
+          IBulkCreateDataAgent, 
+          IBulkUpdateDataAgent, 
+          IBulkDeleteDataAgent
     {
-        public Task<TEntity> CreateAsync<TEntity>(EntitySet<TEntity> entitySet,
+        public Task<TEntity> CreateAsync<TEntity>(DataContext<TEntity> context,
             TEntity entity,
             CancellationToken token = default(CancellationToken))
             where TEntity : class
         {
-            var set = entitySet as InMemorySet<TEntity>;
+            var set = context.EntitySet as InMemorySet<TEntity>;
 
             if (entity is IEntity entityWithId)
                 entityWithId.Id = set.Id++;
@@ -24,30 +30,30 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
             return Task.FromResult(entity);
         }
 
-        public Task<TEntity> UpdateAsync<TEntity>(EntitySet<TEntity> entitySet,
+        public Task<TEntity> UpdateAsync<TEntity>(DataContext<TEntity> context,
             TEntity entity,
             CancellationToken token = default(CancellationToken))
             where TEntity : class
             => Task.FromResult(entity);
 
-        public Task<TEntity> DeleteAsync<TEntity>(EntitySet<TEntity> entitySet,
+        public Task<TEntity> DeleteAsync<TEntity>(DataContext<TEntity> context,
             TEntity entity,
             CancellationToken token = default(CancellationToken))
             where TEntity : class
         {
-            var set = entitySet as InMemorySet<TEntity>;
+            var set = context.EntitySet as InMemorySet<TEntity>;
 
             set.Items.Remove(entity);
 
             return Task.FromResult(entity);
         }
 
-        public Task<TEntity[]> CreateAsync<TEntity>(EntitySet<TEntity> entitySet,
+        public Task<TEntity[]> CreateAsync<TEntity>(DataContext<TEntity> context,
             IEnumerable<TEntity> entities,
             CancellationToken token = default(CancellationToken))
             where TEntity : class
         {
-            var set = entitySet as InMemorySet<TEntity>;
+            var set = context.EntitySet as InMemorySet<TEntity>;
             var result = entities.ToArray();
 
             foreach (var entity in result)
@@ -61,18 +67,18 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
             return Task.FromResult(result);
         }
 
-        public Task<TEntity[]> UpdateAsync<TEntity>(EntitySet<TEntity> entitySet,
+        public Task<TEntity[]> UpdateAsync<TEntity>(DataContext<TEntity> context,
             IEnumerable<TEntity> entities,
             CancellationToken token = default(CancellationToken))
             where TEntity : class
             => Task.FromResult(entities.ToArray());
 
-        public Task<TEntity[]> DeleteAsync<TEntity>(EntitySet<TEntity> entitySet,
+        public Task<TEntity[]> DeleteAsync<TEntity>(DataContext<TEntity> context,
             IEnumerable<TEntity> entities,
             CancellationToken token = default(CancellationToken))
             where TEntity : class
         {
-            var set = entitySet as InMemorySet<TEntity>;
+            var set = context.EntitySet as InMemorySet<TEntity>;
             var result = entities.ToArray();
 
             foreach (var entity in result)

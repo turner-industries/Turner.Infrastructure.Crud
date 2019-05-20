@@ -13,7 +13,7 @@ namespace Turner.Infrastructure.Crud.Context
         where TEntity : class
     {
         private readonly EntityQueryable<TEntity> _entityQueryable;
-        private readonly IDataAgent _dataAgent;
+        private readonly IDataAgentFactory _dataAgentFactory;
 
         IEnumerator<TEntity> IEnumerable<TEntity>.GetEnumerator() => _entityQueryable.GetEnumerator();
 
@@ -27,34 +27,46 @@ namespace Turner.Infrastructure.Crud.Context
 
         IQueryProvider IQueryable.Provider => _entityQueryable.Provider;
         
-        public EntitySet(EntityQueryable<TEntity> entityQueryable, IDataAgent dataAgent)
+        public EntitySet(EntityQueryable<TEntity> entityQueryable, IDataAgentFactory dataAgentFactory)
         {
             _entityQueryable = entityQueryable;
-            _dataAgent = dataAgent ?? throw new ArgumentNullException(nameof(dataAgent));
+            _dataAgentFactory = dataAgentFactory ?? throw new ArgumentNullException(nameof(dataAgentFactory));
         }
 
-        public Task<TEntity> CreateAsync(TEntity entity, 
+        public Task<TEntity> CreateAsync(
+            DataContext<TEntity> context, 
+            TEntity entity,
             CancellationToken token = default(CancellationToken))
-            => _dataAgent.CreateAsync(this, entity, token);
+            => _dataAgentFactory.GetCreateDataAgent().CreateAsync(context.WithEntitySet(this), entity, token);
+        
+        public Task<TEntity> UpdateAsync(
+            DataContext<TEntity> context,
+            TEntity entity, 
+            CancellationToken token = default(CancellationToken))
+            => _dataAgentFactory.GetUpdateDataAgent().UpdateAsync(context.WithEntitySet(this), entity, token);
 
-        public Task<TEntity> UpdateAsync(TEntity entity, 
+        public Task<TEntity> DeleteAsync(
+            DataContext<TEntity> context, 
+            TEntity entity, 
             CancellationToken token = default(CancellationToken))
-            => _dataAgent.UpdateAsync(this, entity, token);
+            => _dataAgentFactory.GetDeleteDataAgent().DeleteAsync(context.WithEntitySet(this), entity, token);
 
-        public Task<TEntity> DeleteAsync(TEntity entity, 
+        public Task<TEntity[]> CreateAsync(
+            DataContext<TEntity> context, 
+            IEnumerable<TEntity> entities, 
             CancellationToken token = default(CancellationToken))
-            => _dataAgent.DeleteAsync(this, entity, token);
+            => _dataAgentFactory.GetBulkCreateDataAgent().CreateAsync(context.WithEntitySet(this), entities, token);
 
-        public Task<TEntity[]> CreateAsync(IEnumerable<TEntity> entities, 
+        public Task<TEntity[]> UpdateAsync(
+            DataContext<TEntity> context, 
+            IEnumerable<TEntity> entities, 
             CancellationToken token = default(CancellationToken))
-            => _dataAgent.CreateAsync(this, entities, token);
+            => _dataAgentFactory.GetBulkUpdateDataAgent().UpdateAsync(context.WithEntitySet(this), entities, token);
 
-        public Task<TEntity[]> UpdateAsync(IEnumerable<TEntity> entities, 
+        public Task<TEntity[]> DeleteAsync(
+            DataContext<TEntity> context, 
+            IEnumerable<TEntity> entities, 
             CancellationToken token = default(CancellationToken))
-            => _dataAgent.UpdateAsync(this, entities, token);
-
-        public Task<TEntity[]> DeleteAsync(IEnumerable<TEntity> entities, 
-            CancellationToken token = default(CancellationToken))
-            => _dataAgent.DeleteAsync(this, entities, token);
+            => _dataAgentFactory.GetBulkDeleteDataAgent().DeleteAsync(context.WithEntitySet(this), entities, token);
     }
 }

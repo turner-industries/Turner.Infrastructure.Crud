@@ -8,12 +8,12 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkCore
     public class EntityFrameworkEntitySet<TEntity> : EntitySet<TEntity>
         where TEntity : class
     {
-        public DbSet<TEntity> Set { get; }
+        public DbContext Context { get; }
 
-        public EntityFrameworkEntitySet(DbSet<TEntity> set, IDataAgent dataAgent)
-            : base(CreateEntityQueryable(set), dataAgent)
+        public EntityFrameworkEntitySet(DbContext context, IDataAgentFactory dataAgentFactory)
+            : base(CreateEntityQueryable(context.Set<TEntity>()), dataAgentFactory)
         {
-            Set = set;
+            Context = context;
         }
 
         private static EntityQueryable<TEntity> CreateEntityQueryable(DbSet<TEntity> set)

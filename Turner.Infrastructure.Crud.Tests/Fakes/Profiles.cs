@@ -1,5 +1,8 @@
-﻿using Turner.Infrastructure.Crud.Configuration;
+﻿using System;
+using Turner.Infrastructure.Crud.Configuration;
+using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Requests;
+using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Tests.Fakes
 {
@@ -31,6 +34,23 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
     public class SortTestRequest : GetAllRequest<SortEntity, UserGetDto>
     {
         public SortKeys SortKey { get; set; }
+    }
+
+    public class DebugErrorHandler : CrudErrorHandler
+    {
+        protected override Response HandleError(CreateEntityFailedError error) => throw new Exception(error.Reason, error.Exception);
+
+        protected override Response HandleError(CreateResultFailedError error) => throw new Exception(error.Reason, error.Exception);
+
+        protected override Response HandleError(CrudError error) => throw new Exception(error.Exception?.Message, error.Exception);
+        
+        protected override Response HandleError(HookFailedError error) => throw new Exception(error.Reason, error.Exception);
+
+        protected override Response HandleError(RequestCanceledError error) => throw new Exception(error.Exception?.Message, error.Exception);
+
+        protected override Response HandleError(RequestFailedError error) => throw new Exception(error.Reason, error.Exception);
+
+        protected override Response HandleError(UpdateEntityFailedError error) => throw new Exception(error.Reason, error.Exception);
     }
 
     public class CrudRequestProfile : CrudRequestProfile<ICrudRequest>
@@ -69,6 +89,18 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         {
             ForEntity<IEntity>()
                 .SelectWith(builder => builder.Single(r => r.Key, e => e.Id));
+        }
+    }
+
+    public class DefaultEntityBulkProfile
+        : CrudRequestProfile<ICrudRequest>
+    {
+        public DefaultEntityBulkProfile()
+        {
+            ForEntity<IEntity>()
+                .BulkCreateWith(config => config.WithPrimaryKey(x => x.Id))
+                .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Id).IgnoreColumns(x => x.Id))
+                .BulkDeleteWith(config => config.WithPrimaryKey(x => x.Id));
         }
     }
 }

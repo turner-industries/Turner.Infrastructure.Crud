@@ -56,9 +56,7 @@ namespace Turner.Infrastructure.Crud.Requests
             ct.ThrowIfCancellationRequested();
 
             var mergedEntities = updatedEntities.Concat(createdEntities).ToArray();
-
-            await request.RunEntityHooks<TEntity>(RequestConfig, mergedEntities, ct).Configure();
-
+            
             await Context.ApplyChangesAsync(ct).Configure();
             ct.ThrowIfCancellationRequested();
 
@@ -71,7 +69,9 @@ namespace Turner.Infrastructure.Crud.Requests
         {
             var entities = await request.CreateEntities<TEntity>(RequestConfig, items, ct).Configure();
 
-            entities = await Context.Set<TEntity>().CreateAsync(entities, ct).Configure();
+            await request.RunEntityHooks<TEntity>(RequestConfig, entities, ct).Configure();
+
+            entities = await Context.Set<TEntity>().CreateAsync(DataContext, entities, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
             return entities;
@@ -83,7 +83,9 @@ namespace Turner.Infrastructure.Crud.Requests
         {
             var entities = await request.UpdateEntities(RequestConfig, items, ct).Configure();
 
-            entities = await Context.Set<TEntity>().UpdateAsync(entities, ct).Configure();
+            await request.RunEntityHooks<TEntity>(RequestConfig, entities, ct).Configure();
+
+            entities = await Context.Set<TEntity>().UpdateAsync(DataContext, entities, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
             return entities;

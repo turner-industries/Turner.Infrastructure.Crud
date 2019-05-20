@@ -1,27 +1,32 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.ValueGeneration;
 
 namespace Turner.Infrastructure.Crud.Tests.Fakes
 {
     public class FakeDbContext : DbContext
     {
-        public DbSet<User> Users { get; set; }
-
-        public DbSet<Site> Sites { get; set; }
-
-        public DbSet<NonEntity> NonEntities { get; set; }
-
-        public DbSet<HookEntity> Hooks { get; set; }
-
-        public DbSet<UserClaim> UserClaims { get; set; }
-
         public FakeDbContext(DbContextOptions options)
             : base(options)
         {
+        }
+        
+        public async Task Clear()
+        {
+            Set<User>().RemoveRange(await Set<User>().ToArrayAsync());
+            Set<UserClaim>().RemoveRange(await Set<UserClaim>().ToArrayAsync());
+            Set<Site>().RemoveRange(await Set<Site>().ToArrayAsync());
+            Set<NonEntity>().RemoveRange(await Set<NonEntity>().ToArrayAsync());
+            Set<HookEntity>().RemoveRange(await Set<HookEntity>().ToArrayAsync());
+
+            await SaveChangesAsync();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -34,29 +39,43 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<User>();
-            modelBuilder.Entity<Site>();
-            modelBuilder.Entity<NonEntity>();
-            modelBuilder.Entity<HookEntity>();
-            modelBuilder.Entity<UserClaim>();
+            modelBuilder.Entity<User>().Property(x => x.Id).HasValueGenerator<ResettableValueGenerator>();
+            modelBuilder.Entity<UserClaim>().Property(x => x.Id).HasValueGenerator<ResettableValueGenerator>();
+            modelBuilder.Entity<Site>().Property(x => x.Id).HasValueGenerator<ResettableValueGenerator>();
+            modelBuilder.Entity<NonEntity>().Property(x => x.Id).HasValueGenerator<ResettableValueGenerator>();
+            modelBuilder.Entity<HookEntity>().Property(x => x.Id).HasValueGenerator<ResettableValueGenerator>();
         }
+    }
 
-        public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default(CancellationToken))
+    public static class DbContextExtensions
+    {
+        public static void ResetValueGenerators(this DbContext context)
         {
-            var deletedEntries = ChangeTracker.Entries()
-                .Where(x => x.State == EntityState.Deleted)
-                .ToList();
+            var cache = context.GetService<IValueGeneratorCache>();
 
-            foreach (var entry in deletedEntries)
+            foreach (var keyProperty in context.Model.GetEntityTypes()
+                .Select(e => e.FindPrimaryKey().Properties[0])
+                .Where(p => p.ClrType == typeof(int) && p.ValueGenerated == ValueGenerated.OnAdd))
             {
-                if (entry.Entity is IEntity entity)
-                {
-                    entity.IsDeleted = true;
-                    entry.State = EntityState.Modified;
-                }
-            }
+                var generator = (ResettableValueGenerator)cache.GetOrAdd(
+                    keyProperty,
+                    keyProperty.DeclaringEntityType,
+                    (p, e) => new ResettableValueGenerator());
 
-            return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+                generator.Reset();
+            }
         }
+    }
+
+    public class ResettableValueGenerator : ValueGenerator<int>
+    {
+        private int _current;
+
+        public override bool GeneratesTemporaryValues => false;
+
+        public override int Next(EntityEntry entry)
+            => Interlocked.Increment(ref _current);
+
+        public void Reset() => _current = 0;
     }
 }

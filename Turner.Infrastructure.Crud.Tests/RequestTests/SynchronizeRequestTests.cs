@@ -1,7 +1,8 @@
-﻿using NUnit.Framework;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
+using NUnit.Framework;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Tests.Fakes;
@@ -28,7 +29,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Context.AddRange(_users.Cast<object>());
             Context.SaveChanges();
         }
-
+        
         [Test]
         public async Task Handle_SynchronizeUsersByIdRequest_SynchronizesAllProvidedUsers()
         {
@@ -71,11 +72,11 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             var request = new SynchronizeByIdRequest<User, UserGetDto, UserGetDto>(new List<UserGetDto>
             {
                 new UserGetDto { Id = _users[0].Id, Name = string.Concat(_users[0].Name, "_New") },
-                    new UserGetDto { Id = _users[1].Id, Name = string.Concat(_users[1].Name, "_New") },
-                    new UserGetDto { Id = 9999, Name = "NewUser1" },
-                    new UserGetDto { Id = 0, Name = "NewUser2" },
-                    new UserGetDto { Name = "NewUser3" },
-                    null,
+                new UserGetDto { Id = _users[1].Id, Name = string.Concat(_users[1].Name, "_New") },
+                new UserGetDto { Id = 9999, Name = "NewUser1" },
+                new UserGetDto { Id = 0, Name = "NewUser2" },
+                new UserGetDto { Name = "NewUser3" },
+                null,
             });
 
             var response = await Mediator.HandleAsync(request);
@@ -103,16 +104,16 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         {
             var user1Claims = new[]
             {
-                new UserClaim { UserId = _users[0].Id, Claim = "TestClaim1" },
-                new UserClaim { UserId = _users[0].Id, Claim = "TestClaim2" }
+                new UserClaim { UserId = _users[0].Id, Claim = "TestClaim1", Value = "Before", IsDeleted = false },
+                new UserClaim { UserId = _users[0].Id, Claim = "TestClaim2", Value = "Before", IsDeleted = false }
             };
 
             Context.AddRange(user1Claims.Cast<object>());
 
             var user2Claims = new[]
             {
-                new UserClaim { UserId = _users[1].Id, Claim = "TestClaim3" },
-                new UserClaim { UserId = _users[1].Id, Claim = "TestClaim4" }
+                new UserClaim { UserId = _users[1].Id, Claim = "TestClaim1", Value = "Before", IsDeleted = false },
+                new UserClaim { UserId = _users[1].Id, Claim = "TestClaim2", Value = "Before", IsDeleted = false }
             };
 
             Context.AddRange(user2Claims.Cast<object>());
@@ -121,10 +122,10 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             var request = new SynchronizeUserClaimsRequest
             {
                 UserId = _users[1].Id,
-                Claims = new List<string>
+                Claims = new List<UserClaimDto>
                 {
-                    "TestClaim3",
-                    "TestClaim5"
+                    new UserClaimDto { UserId = 99, Claim = "TestClaim2", Value = "After" },
+                    new UserClaimDto { UserId = 99, Claim = "TestClaim3", Value = "After" }
                 }
             };
 
@@ -133,14 +134,51 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             Assert.IsFalse(response.HasErrors);
             Assert.IsNotNull(response.Data);
             Assert.IsNotNull(response.Data.Items);
+
             Assert.AreEqual(2, response.Data.Items.Count);
-            Assert.AreEqual("TestClaim3", response.Data.Items[0]);
-            Assert.AreEqual("TestClaim5", response.Data.Items[1]);
-            Assert.AreEqual(1, Context.Set<UserClaim>().Count(x => x.IsDeleted));
-            Assert.AreEqual(4, Context.Set<UserClaim>().Count(x => !x.IsDeleted));
-            Assert.AreEqual(2, Context.Set<UserClaim>().Count(x => x.UserId == _users[0].Id && !x.IsDeleted));
-            Assert.AreEqual(1, Context.Set<UserClaim>().Count(x => x.UserId == _users[1].Id && x.IsDeleted));
-            Assert.AreEqual(2, Context.Set<UserClaim>().Count(x => x.UserId == _users[1].Id && !x.IsDeleted));
+
+            Assert.AreEqual(4, response.Data.Items[0].Id);
+            Assert.AreEqual("TestClaim2", response.Data.Items[0].Claim);
+            Assert.AreEqual("After", response.Data.Items[0].Value);
+            Assert.AreEqual(99, response.Data.Items[0].UserId);
+
+            Assert.AreEqual(5, response.Data.Items[1].Id);
+            Assert.AreEqual("TestClaim3", response.Data.Items[1].Claim);
+            Assert.AreEqual("After", response.Data.Items[1].Value);
+            Assert.AreEqual(_users[1].Id, response.Data.Items[1].UserId);
+
+            var claims = Context.Set<UserClaim>().OrderBy(x => x.Id).ToArray();
+            Assert.AreEqual(5, claims.Length);
+
+            Assert.AreEqual(1, claims[0].Id);
+            Assert.AreEqual("TestClaim1", claims[0].Claim);
+            Assert.AreEqual("Before", claims[0].Value);
+            Assert.AreEqual(_users[0].Id, claims[0].UserId);
+            Assert.IsFalse(claims[0].IsDeleted);
+
+            Assert.AreEqual(2, claims[1].Id);
+            Assert.AreEqual("TestClaim2", claims[1].Claim);
+            Assert.AreEqual("Before", claims[1].Value);
+            Assert.AreEqual(_users[0].Id, claims[1].UserId);
+            Assert.IsFalse(claims[1].IsDeleted);
+
+            Assert.AreEqual(3, claims[2].Id);
+            Assert.AreEqual("TestClaim1", claims[2].Claim);
+            Assert.AreEqual("Before", claims[2].Value);
+            Assert.AreEqual(_users[1].Id, claims[2].UserId);
+            Assert.IsTrue(claims[2].IsDeleted);
+
+            Assert.AreEqual(4, claims[3].Id);
+            Assert.AreEqual("TestClaim2", claims[3].Claim);
+            Assert.AreEqual("After", claims[3].Value);
+            Assert.AreEqual(_users[1].Id, claims[3].UserId);
+            Assert.IsFalse(claims[3].IsDeleted);
+
+            Assert.AreEqual(5, claims[4].Id);
+            Assert.AreEqual("TestClaim3", claims[4].Claim);
+            Assert.AreEqual("After", claims[4].Value);
+            Assert.AreEqual(_users[1].Id, claims[4].UserId);
+            Assert.IsFalse(claims[4].IsDeleted);
         }
     }
     
@@ -160,11 +198,11 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class SynchronizeUserClaimsRequest
-        : ISynchronizeRequest<UserClaim, string>
+        : ISynchronizeRequest<UserClaim, UserClaimGetDto>
     {
         public int UserId { get; set; }
 
-        public List<string> Claims { get; set; }
+        public List<UserClaimDto> Claims { get; set; }
     }
 
     public class NotDeletedFilter : IFilter<ICrudRequest, IEntity>
@@ -174,23 +212,23 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
             return queryable.Where(x => !x.IsDeleted);
         }
     }
-
+    
     public class SynchronizeUserClaimsProfile
-        : CrudBulkRequestProfile<SynchronizeUserClaimsRequest, string>
+        : CrudBulkRequestProfile<SynchronizeUserClaimsRequest, UserClaimDto>
     {
         public SynchronizeUserClaimsProfile() : base(request => request.Claims)
         {
             ForEntity<UserClaim>()
-                .UseKeys(x => x, x => x.Claim)
+                .UseKeys("Claim")
                 .FilterWith(new NotDeletedFilter())
                 .FilterUsing((request, claim) => request.UserId == claim.UserId)
-                .CreateResultWith(x => x.Claim)
-                .UpdateEntityWith((claim, entity) => entity)
-                .CreateEntityWith((request, claim) => new UserClaim
+                .CreateEntityWith((request, claim) =>
                 {
-                    UserId = request.UserId,
-                    Claim = claim
-                });
+                    var result = Mapper.Map<UserClaim>(claim);
+                    result.UserId = request.UserId;
+                    return result;
+                })
+                .BulkUpdateWith(config => config.IgnoreColumns(x => x.UserId));
         }
     }
 }

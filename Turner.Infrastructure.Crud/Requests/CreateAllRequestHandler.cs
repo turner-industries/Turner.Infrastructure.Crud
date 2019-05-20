@@ -29,10 +29,10 @@ namespace Turner.Infrastructure.Crud.Requests
             items = await request.RunItemHooks<TEntity>(RequestConfig, items, ct).Configure();
             var entities = await request.CreateEntities<TEntity>(RequestConfig, items, ct).Configure();
 
-            entities = await Context.Set<TEntity>().CreateAsync(entities, ct).Configure();
-            ct.ThrowIfCancellationRequested();
-            
             await request.RunEntityHooks<TEntity>(RequestConfig, entities, ct).Configure();
+            
+            entities = await Context.Set<TEntity>().CreateAsync(DataContext, entities, ct).Configure();
+            ct.ThrowIfCancellationRequested();
             
             await Context.ApplyChangesAsync(ct).Configure();
             ct.ThrowIfCancellationRequested();
