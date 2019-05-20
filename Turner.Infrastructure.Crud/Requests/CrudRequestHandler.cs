@@ -13,11 +13,13 @@ namespace Turner.Infrastructure.Crud.Requests
     {
         protected readonly IEntityContext Context;
         protected readonly ICrudRequestConfig RequestConfig;
+        protected readonly DataContext<TEntity> DataContext;
         
         protected CrudRequestHandler(IEntityContext context, CrudConfigManager profileManager)
         {
             Context = context;
             RequestConfig = profileManager.GetRequestConfigFor<TRequest>();
+            DataContext = new DataContext<TEntity>(RequestConfig);
 
             var errorHandler = RequestConfig.ErrorConfig.GetErrorHandlerFor<TEntity>();
             ErrorDispatcher = new CrudErrorDispatcher(errorHandler);

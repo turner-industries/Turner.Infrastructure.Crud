@@ -11,7 +11,14 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
     {
         private static readonly Dictionary<Type, Tuple<IInMemorySet, IList>> _sets
             = new Dictionary<Type, Tuple<IInMemorySet, IList>>();
-        
+
+        private readonly IDataAgentFactory _dataAgentFactory;
+
+        public InMemoryContext(IDataAgentFactory dataAgentFactory)
+        {
+            _dataAgentFactory = dataAgentFactory;
+        }
+
         internal static void Clear()
         {
             _sets.Clear();
@@ -28,7 +35,7 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
                 var dataList = new List<TEntity>();
 
                 _sets[typeof(TEntity)] = Tuple.Create<IInMemorySet, IList>(
-                    new InMemorySet<TEntity>(dataList, new InMemoryDataAgent()),
+                    new InMemorySet<TEntity>(dataList, _dataAgentFactory),
                     dataList);
             }
 

@@ -185,7 +185,10 @@ namespace Turner.Infrastructure.Crud.Configuration
     {
         public CrudRequestProfile()
         {
-            if (typeof(IBulkRequest).IsAssignableFrom(typeof(TRequest)))
+            if (typeof(IBulkRequest).IsAssignableFrom(typeof(TRequest)) &&
+                !typeof(TRequest).IsInterface &&
+                !typeof(TRequest).IsAbstract &&
+                !typeof(TRequest).IsGenericTypeDefinition)
             {
                 var message =
                     $"Unable to build configuration for request '{typeof(TRequest)}'." +

@@ -7,23 +7,24 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkCore
 {
     public class EntityFrameworkContext : IEntityContext
     {
-        private readonly DbContext _context;
-        private readonly IDataAgent _dataAgent;
+        protected DbContext DbContext { get; }
+
+        protected IDataAgentFactory DataAgentFactory { get; }
 
         public EntityFrameworkContext(DbContext context, 
-            IDataAgent dataAgent)
+            IDataAgentFactory dataAgentFactory)
         {
-            _context = context;
-            _dataAgent = dataAgent;
+            DbContext = context;
+            DataAgentFactory = dataAgentFactory;
         }
 
-        public virtual EntitySet<TEntity> Set<TEntity>()
+        public virtual EntitySet<TEntity> Set<TEntity>() 
             where TEntity : class
-            => new EntityFrameworkEntitySet<TEntity>(_context.Set<TEntity>(), _dataAgent);
+            => new EntityFrameworkEntitySet<TEntity>(DbContext, DataAgentFactory);
 
         public virtual async Task<int> ApplyChangesAsync(CancellationToken token = default(CancellationToken))
         {
-            var result = await _context.SaveChangesAsync(token).ConfigureAwait(false);
+            var result = await DbContext.SaveChangesAsync(token).ConfigureAwait(false);
             token.ThrowIfCancellationRequested();
 
             return result;

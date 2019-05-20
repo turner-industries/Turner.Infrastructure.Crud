@@ -10,6 +10,8 @@ namespace Turner.Infrastructure.Crud.Configuration
 {
     public interface ICrudRequestConfig
     {
+        Type RequestType { get; }
+
         ErrorConfig ErrorConfig { get; }
 
         RequestOptions GetOptionsFor<TEntity>()
@@ -110,6 +112,8 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         private readonly Dictionary<Type, FilterConfig> _entityFilters
             = new Dictionary<Type, FilterConfig>();
+
+        public Type RequestType => typeof(TRequest);
 
         public ErrorConfig ErrorConfig { get; private set; } = new ErrorConfig();
 

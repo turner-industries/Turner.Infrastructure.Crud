@@ -1,7 +1,9 @@
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using SimpleInjector;
 using SimpleInjector.Lifestyles;
+using Turner.Infrastructure.Crud.Tests.Fakes;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Tests
@@ -27,8 +29,13 @@ namespace Turner.Infrastructure.Crud.Tests
         }
 
         [TearDown]
-        public void BaseTearDown()
+        public async Task BaseTearDown()
         {
+            if (Context is FakeDbContext dbContext)
+                await dbContext.Clear();
+
+            Context.ResetValueGenerators();
+
             _scope.Dispose();
         }
     }

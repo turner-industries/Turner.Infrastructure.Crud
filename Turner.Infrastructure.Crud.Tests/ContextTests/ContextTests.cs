@@ -47,7 +47,17 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
                 .Initialize();
 
             container.Options.AllowOverridingRegistrations = true;
+
             container.Register<IEntityContext, InMemoryContext>();
+
+            var dataAgent = new InMemoryDataAgent();
+            container.RegisterInstance<ICreateDataAgent>(dataAgent);
+            container.RegisterInstance<IUpdateDataAgent>(dataAgent);
+            container.RegisterInstance<IDeleteDataAgent>(dataAgent);
+            container.RegisterInstance<IBulkCreateDataAgent>(dataAgent);
+            container.RegisterInstance<IBulkUpdateDataAgent>(dataAgent);
+            container.RegisterInstance<IBulkDeleteDataAgent>(dataAgent);
+
             container.Options.AllowOverridingRegistrations = false;
 
             _scope = AsyncScopedLifestyle.BeginScope(container);
@@ -88,12 +98,13 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
         [Test]
         public async Task GetEnumerator_FromCustomContextQuery_AllowsIteration()
         {
-            await Context.Set<User>().CreateAsync(new[]
-            {
-                new User { Name = "User1" },
-                new User { Name = "User2" },
-                new User { Name = "User3" },
-            });
+            await Context.Set<User>().CreateAsync(new DataContext<User>(null), 
+                new[]
+                {
+                    new User { Name = "User1" },
+                    new User { Name = "User2" },
+                    new User { Name = "User3" },
+                });
 
             var enumerator = Context.Set<User>().Where(x => x.Name.StartsWith("User")).GetEnumerator();
             var results = new List<string>();
@@ -110,12 +121,13 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
         [Test]
         public async Task GetBoxedEnumerator_FromCustomContextQuery_AllowsIteration()
         {
-            await Context.Set<User>().CreateAsync(new[]
-            {
-                new User { Name = "User1" },
-                new User { Name = "User2" },
-                new User { Name = "User3" },
-            });
+            await Context.Set<User>().CreateAsync(new DataContext<User>(null),
+                new[]
+                {
+                    new User { Name = "User1" },
+                    new User { Name = "User2" },
+                    new User { Name = "User3" },
+                });
 
             IEnumerator enumerator = ((IQueryable)Context.Set<User>().Where(x => x.Name.StartsWith("User"))).GetEnumerator();
             var results = new List<string>();
@@ -155,12 +167,13 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
         {
             Assert.IsNull(await Context.Set<User>().FirstOrDefaultAsync());
 
-            await Context.Set<User>().CreateAsync(new[]
-            {
-                new User { Name = "User1" },
-                new User { Name = "User2" },
-                new User { Name = "User3" },
-            });
+            await Context.Set<User>().CreateAsync(new DataContext<User>(null),
+                new[]
+                {
+                    new User { Name = "User1" },
+                    new User { Name = "User2" },
+                    new User { Name = "User3" },
+                });
 
             var name = (await Context.Set<User>().FirstOrDefaultAsync())?.Name;
             Assert.AreEqual("User1", name);
@@ -176,16 +189,18 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
         {
             Assert.IsNull(await Context.Set<User>().SingleOrDefaultAsync());
 
-            await Context.Set<User>().CreateAsync(new User { Name = "User1" });
+            await Context.Set<User>().CreateAsync(new DataContext<User>(null), new User { Name = "User1" });
 
             var name = (await Context.Set<User>().SingleOrDefaultAsync())?.Name;
             Assert.AreEqual("User1", name);
 
-            await Context.Set<User>().CreateAsync(new[]
-            {
-                new User { Name = "User2" },
-                new User { Name = "User3" },
-            });
+            await Context.Set<User>().CreateAsync(
+                new DataContext<User>(null), 
+                new[]
+                {
+                    new User { Name = "User2" },
+                    new User { Name = "User3" },
+                });
 
             name = (await Context.Set<User>().SingleOrDefaultAsync(x => x.Name == "User2"))?.Name;
             Assert.AreEqual("User2", name);
@@ -202,16 +217,17 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
         {
             Assert.IsNull(await Context.Set<User>().ProjectSingleOrDefaultAsync<User, PUser>());
 
-            await Context.Set<User>().CreateAsync(new User { Name = "User1" });
+            await Context.Set<User>().CreateAsync(new DataContext<User>(null), new User { Name = "User1" });
 
             var name = (await Context.Set<User>().ProjectSingleOrDefaultAsync<User, PUser>())?.Name;
             Assert.AreEqual("User1", name);
 
-            await Context.Set<User>().CreateAsync(new[]
-            {
-                new User { Name = "User2" },
-                new User { Name = "User3" },
-            });
+            await Context.Set<User>().CreateAsync(new DataContext<User>(null), 
+                new[]
+                {
+                    new User { Name = "User2" },
+                    new User { Name = "User3" },
+                });
 
             name = (await Context.Set<User>().ProjectSingleOrDefaultAsync<User, PUser>(x => x.Name == "User2"))?.Name;
             Assert.AreEqual("User2", name);
@@ -228,12 +244,14 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
         {
             Assert.AreEqual(0, await Context.Set<User>().CountAsync());
 
-            await Context.Set<User>().CreateAsync(new[]
-            {
-                new User { Name = "User1" },
-                new User { Name = "User2" },
-                new User { Name = "AUser3" },
-            });
+            await Context.Set<User>().CreateAsync(
+                new DataContext<User>(null),
+                new[]
+                {
+                    new User { Name = "User1" },
+                    new User { Name = "User2" },
+                    new User { Name = "AUser3" },
+                });
 
             var count = await Context.Set<User>().CountAsync();
             Assert.AreEqual(3, count);
@@ -248,12 +266,14 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
         [Test]
         public async Task ToArrayAsync_OnCustomContext_Succeeds()
         {
-            await Context.Set<User>().CreateAsync(new[]
-            {
-                new User { Name = "User1" },
-                new User { Name = "User2" },
-                new User { Name = "User3" },
-            });
+            await Context.Set<User>().CreateAsync(
+                new DataContext<User>(null), 
+                new[]
+                {
+                    new User { Name = "User1" },
+                    new User { Name = "User2" },
+                    new User { Name = "User3" },
+                });
 
             var results = await Context.Set<User>().ToArrayAsync();
 
@@ -266,12 +286,14 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
         [Test]
         public async Task ProjectToArrayAsync_OnCustomContext_Succeeds()
         {
-            await Context.Set<User>().CreateAsync(new[]
-            {
-                new User { Name = "User1" },
-                new User { Name = "User2" },
-                new User { Name = "User3" },
-            });
+            await Context.Set<User>().CreateAsync(
+                new DataContext<User>(null), 
+                new[]
+                {
+                    new User { Name = "User1" },
+                    new User { Name = "User2" },
+                    new User { Name = "User3" },
+                });
 
             var results = await Context.Set<User>().ProjectToArrayAsync<User, PUser>();
 
@@ -287,12 +309,14 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
         {
             Assert.IsNull(await Context.Set<User>().FirstOrDefaultAsync());
 
-            await Context.Set<User>().CreateAsync(new[]
-            {
-                new User { Name = "User1" },
-                new User { Name = "User2" },
-                new User { Name = "User3" },
-            });
+            await Context.Set<User>().CreateAsync(
+                new DataContext<User>(null), 
+                new[]
+                {
+                    new User { Name = "User1" },
+                    new User { Name = "User2" },
+                    new User { Name = "User3" },
+                });
 
             var results = await Context.Set<User>().ToListAsync();
 
@@ -305,12 +329,14 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
         [Test]
         public async Task ProjectToListAsync_OnCustomContext_Succeeds()
         {
-            await Context.Set<User>().CreateAsync(new[]
-            {
-                new User { Name = "User1" },
-                new User { Name = "User2" },
-                new User { Name = "User3" },
-            });
+            await Context.Set<User>().CreateAsync(
+                new DataContext<User>(null), 
+                new[]
+                {
+                    new User { Name = "User1" },
+                    new User { Name = "User2" },
+                    new User { Name = "User3" },
+                });
 
             var results = await Context.Set<User>().ProjectToListAsync<User, PUser>();
 

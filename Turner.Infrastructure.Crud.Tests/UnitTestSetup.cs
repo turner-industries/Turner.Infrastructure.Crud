@@ -7,9 +7,11 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using NUnit.Framework;
 using SimpleInjector;
 using SimpleInjector.Lifestyles;
-using Turner.Infrastructure.Crud.EntityFrameworkCore;
+using Turner.Infrastructure.Crud.Context;
+using Turner.Infrastructure.Crud.EntityFrameworkExtensions;
 using Turner.Infrastructure.Crud.FluentValidation;
 using Turner.Infrastructure.Crud.Tests.Fakes;
+using Turner.Infrastructure.Crud.Tests.Utilities;
 using Turner.Infrastructure.Mediator.Configuration;
 
 namespace Turner.Infrastructure.Crud.Tests
@@ -23,23 +25,35 @@ namespace Turner.Infrastructure.Crud.Tests
         public static void UnitTestOneTimeSetUp()
         {
             var assemblies = new[] { typeof(UnitTestSetUp).Assembly };
-            var container = new Container();
+            Container = new Container();
 
-            container.Options.DefaultScopedLifestyle = new AsyncScopedLifestyle();
+            Container.Options.DefaultScopedLifestyle = new AsyncScopedLifestyle();
 
-            ConfigureDatabase(container);
-            ConfigureAutoMapper(container, assemblies);
-            ConfigureFluentValidation(container, assemblies);
+            ConfigureDatabase(Container);
+            ConfigureAutoMapper(Container, assemblies);
+            ConfigureFluentValidation(Container, assemblies);
 
-            container.ConfigureMediator(assemblies);
+            Container.ConfigureMediator(assemblies);
+
+            // NOTE: License removed from repository
+
+            //if (!LicenseManager.ValidateLicense(out var licenseErrorMessage))
+            //{
+            //    throw new Exception(licenseErrorMessage);
+            //}
             
-            Crud.CreateInitializer(container, assemblies)
+            Crud.CreateInitializer(Container, assemblies)
                 .ValidateAllRequests(false)
                 .UseFluentValidation()
-                .UseEntityFramework()
+                .UseEntityFrameworkExtensions(BulkExtensions.Create | BulkExtensions.Update)
                 .Initialize();
-            
-            Container = container;
+
+            Container.Options.AllowOverridingRegistrations = true;
+            Container.Register<IDeleteDataAgent, SoftDeleteDataAgent>(Lifestyle.Singleton);
+            Container.Register<IBulkDeleteDataAgent, SoftDeleteDataAgent>(Lifestyle.Singleton);
+            Container.Options.AllowOverridingRegistrations = false;
+
+            Container.Verify();
         }
 
         public static void ConfigureDatabase(Container container)

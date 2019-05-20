@@ -33,10 +33,10 @@ namespace Turner.Infrastructure.Crud.Requests
 
             ct.ThrowIfCancellationRequested();
 
-            entities = await Context.Set<TEntity>().DeleteAsync(entities, ct).Configure();
-            ct.ThrowIfCancellationRequested();
-
             await request.RunEntityHooks<TEntity>(RequestConfig, entities, ct).Configure();
+
+            entities = await Context.Set<TEntity>().DeleteAsync(DataContext, entities, ct).Configure();
+            ct.ThrowIfCancellationRequested();
 
             await Context.ApplyChangesAsync(ct).Configure();
             ct.ThrowIfCancellationRequested();

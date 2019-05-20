@@ -24,6 +24,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Turner.Infrastructure.Crud.
 		{AEB041AF-8991-4D90-90D1-08F63AAD0594} = {AEB041AF-8991-4D90-90D1-08F63AAD0594}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Turner.Infrastructure.Crud.EntityFrameworkExtensions", "Turner.Infrastructure.Crud.EntityFrameworkExtensions\Turner.Infrastructure.Crud.EntityFrameworkExtensions.csproj", "{591F0F89-1252-420D-B0F6-DB4E410C1A98}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,6 +63,12 @@ Global
 		{45716BDC-E694-4066-A719-F59E32626AE0}.Deploy|Any CPU.Build.0 = Debug|Any CPU
 		{45716BDC-E694-4066-A719-F59E32626AE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{45716BDC-E694-4066-A719-F59E32626AE0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{591F0F89-1252-420D-B0F6-DB4E410C1A98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{591F0F89-1252-420D-B0F6-DB4E410C1A98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{591F0F89-1252-420D-B0F6-DB4E410C1A98}.Deploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{591F0F89-1252-420D-B0F6-DB4E410C1A98}.Deploy|Any CPU.Build.0 = Debug|Any CPU
+		{591F0F89-1252-420D-B0F6-DB4E410C1A98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{591F0F89-1252-420D-B0F6-DB4E410C1A98}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

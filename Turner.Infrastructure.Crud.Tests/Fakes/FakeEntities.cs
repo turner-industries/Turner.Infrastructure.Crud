@@ -50,6 +50,31 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         public int UserId { get; set; }
 
         public string Claim { get; set; }
+
+        public string Value { get; set; }
+    }
+
+    public class UserClaimDto
+    {
+        public int UserId { get; set; }
+
+        public string Claim { get; set; }
+
+        public string Value { get; set; }
+    }
+
+    public class UserClaimGetDto : UserClaimDto
+    {
+        public int Id { get; set; }
+    }
+
+    public class UserClaimProfiles : Profile
+    {
+        public UserClaimProfiles()
+        {
+            CreateMap<UserClaimDto, UserClaim>();
+            CreateMap<UserClaim, UserClaimGetDto>();
+        }
     }
 
     public class Site : Entity

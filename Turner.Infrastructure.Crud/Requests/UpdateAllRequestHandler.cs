@@ -43,11 +43,11 @@ namespace Turner.Infrastructure.Crud.Requests
 
             var updatedEntities = await request.UpdateEntities(RequestConfig, joinedItems, ct).Configure();
 
-            entities = await Context.Set<TEntity>().UpdateAsync(updatedEntities, ct).Configure();
-            ct.ThrowIfCancellationRequested();
-
             await request.RunEntityHooks<TEntity>(RequestConfig, entities, ct).Configure();
             
+            entities = await Context.Set<TEntity>().UpdateAsync(DataContext, updatedEntities, ct).Configure();
+            ct.ThrowIfCancellationRequested();
+
             await Context.ApplyChangesAsync(ct).Configure();
             ct.ThrowIfCancellationRequested();
 
