@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
+// ReSharper disable once CheckNamespace
 namespace Turner.Infrastructure.Crud.EntityFrameworkExtensions
 {
     internal class ParameterMirage

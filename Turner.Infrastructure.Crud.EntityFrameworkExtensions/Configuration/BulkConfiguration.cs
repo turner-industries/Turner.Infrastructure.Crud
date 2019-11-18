@@ -7,11 +7,13 @@ using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Exceptions;
 using Z.BulkOperations;
 
+// ReSharper disable UnusedTypeParameter
+
 namespace Turner.Infrastructure.Crud.EntityFrameworkExtensions.Configuration
 {
     public interface IBulkConfiguration
     {
-        BulkOperation<TOperationEntity> Apply<TOperationEntity>(ICrudRequestConfig config, BulkOperation<TOperationEntity> operation)
+        BulkOperation<TOperationEntity> Apply<TOperationEntity>(IRequestConfig config, BulkOperation<TOperationEntity> operation)
             where TOperationEntity : class;
     }
 
@@ -38,7 +40,7 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkExtensions.Configuration
         protected int? BatchTimeout { get; set; }
         
         public virtual BulkOperation<TOperationEntity> Apply<TOperationEntity>(
-            ICrudRequestConfig config, 
+            IRequestConfig config, 
             BulkOperation<TOperationEntity> operation)
             where TOperationEntity : class
         {
@@ -63,7 +65,7 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkExtensions.Configuration
                     var message = $"No key column has been declared for bulk request '{config.RequestType}' " +
                                   $"and entity '{typeof(TOperationEntity)}'.";
 
-                    throw new BadCrudConfigurationException(message);
+                    throw new BadConfigurationException(message);
                 }
 
                 operation.ColumnMappings.Add(DowncastExpression<TOperationEntity>(KeyColumnMapping), true);
@@ -165,7 +167,7 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkExtensions.Configuration
             return Expression.Lambda<Func<TOperationEntity, object>>(convertExpr, paramExpr);
         }
 
-        protected Expression<Func<TEntity, object>> GetDefaultKeyMapping(ICrudRequestConfig config)
+        protected Expression<Func<TEntity, object>> GetDefaultKeyMapping(IRequestConfig config)
         {
             var entityKey = config.GetKeyFor<TEntity>();
 
@@ -200,10 +202,11 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkExtensions.Configuration
 
             if (KeyColumnMapping != null)
             {
-                var keyExpression = (KeyColumnMapping.Body is UnaryExpression unaryExpression)
+                var keyExpression = KeyColumnMapping.Body is UnaryExpression unaryExpression
                     ? unaryExpression.Operand as MemberExpression
                     : KeyColumnMapping.Body as MemberExpression;
 
+                // ReSharper disable once PossibleNullReferenceException
                 columns.RemoveAll(x => x.Name == keyExpression.Member.Name);
             }
 
@@ -221,7 +224,7 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkExtensions.Configuration
                         ColumnMappings.Add(Expression.Lambda<Func<TEntity, object>>(
                             Expression.Convert(arg, typeof(object)),
                             member.Parameters));
-                    };
+                    }
                 }
                 else
                 {
@@ -245,12 +248,12 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkExtensions.Configuration
             }
             else
             {
-                var memberExpression = (members.Body is UnaryExpression unaryExpression)
+                var memberExpression = members.Body is UnaryExpression unaryExpression
                     ? unaryExpression.Operand as MemberExpression
                     : members.Body as MemberExpression;
 
                 if (memberExpression == null)
-                    throw new ArgumentException($"Invalid expression: '{memberExpression}'", nameof(members));
+                    throw new ArgumentException($"Invalid expression: '{members}'", nameof(members));
 
                 return new[] { memberExpression.Member };
             }
@@ -264,17 +267,15 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkExtensions.Configuration
             {
                 return CreateNewExpression<TEntity>(new HashSet<MemberInfo>(newExpression.Members));
             }
-            else
-            {
-                var memberExpression = (expression.Body is UnaryExpression unaryExpression)
-                    ? unaryExpression.Operand as MemberExpression
-                    : expression.Body as MemberExpression;
 
-                if (memberExpression == null)
-                    throw new ArgumentException($"Invalid expression: '{memberExpression}'", nameof(expression));
+            var memberExpression = (expression.Body is UnaryExpression unaryExpression)
+                ? unaryExpression.Operand as MemberExpression
+                : expression.Body as MemberExpression;
 
-                return MakeColumnExpression<TEntity>(memberExpression.Member);
-            }
+            if (memberExpression == null)
+                throw new ArgumentException($"Invalid expression: '{expression}'", nameof(expression));
+
+            return MakeColumnExpression<TEntity>(memberExpression.Member);
         }
 
         protected Expression<Func<TOperationEntity, object>> DowncastExpression<TOperationEntity>(
@@ -285,17 +286,15 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkExtensions.Configuration
             {
                 return CreateNewExpression<TOperationEntity>(new HashSet<MemberInfo>(newExpression.Members));
             }
-            else
-            {
-                var memberExpression = (expression.Body is UnaryExpression unaryExpression)
-                    ? unaryExpression.Operand as MemberExpression
-                    : expression.Body as MemberExpression;
 
-                if (memberExpression == null)
-                    throw new ArgumentException($"Invalid expression: '{memberExpression}'", nameof(expression));
+            var memberExpression = (expression.Body is UnaryExpression unaryExpression)
+                ? unaryExpression.Operand as MemberExpression
+                : expression.Body as MemberExpression;
 
-                return MakeColumnExpression<TOperationEntity>(memberExpression.Member);
-            }
+            if (memberExpression == null)
+                throw new ArgumentException($"Invalid expression: '{expression}'", nameof(expression));
+
+            return MakeColumnExpression<TOperationEntity>(memberExpression.Member);
         }
     }
 }

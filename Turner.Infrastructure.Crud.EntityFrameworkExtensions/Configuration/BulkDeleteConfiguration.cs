@@ -10,7 +10,7 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkExtensions.Configuration
         private CaseSensitiveType _keyCaseSensitivity = CaseSensitiveType.Sensitive;
 
         public override BulkOperation<TOperationEntity> Apply<TOperationEntity>(
-            ICrudRequestConfig config, 
+            IRequestConfig config, 
             BulkOperation<TOperationEntity> operation)
         {
             operation = base.Apply(config, operation);

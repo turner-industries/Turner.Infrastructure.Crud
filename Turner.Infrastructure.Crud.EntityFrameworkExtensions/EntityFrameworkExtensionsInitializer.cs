@@ -1,13 +1,14 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using SimpleInjector;
 using Turner.Infrastructure.Crud.Context;
-using Turner.Infrastructure.Crud.EntityFrameworkCore;
 using Turner.Infrastructure.Crud.EntityFrameworkExtensions.Configuration;
 using Z.EntityFramework.Extensions;
 
 namespace Turner.Infrastructure.Crud.EntityFrameworkExtensions
 {
+    [Flags]
     public enum BulkExtensions
     {
         None = 0,
@@ -48,18 +49,6 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkExtensions
             container.Options.AllowOverridingRegistrations = false;
             
             EntityFrameworkManager.ContextFactory = context => container.GetInstance<DbContext>();
-        }
-    }
-
-    public static class IncludeInitializer
-    {
-        public static CrudInitializer UseEntityFrameworkExtensions(this CrudInitializer initializer, BulkExtensions extensions = BulkExtensions.All)
-        {
-            EntityFrameworkCoreInitializer.Unregister(initializer);
-
-            return initializer
-                .UseEntityFramework()
-                .AddInitializer(new EntityFrameworkExtensionsInitializer(extensions));
         }
     }
 }

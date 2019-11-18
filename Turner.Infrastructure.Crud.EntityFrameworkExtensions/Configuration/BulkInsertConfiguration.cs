@@ -10,7 +10,7 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkExtensions.Configuration
         where TEntity : class
     {
         public override BulkOperation<TOperationEntity> Apply<TOperationEntity>(
-            ICrudRequestConfig config, 
+            IRequestConfig config, 
             BulkOperation<TOperationEntity> operation)
         {
             operation = base.Apply(config, operation);

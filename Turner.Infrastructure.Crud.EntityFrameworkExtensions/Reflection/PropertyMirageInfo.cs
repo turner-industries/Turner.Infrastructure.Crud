@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Reflection;
 
+// ReSharper disable once CheckNamespace
 namespace Turner.Infrastructure.Crud.EntityFrameworkExtensions
 {
     internal class PropertyMirageInfo<T> : PropertyInfo

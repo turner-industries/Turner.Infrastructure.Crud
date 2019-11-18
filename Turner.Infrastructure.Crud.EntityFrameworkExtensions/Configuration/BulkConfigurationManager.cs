@@ -16,30 +16,30 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkExtensions.Configuration
     
     internal static class BulkConfigurationManager
     {
-        private static readonly Dictionary<BulkConfigurationType, BulkRequestConfigurationMap> _configurations;
+        private static readonly Dictionary<BulkConfigurationType, BulkRequestConfigurationMap> BulkConfigurations;
         
         static BulkConfigurationManager()
         {
-            _configurations = Enum.GetValues(typeof(BulkConfigurationType))
+            BulkConfigurations = Enum.GetValues(typeof(BulkConfigurationType))
                 .Cast<BulkConfigurationType>()
                 .ToDictionary(x => x, x => new BulkRequestConfigurationMap());
         }
 
         public static BulkRequestConfigurationMap Configurations(BulkConfigurationType type)
-            => _configurations[type];
+            => BulkConfigurations[type];
 
         public static void Clear()
         {
-            foreach (var configMap in _configurations.Values)
+            foreach (var configMap in BulkConfigurations.Values)
                 configMap.Clear();
         }
 
         public static void SetConfiguration(BulkConfigurationType type, Type tRequest, Type tEntity, IBulkConfiguration config)
         {
-            if (!_configurations[type].ContainsKey(tRequest))
-                _configurations[type][tRequest] = new BulkRequestEntityConfigurationMap();
+            if (!BulkConfigurations[type].ContainsKey(tRequest))
+                BulkConfigurations[type][tRequest] = new BulkRequestEntityConfigurationMap();
             
-            _configurations[type][tRequest][tEntity] = config;
+            BulkConfigurations[type][tRequest][tEntity] = config;
         }
     }
 }

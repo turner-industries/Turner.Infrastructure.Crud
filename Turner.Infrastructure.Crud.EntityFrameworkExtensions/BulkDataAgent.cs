@@ -22,6 +22,7 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkExtensions
             var set = context.EntitySet as EntityFrameworkEntitySet<TEntity>;
             var entities = items.ToArray();
 
+            // ReSharper disable once PossibleNullReferenceException
             await DetachEntities(entities, set.Context, EntityState.Added, token);
             
             await set.Context.BulkInsertAsync(entities,
@@ -41,6 +42,7 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkExtensions
             var set = context.EntitySet as EntityFrameworkEntitySet<TEntity>;
             var entities = items.ToArray();
 
+            // ReSharper disable once PossibleNullReferenceException
             await DetachEntities(entities, set.Context, EntityState.Modified, token);
 
             await set.Context.BulkUpdateAsync(entities,
@@ -60,6 +62,7 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkExtensions
             var set = context.EntitySet as EntityFrameworkEntitySet<TEntity>;
             var entities = items.ToArray();
 
+            // ReSharper disable once PossibleNullReferenceException
             await DetachEntities(entities, set.Context, EntityState.Deleted, token);
 
             await set.Context.BulkDeleteAsync(entities,
