@@ -12,7 +12,7 @@ namespace Turner.Infrastructure.Crud.Context
 {
     internal static class QueryableExtensions
     {
-        private static readonly Dictionary<string, MethodInfo> _methods =
+        private static readonly Dictionary<string, MethodInfo> Methods =
             new Dictionary<string, MethodInfo>
             {
                 { "FirstOrDefault", GetMethod(nameof(Queryable.FirstOrDefault)) },
@@ -87,7 +87,7 @@ namespace Turner.Infrastructure.Crud.Context
             if (!(source.Provider is IAsyncQueryProvider queryProvider))
                 throw new InvalidQueryProviderTypeException();
 
-            var method = _methods[methodName] ?? throw new ArgumentOutOfRangeException(methodName);
+            var method = Methods[methodName] ?? throw new ArgumentOutOfRangeException(methodName);
             if (method.IsGenericMethod)
                 method = method.MakeGenericMethod(typeof(TSource));
                 
@@ -116,7 +116,7 @@ namespace Turner.Infrastructure.Crud.Context
             if (!(source.Provider is IAsyncQueryProvider queryProvider))
                 throw new InvalidQueryProviderTypeException();
 
-            var method = _methods[methodName] ?? throw new ArgumentOutOfRangeException(methodName);
+            var method = Methods[methodName] ?? throw new ArgumentOutOfRangeException(methodName);
             method = method.GetGenericArguments().Length == 2
                 ? method.MakeGenericMethod(typeof(TSource), typeof(TResult))
                 : method.MakeGenericMethod(typeof(TSource));

@@ -19,14 +19,14 @@ namespace Turner.Infrastructure.Crud.Context
 
     public class DataAgentFactory : IDataAgentFactory
     {
-        private static Func<Type, object> s_serviceFactory;
+        private static Func<Type, object> _serviceFactory;
 
         internal static void BindContainer(Func<Type, object> serviceFactory)
         {
-            s_serviceFactory = serviceFactory;
+            _serviceFactory = serviceFactory;
         }
 
-        internal static T Create<T>() => (T)s_serviceFactory(typeof(T));
+        internal static T Create<T>() => (T)_serviceFactory(typeof(T));
 
         public IBulkCreateDataAgent GetBulkCreateDataAgent() => Create<IBulkCreateDataAgent>();
 

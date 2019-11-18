@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+// ReSharper disable once CheckNamespace
 namespace Turner.Infrastructure.Crud
 {
     public class TableSorter<TRequest, TEntity, TControl> : ISorter<TRequest, TEntity>

@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 
+// ReSharper disable once CheckNamespace
 namespace Turner.Infrastructure.Crud
 {
     internal static class ExpressionExtensions

@@ -33,7 +33,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class DeleteAllByIdRequestProfile<TEntity>
-        : CrudRequestProfile<DeleteAllByIdRequest<TEntity>>
+        : RequestProfile<DeleteAllByIdRequest<TEntity>>
         where TEntity : class
     {
         public DeleteAllByIdRequestProfile()
@@ -51,7 +51,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class DeleteAllByIdRequestProfile<TEntity, TOut>
-        : CrudRequestProfile<DeleteAllByIdRequest<TEntity, TOut>>
+        : RequestProfile<DeleteAllByIdRequest<TEntity, TOut>>
         where TEntity : class
     {
         public DeleteAllByIdRequestProfile()
@@ -69,7 +69,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class DeleteAllByGuidRequestProfile<TEntity>
-        : CrudRequestProfile<DeleteAllByGuidRequest<TEntity>>
+        : RequestProfile<DeleteAllByGuidRequest<TEntity>>
         where TEntity : class
     {
         public DeleteAllByGuidRequestProfile()
@@ -87,7 +87,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class DeleteAllByGuidRequestProfile<TEntity, TOut>
-        : CrudRequestProfile<DeleteAllByGuidRequest<TEntity, TOut>>
+        : RequestProfile<DeleteAllByGuidRequest<TEntity, TOut>>
         where TEntity : class
     {
         public DeleteAllByGuidRequestProfile()
@@ -105,7 +105,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class DeleteAllByNameRequestProfile<TEntity>
-        : CrudRequestProfile<DeleteAllByNameRequest<TEntity>>
+        : RequestProfile<DeleteAllByNameRequest<TEntity>>
         where TEntity : class
     {
         public DeleteAllByNameRequestProfile()
@@ -123,7 +123,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class DeleteAllByNameRequestProfile<TEntity, TOut>
-        : CrudRequestProfile<DeleteAllByNameRequest<TEntity, TOut>>
+        : RequestProfile<DeleteAllByNameRequest<TEntity, TOut>>
         where TEntity : class
     {
         public DeleteAllByNameRequestProfile()

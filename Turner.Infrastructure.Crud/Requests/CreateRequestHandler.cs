@@ -17,7 +17,8 @@ namespace Turner.Infrastructure.Crud.Requests
         {
         }
 
-        protected async Task<TEntity> CreateEntity(TRequest request, CancellationToken ct)
+        protected async Task<TEntity> CreateEntity(TRequest request, 
+            CancellationToken ct = default(CancellationToken))
         {
             await request.RunRequestHooks(RequestConfig, ct).Configure();
             
@@ -50,7 +51,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public Task<Response> HandleAsync(TRequest request)
         {
-            return HandleWithErrorsAsync(request, (_, token) => (Task)CreateEntity(request, token));
+            return HandleWithErrorsAsync(request, _ => (Task)CreateEntity(request));
         }
     }
 
@@ -68,14 +69,14 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public Task<Response<TOut>> HandleAsync(TRequest request)
         {
-            return HandleWithErrorsAsync(request, HandleAsync);
+            return HandleWithErrorsAsync(request, _HandleAsync);
         }
 
-        private async Task<TOut> HandleAsync(TRequest request, CancellationToken token)
+        private async Task<TOut> _HandleAsync(TRequest request)
         {
-            var entity = await CreateEntity(request, token).Configure();
-            var tOut = await entity.CreateResult<TEntity, TOut>(RequestConfig, token).Configure();
-            var result = await request.RunResultHooks(RequestConfig, tOut, token).Configure();
+            var entity = await CreateEntity(request).Configure();
+            var tOut = await entity.CreateResult<TEntity, TOut>(RequestConfig).Configure();
+            var result = await request.RunResultHooks(RequestConfig, tOut).Configure();
 
             return result;
         }

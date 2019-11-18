@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
+// ReSharper disable once CheckNamespace
 namespace Turner.Infrastructure.Crud
 {
     internal static class TypeExtensions

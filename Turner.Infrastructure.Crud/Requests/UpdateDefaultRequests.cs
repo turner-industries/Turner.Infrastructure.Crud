@@ -15,7 +15,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class UpdateRequestProfile<TEntity, TIn>
-        : CrudRequestProfile<UpdateRequest<TEntity, TIn>>
+        : RequestProfile<UpdateRequest<TEntity, TIn>>
         where TEntity : class
     {
         public UpdateRequestProfile()
@@ -35,7 +35,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class UpdateRequestProfile<TEntity, TIn, TOut>
-        : CrudRequestProfile<UpdateRequest<TEntity, TIn, TOut>>
+        : RequestProfile<UpdateRequest<TEntity, TIn, TOut>>
         where TEntity : class
     {
         public UpdateRequestProfile()
@@ -62,7 +62,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class UpdateRequestProfile<TEntity, TKey, TIn, TOut>
-        : CrudRequestProfile<UpdateRequest<TEntity, TKey, TIn, TOut>>
+        : RequestProfile<UpdateRequest<TEntity, TKey, TIn, TOut>>
         where TEntity : class
     {
         public UpdateRequestProfile()
@@ -80,7 +80,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class UpdateByIdRequestProfile<TEntity, TIn, TOut>
-        : CrudRequestProfile<UpdateByIdRequest<TEntity, TIn, TOut>>
+        : RequestProfile<UpdateByIdRequest<TEntity, TIn, TOut>>
         where TEntity : class
     {
         public UpdateByIdRequestProfile()
@@ -98,7 +98,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class UpdateByGuidRequestProfile<TEntity, TIn, TOut>
-        : CrudRequestProfile<UpdateByGuidRequest<TEntity, TIn, TOut>>
+        : RequestProfile<UpdateByGuidRequest<TEntity, TIn, TOut>>
         where TEntity : class
     {
         public UpdateByGuidRequestProfile()
@@ -116,7 +116,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class UpdateByNameRequestProfile<TEntity, TIn, TOut>
-        : CrudRequestProfile<UpdateByNameRequest<TEntity, TIn, TOut>>
+        : RequestProfile<UpdateByNameRequest<TEntity, TIn, TOut>>
         where TEntity : class
     {
         public UpdateByNameRequestProfile()

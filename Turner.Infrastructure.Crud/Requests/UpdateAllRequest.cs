@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Turner.Infrastructure.Mediator;
+
 // ReSharper disable UnusedTypeParameter
 
 namespace Turner.Infrastructure.Crud.Requests

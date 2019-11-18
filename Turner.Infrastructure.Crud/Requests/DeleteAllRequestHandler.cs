@@ -20,7 +20,7 @@ namespace Turner.Infrastructure.Crud.Requests
             Options = RequestConfig.GetOptionsFor<TEntity>();
         }
 
-        protected async Task<TEntity[]> DeleteEntities(TRequest request, CancellationToken ct)
+        protected async Task<TEntity[]> DeleteEntities(TRequest request, CancellationToken ct = default(CancellationToken))
         {
             await request.RunRequestHooks(RequestConfig, ct).Configure();
 
@@ -58,7 +58,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public Task<Response> HandleAsync(TRequest request)
         {
-            return HandleWithErrorsAsync(request, (_, token) => (Task)DeleteEntities(request, token));
+            return HandleWithErrorsAsync(request,  _ => (Task)DeleteEntities(request));
         }
     }
 
@@ -75,16 +75,16 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public Task<Response<DeleteAllResult<TOut>>> HandleAsync(TRequest request)
         {
-            return HandleWithErrorsAsync(request, HandleAsync);
+            return HandleWithErrorsAsync(request, _HandleAsync);
         }
 
-        private async Task<DeleteAllResult<TOut>> HandleAsync(TRequest request, CancellationToken token)
+        private async Task<DeleteAllResult<TOut>> _HandleAsync(TRequest request)
         {
-            var entities = await DeleteEntities(request, token).Configure();
-            var items = await entities.CreateResults<TEntity, TOut>(RequestConfig, token).Configure();
+            var entities = await DeleteEntities(request).Configure();
+            var items = await entities.CreateResults<TEntity, TOut>(RequestConfig).Configure();
             var result = new DeleteAllResult<TOut>(items);
 
-            return await request.RunResultHooks(RequestConfig, result, token).Configure();
+            return await request.RunResultHooks(RequestConfig, result).Configure();
         }
     }
 }

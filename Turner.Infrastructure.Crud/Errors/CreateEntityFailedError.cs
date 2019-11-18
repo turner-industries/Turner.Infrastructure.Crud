@@ -12,11 +12,11 @@ namespace Turner.Infrastructure.Crud.Errors
         }
         
         public new static bool IsReturnedFor(Exception e)
-            => e is CrudCreateEntityFailedException;
+            => e is CreateEntityFailedException;
 
         public new static CreateEntityFailedError From(object request, Exception exception)
         {
-            if (exception is CrudCreateEntityFailedException cefException)
+            if (exception is CreateEntityFailedException cefException)
                 return new CreateEntityFailedError(request, cefException.ItemProperty, cefException.InnerException);
 
             return new CreateEntityFailedError(request, null, exception);

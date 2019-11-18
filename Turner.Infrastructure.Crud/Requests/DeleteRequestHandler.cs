@@ -18,7 +18,7 @@ namespace Turner.Infrastructure.Crud.Requests
         {
         }
         
-        protected async Task<TEntity> DeleteEntity(TRequest request, CancellationToken ct)
+        protected async Task<TEntity> DeleteEntity(TRequest request, CancellationToken ct = default(CancellationToken))
         {
             await request.RunRequestHooks(RequestConfig, ct).Configure();
 
@@ -41,7 +41,7 @@ namespace Turner.Infrastructure.Crud.Requests
             }
             else if (RequestConfig.ErrorConfig.FailedToFindInDeleteIsError)
             {
-                throw new CrudFailedToFindException { EntityTypeProperty = typeof(TEntity) };
+                throw new FailedToFindException { EntityTypeProperty = typeof(TEntity) };
             }
             
             return entity;
@@ -61,7 +61,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public Task<Response> HandleAsync(TRequest request)
         {
-            return HandleWithErrorsAsync(request, (_, token) => (Task)DeleteEntity(request, token));
+            return HandleWithErrorsAsync(request, _ => (Task)DeleteEntity(request));
         }
     }
 
@@ -78,14 +78,14 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public Task<Response<TOut>> HandleAsync(TRequest request)
         {
-            return HandleWithErrorsAsync(request, HandleAsync);
+            return HandleWithErrorsAsync(request, _HandleAsync);
         }
 
-        public async Task<TOut> HandleAsync(TRequest request, CancellationToken token)
+        public async Task<TOut> _HandleAsync(TRequest request)
         {
-            var entity = await DeleteEntity(request, token).Configure();
-            var tOut = await entity.CreateResult<TEntity, TOut>(RequestConfig, token).Configure();
-            var result = await request.RunResultHooks(RequestConfig, tOut, token).Configure();
+            var entity = await DeleteEntity(request).Configure();
+            var tOut = await entity.CreateResult<TEntity, TOut>(RequestConfig).Configure();
+            var result = await request.RunResultHooks(RequestConfig, tOut).Configure();
 
             return result;
         }

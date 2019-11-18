@@ -16,8 +16,8 @@ namespace Turner.Infrastructure.Crud.Extensions
             => !(e is OperationCanceledException);
 
         internal static async Task<TResult> CreateResult<TEntity, TResult>(this TEntity entity,
-            ICrudRequestConfig config,
-            CancellationToken token)
+            IRequestConfig config,
+            CancellationToken token = default(CancellationToken))
             where TEntity : class
         {
             var createResult = config.GetResultCreatorFor<TEntity, TResult>();
@@ -31,7 +31,7 @@ namespace Turner.Infrastructure.Crud.Extensions
             }
             catch (Exception e) when (IsNonCancellationFailure(e))
             {
-                throw new CrudCreateResultFailedException(GenericCreateResultError, e)
+                throw new CreateResultFailedException(GenericCreateResultError, e)
                 {
                     EntityProperty = entity
                 };
@@ -39,8 +39,8 @@ namespace Turner.Infrastructure.Crud.Extensions
         }
 
         internal static async Task<TResult[]> CreateResults<TEntity, TResult>(this TEntity[] entities,
-            ICrudRequestConfig config,
-            CancellationToken token)
+            IRequestConfig config,
+            CancellationToken token = default(CancellationToken))
             where TEntity : class
         {
             var createResult = config.GetResultCreatorFor<TEntity, TResult>();
@@ -54,7 +54,7 @@ namespace Turner.Infrastructure.Crud.Extensions
             }
             catch (Exception e) when (IsNonCancellationFailure(e))
             {
-                throw new CrudCreateResultFailedException(GenericCreateResultError, e)
+                throw new CreateResultFailedException(GenericCreateResultError, e)
                 {
                     EntityProperty = entities
                 };

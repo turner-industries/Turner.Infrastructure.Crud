@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Exceptions;
 using Turner.Infrastructure.Crud.Requests;
 
+// ReSharper disable once CheckNamespace
 namespace Turner.Infrastructure.Crud
 {
     internal static class ResultHookAdapter
@@ -13,7 +14,7 @@ namespace Turner.Infrastructure.Crud
         internal static async Task<T> Adapt<T>(IBoxedResultHook hook,
             object request,
             T result,
-            CancellationToken ct)
+            CancellationToken ct = default(CancellationToken))
         {
             if (typeof(IResultCollection<>).MakeGenericType(hook.ResultType).IsAssignableFrom(typeof(T)))
             {
@@ -23,18 +24,18 @@ namespace Turner.Infrastructure.Crud
 
                 await (Task)adaptMethod
                     .MakeGenericMethod(hook.ResultType)
-                    .Invoke(null, new object[] { hook, request, result, ct });
+                    .Invoke(null, new[] { hook, request, result, ct });
 
                 return result;
             }
 
-            throw new BadCrudConfigurationException($"Failed to adapt hook result type {typeof(T)}");
+            throw new BadConfigurationException($"Failed to adapt hook result type {typeof(T)}");
         }
 
         internal static async Task AdaptAsCollection<T>(IBoxedResultHook hook,
             object request,
             IResultCollection<T> items,
-            CancellationToken ct)
+            CancellationToken ct = default(CancellationToken))
         {
             var result = new List<T>(items.Items.Count);
 

@@ -30,7 +30,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class SynchronizeByIdRequestProfile<TEntity, TIn>
-        : CrudBulkRequestProfile<SynchronizeByIdRequest<TEntity, TIn>, TIn>
+        : BulkRequestProfile<SynchronizeByIdRequest<TEntity, TIn>, TIn>
         where TEntity : class
     {
         public SynchronizeByIdRequestProfile()
@@ -49,7 +49,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class SynchronizeByIdRequestProfile<TEntity, TIn, TOut>
-        : CrudBulkRequestProfile<SynchronizeByIdRequest<TEntity, TIn, TOut>, TIn>
+        : BulkRequestProfile<SynchronizeByIdRequest<TEntity, TIn, TOut>, TIn>
         where TEntity : class
     {
         public SynchronizeByIdRequestProfile()
@@ -68,7 +68,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class SynchronizeByGuidRequestProfile<TEntity, TIn>
-        : CrudBulkRequestProfile<SynchronizeByGuidRequest<TEntity, TIn>, TIn>
+        : BulkRequestProfile<SynchronizeByGuidRequest<TEntity, TIn>, TIn>
         where TEntity : class
     {
         public SynchronizeByGuidRequestProfile()
@@ -87,7 +87,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class SynchronizeByGuidRequestProfile<TEntity, TIn, TOut>
-        : CrudBulkRequestProfile<SynchronizeByGuidRequest<TEntity, TIn, TOut>, TIn>
+        : BulkRequestProfile<SynchronizeByGuidRequest<TEntity, TIn, TOut>, TIn>
         where TEntity : class
     {
         public SynchronizeByGuidRequestProfile()
@@ -106,7 +106,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class SynchronizeByNameRequestProfile<TEntity, TIn>
-        : CrudBulkRequestProfile<SynchronizeByNameRequest<TEntity, TIn>, TIn>
+        : BulkRequestProfile<SynchronizeByNameRequest<TEntity, TIn>, TIn>
         where TEntity : class
     {
         public SynchronizeByNameRequestProfile()
@@ -125,7 +125,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class SynchronizeByNameRequestProfile<TEntity, TIn, TOut>
-        : CrudBulkRequestProfile<SynchronizeByNameRequest<TEntity, TIn, TOut>, TIn>
+        : BulkRequestProfile<SynchronizeByNameRequest<TEntity, TIn, TOut>, TIn>
         where TEntity : class
     {
         public SynchronizeByNameRequestProfile()

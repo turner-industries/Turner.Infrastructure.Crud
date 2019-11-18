@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
+// ReSharper disable once CheckNamespace
 namespace Turner.Infrastructure.Crud
 {
     public interface IBoxedResultHook
@@ -47,7 +48,7 @@ namespace Turner.Infrastructure.Crud
         {
             return new FunctionResultHookFactory(typeof(TResult),
                 (request, result, ct) => hook((TRequest)request, (TResult)result, ct)
-                    .ContinueWith(t => (object)t.Result));
+                    .ContinueWith(t => (object)t.Result, ct));
         }
 
         internal static FunctionResultHookFactory From<TRequest, TResult>(
@@ -69,8 +70,9 @@ namespace Turner.Infrastructure.Crud
 
     public class InstanceResultHookFactory : IResultHookFactory
     {
+        // ReSharper disable once NotAccessedField.Local
         private readonly object _instance;
-        private IBoxedResultHook _adaptedInstance;
+        private readonly IBoxedResultHook _adaptedInstance;
 
         private InstanceResultHookFactory(object instance, IBoxedResultHook adaptedInstance)
         {
@@ -86,7 +88,7 @@ namespace Turner.Infrastructure.Crud
                 new FunctionResultHook(typeof(TResult), 
                     (request, result, ct) => hook
                         .Run((TRequest)request, (TResult)result, ct)
-                        .ContinueWith(t => (object)t.Result)));
+                        .ContinueWith(t => (object)t.Result, ct)));
         }
 
         public IBoxedResultHook Create() => _adaptedInstance;
@@ -94,9 +96,9 @@ namespace Turner.Infrastructure.Crud
 
     public class TypeResultHookFactory : IResultHookFactory
     {
-        private static Func<Type, object> s_serviceFactory;
+        private static Func<Type, object> _serviceFactory;
 
-        private Func<IBoxedResultHook> _hookFactory;
+        private readonly Func<IBoxedResultHook> _hookFactory;
 
         public TypeResultHookFactory(Func<IBoxedResultHook> hookFactory)
         {
@@ -105,7 +107,7 @@ namespace Turner.Infrastructure.Crud
 
         internal static void BindContainer(Func<Type, object> serviceFactory)
         {
-            s_serviceFactory = serviceFactory;
+            _serviceFactory = serviceFactory;
         }
 
         internal static TypeResultHookFactory From<THook, TRequest, TResult>()
@@ -114,9 +116,9 @@ namespace Turner.Infrastructure.Crud
             return new TypeResultHookFactory(
                 () =>
                 {
-                    var instance = (IResultHook<TRequest, TResult>)s_serviceFactory(typeof(THook));
+                    var instance = (IResultHook<TRequest, TResult>)_serviceFactory(typeof(THook));
                     return new FunctionResultHook(typeof(TResult), (request, result, ct) 
-                        => instance.Run((TRequest)request, (TResult)result, ct).ContinueWith(t => (object)t.Result));
+                        => instance.Run((TRequest)request, (TResult)result, ct).ContinueWith(t => (object)t.Result, ct));
                 });
         }
 

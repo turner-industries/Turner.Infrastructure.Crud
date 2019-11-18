@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 
+// ReSharper disable once CheckNamespace
 namespace Turner.Infrastructure.Crud
 {
     public enum SortDirection
@@ -62,8 +63,9 @@ namespace Turner.Infrastructure.Crud
 
     public class InstanceSorterFactory : ISorterFactory
     {
+        // ReSharper disable once NotAccessedField.Local
         private readonly object _instance;
-        private IBoxedSorter _adaptedInstance;
+        private readonly IBoxedSorter _adaptedInstance;
 
         private InstanceSorterFactory(object instance, IBoxedSorter adaptedInstance)
         {
@@ -85,9 +87,9 @@ namespace Turner.Infrastructure.Crud
 
     public class TypeSorterFactory : ISorterFactory
     {
-        private static Func<Type, object> s_serviceFactory;
+        private static Func<Type, object> _serviceFactory;
 
-        private Func<IBoxedSorter> _sorterFactory;
+        private readonly Func<IBoxedSorter> _sorterFactory;
 
         public TypeSorterFactory(Func<IBoxedSorter> sorterFactory)
         {
@@ -96,7 +98,7 @@ namespace Turner.Infrastructure.Crud
 
         internal static void BindContainer(Func<Type, object> serviceFactory)
         {
-            s_serviceFactory = serviceFactory;
+            _serviceFactory = serviceFactory;
         }
 
         internal static TypeSorterFactory From<TSorter, TRequest, TEntity>()
@@ -106,7 +108,7 @@ namespace Turner.Infrastructure.Crud
             return new TypeSorterFactory(
                 () =>
                 {
-                    var instance = (ISorter<TRequest, TEntity>)s_serviceFactory(typeof(TSorter));
+                    var instance = (ISorter<TRequest, TEntity>)_serviceFactory(typeof(TSorter));
                     return new FunctionSorter((request, queryable)
                         => instance.Sort((TRequest)request, (IQueryable<TEntity>)queryable));
                 });

@@ -10,28 +10,32 @@ namespace Turner.Infrastructure.Crud.Configuration
 {
     public class CrudConfigManager
     {
-        private readonly ConcurrentDictionary<Type, ICrudRequestConfig> _requestConfigs
-            = new ConcurrentDictionary<Type, ICrudRequestConfig>();
+        private readonly Func<Type, object> _profileFactory;
+
+        private readonly ConcurrentDictionary<Type, IRequestConfig> _requestConfigs
+            = new ConcurrentDictionary<Type, IRequestConfig>();
 
         private readonly Type[] _allProfiles;
 
-        public CrudConfigManager(params Assembly[] profileAssemblies)
+        public CrudConfigManager(Func<Type, object> profileFactory, params Assembly[] profileAssemblies)
         {
+            _profileFactory = profileFactory ?? throw new ArgumentNullException(nameof(profileFactory));
+
             _allProfiles = profileAssemblies
                 .SelectMany(x => x.GetExportedTypes())
                 .Where(x =>
                     x.BaseType != null &&
                     x.BaseType.IsGenericType &&
                     (x.BaseType.GetGenericTypeDefinition() == typeof(UniversalRequestProfile<>) ||
-                     x.BaseType.GetGenericTypeDefinition() == typeof(CrudRequestProfile<>) ||
-                     x.BaseType.GetGenericTypeDefinition() == typeof(CrudBulkRequestProfile<,>)))
+                     x.BaseType.GetGenericTypeDefinition() == typeof(RequestProfile<>) ||
+                     x.BaseType.GetGenericTypeDefinition() == typeof(BulkRequestProfile<,>)))
                 .ToArray();
         }
 
-        public ICrudRequestConfig GetRequestConfigFor<TRequest>()
+        public IRequestConfig GetRequestConfigFor<TRequest>()
             => BuildRequestConfigFor(typeof(TRequest));
 
-        public ICrudRequestConfig GetRequestConfigFor(Type tRequest)
+        public IRequestConfig GetRequestConfigFor(Type tRequest)
             => BuildRequestConfigFor(tRequest);
 
         private IEnumerable<Type> FindRequestProfilesFor(Type tRequest)
@@ -69,7 +73,7 @@ namespace Turner.Infrastructure.Crud.Configuration
 
                 if (args.Length != tProfile.GetGenericArguments().Length)
                 {
-                    throw new BadCrudConfigurationException(
+                    throw new BadConfigurationException(
                         $"Failed to determine arguments for profile '{tProfile}'.\r\n" +
                         $"Profiles may not contain more generic arguments than their requests.'");
                 }
@@ -92,39 +96,39 @@ namespace Turner.Infrastructure.Crud.Configuration
                 .Select(InstantiateProfile);
         }
 
-        private CrudRequestProfile GetRequestProfileFor(Type tRequest)
+        private RequestProfile GetRequestProfileFor(Type tRequest)
         {
             if (!typeof(ICrudRequest).IsAssignableFrom(tRequest))
                 return GetUniversalRequestProfileFor(tRequest);
 
             var tProfile = typeof(IBulkRequest).IsAssignableFrom(tRequest)
-                ? typeof(DefaultBulkCrudRequestProfile<>).MakeGenericType(tRequest)
+                ? typeof(DefaultBulkRequestProfile<>).MakeGenericType(tRequest)
                 : typeof(DefaultCrudRequestProfile<>).MakeGenericType(tRequest);
-
-            var profile = (CrudRequestProfile)Activator.CreateInstance(tProfile);
+            
+            var profile = (RequestProfile)_profileFactory(tProfile);
 
             profile.Inherit(tRequest
                 .BuildTypeHierarchyDown()
                 .SelectMany(FindRequestProfilesFor)
-                .Select(x => (CrudRequestProfile)Activator.CreateInstance(x)));
+                .Select(x => (RequestProfile)_profileFactory(x)));
 
             return profile;
         }
 
-        private CrudRequestProfile GetUniversalRequestProfileFor(Type tRequest)
+        private RequestProfile GetUniversalRequestProfileFor(Type tRequest)
         {
             var tProfile = typeof(DefaultUniversalRequestProfile<>).MakeGenericType(tRequest);
-            var profile = (CrudRequestProfile)Activator.CreateInstance(tProfile);
+            var profile = (RequestProfile)_profileFactory(tProfile);
 
             profile.Inherit(tRequest
                 .BuildTypeHierarchyDown()
                 .SelectMany(FindRequestProfilesFor)
-                .Select(x => (CrudRequestProfile)Activator.CreateInstance(x)));
+                .Select(x => (RequestProfile)_profileFactory(x)));
 
             return profile;
         }
 
-        private ICrudRequestConfig BuildRequestConfigFor(Type tRequest)
+        private IRequestConfig BuildRequestConfigFor(Type tRequest)
         {
             if (_requestConfigs.TryGetValue(tRequest, out var config))
                 return config;

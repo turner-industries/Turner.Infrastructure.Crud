@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Turner.Infrastructure.Crud.Context
 {
     public class EnumerableAsyncAdapter<TResult> 
-        : EnumerableQuery<TResult>, IAsyncEnumerable<TResult>, IQueryable<TResult>
+        : EnumerableQuery<TResult>, IAsyncEnumerable<TResult>
     {
         public EnumerableAsyncAdapter(Expression expression)
             : base(expression)

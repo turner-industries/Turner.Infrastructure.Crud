@@ -45,7 +45,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
 
         internal override ISorterFactory Build()
         {
-            var sorter = new SwitchSorter<TRequest, TEntity, TValue>(o => _getSwitchValue((TRequest) o));
+            var sorter = new SwitchSorter<TRequest, TEntity, TValue>(o => _getSwitchValue(o));
 
             foreach (var (k, v) in _cases)
                 sorter.Case(k, v.Build());
@@ -55,7 +55,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
 
             if (_default == null && _cases.Count == 0)
             {
-                throw new BadCrudConfigurationException(
+                throw new BadConfigurationException(
                     $"Switch sorting was set for request '{typeof(TRequest)}' and entity '{typeof(TEntity)}'" +
                     ", but no cases were defined.");
             }
@@ -222,18 +222,18 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
             SwitchSortContinuationOperationBuilder<TRequest, TEntity, TValue> parent, string entityProperty)
         {
             var entityParam = Expression.Parameter(typeof(TEntity));
-            var entityProp = Expression.PropertyOrField(entityParam, entityProperty)
-                ?? throw new ArgumentException(nameof(entityProperty));
+            var entityProp = Expression.PropertyOrField(entityParam, entityProperty);
 
             var fwdMethodInfo = typeof(ConfigurableSwitchSortClauseBuilder<TRequest, TEntity, TValue>)
-                .GetMethod("ForwardFrom", BindingFlags.Static | BindingFlags.NonPublic);
+                .GetMethod(nameof(ForwardFrom), BindingFlags.Static | BindingFlags.NonPublic);
 
+            // ReSharper disable once PossibleNullReferenceException
             var fwdMethod = fwdMethodInfo.MakeGenericMethod(entityProp.Type);
 
             return (ConfigurableSwitchSortClauseBuilder<TRequest, TEntity, TValue>)
                 fwdMethod.Invoke(null, new object[] { parent, entityProperty });
         }
-
+        
         private static ConfigurableSwitchSortClauseBuilder<TRequest, TEntity, TValue> ForwardFrom<TProp>(
             SwitchSortContinuationOperationBuilder<TRequest, TEntity, TValue> parent,
             string entityProperty)

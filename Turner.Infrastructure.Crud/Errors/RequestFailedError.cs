@@ -13,7 +13,7 @@ namespace Turner.Infrastructure.Crud.Errors
         }
 
         public static bool IsReturnedFor(Exception e)
-            => e is CrudRequestFailedException
+            => e is RequestFailedException
             || e is AggregateException;
 
         public static RequestFailedError From(object request, Exception exception)

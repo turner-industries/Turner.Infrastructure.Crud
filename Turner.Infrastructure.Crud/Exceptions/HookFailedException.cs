@@ -6,27 +6,27 @@ using Newtonsoft.Json;
 namespace Turner.Infrastructure.Crud.Exceptions
 {
     [Serializable]
-    public class CrudHookFailedException : Exception
+    public class HookFailedException : Exception
     {
         public Type RequestTypeProperty { get; set; }
 
         public object HookProperty { get; set; }
 
-        public CrudHookFailedException()
+        public HookFailedException()
         {
         }
 
-        public CrudHookFailedException(string message)
+        public HookFailedException(string message)
             : base(message)
         {
         }
 
-        public CrudHookFailedException(string message, Exception inner)
+        public HookFailedException(string message, Exception inner)
             : base(message, inner)
         {
         }
 
-        protected CrudHookFailedException(SerializationInfo info, StreamingContext context)
+        protected HookFailedException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
             RequestTypeProperty = (Type)info.GetValue(nameof(RequestTypeProperty), typeof(Type));

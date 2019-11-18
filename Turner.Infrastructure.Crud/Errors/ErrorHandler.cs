@@ -1,25 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Turner.Infrastructure.Crud.Extensions;
 using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Errors
 {
-    public interface ICrudErrorHandler
+    public interface IErrorHandler
     {
         Response Handle(CrudError error);
 
         Response<TResult> Handle<TResult>(CrudError error);
     }
 
-    public class CrudErrorHandler : ICrudErrorHandler
+    public class ErrorHandler : IErrorHandler
     {
         public const string GenericErrorMessage = "An error occurred while processing the request.";
         public const string CanceledErrorMessage = "The request was canceled while processing.";
 
         private readonly Dictionary<Type, Func<CrudError, Response>> _dispatchers;
 
-        public CrudErrorHandler()
+        public ErrorHandler()
         {
             _dispatchers = new Dictionary<Type, Func<CrudError, Response>>
             {
@@ -55,28 +56,28 @@ namespace Turner.Infrastructure.Crud.Errors
             if (error.Exception != null)
                 throw error.Exception;
 
-            return Error.AsResponse(GenericErrorMessage);
+            return GenericErrorMessage.AsError().AsResponse();
         }
         
         protected virtual Response HandleError(RequestFailedError error)
-            => Error.AsResponse(error.Reason);
+            => error.Reason.AsError().AsResponse();
         
         protected virtual Response HandleError(RequestCanceledError error)
-            => Error.AsResponse(CanceledErrorMessage);
+            => CanceledErrorMessage.AsError().AsResponse();
 
         protected virtual Response HandleError(FailedToFindError error)
-            => Error.AsResponse(error.Reason);
-        
+            => error.Reason.AsError().AsResponse();
+
         protected virtual Response HandleError(HookFailedError error)
-            => Error.AsResponse(error.Reason);
+            => error.Reason.AsError().AsResponse();
 
         protected virtual Response HandleError(CreateEntityFailedError error)
-            => Error.AsResponse(error.Reason);
+            => error.Reason.AsError().AsResponse();
 
         protected virtual Response HandleError(UpdateEntityFailedError error)
-            => Error.AsResponse(error.Reason);
+            => error.Reason.AsError().AsResponse();
 
         protected virtual Response HandleError(CreateResultFailedError error)
-            => Error.AsResponse(error.Reason);
+            => error.Reason.AsError().AsResponse();
     }
 }

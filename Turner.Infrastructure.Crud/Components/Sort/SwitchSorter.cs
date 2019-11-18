@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
+// ReSharper disable once CheckNamespace
 namespace Turner.Infrastructure.Crud
 {
     public class SwitchSortOperation<TRequest, TEntity> : BasicSortOperation<TRequest, TEntity>

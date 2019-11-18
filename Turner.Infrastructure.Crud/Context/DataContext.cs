@@ -7,11 +7,11 @@ namespace Turner.Infrastructure.Crud.Context
     {
         public EntitySet<TEntity> EntitySet { get; private set; }
 
-        public ICrudRequestConfig Configuration { get; }
+        public IRequestConfig Configuration { get; }
 
-        public DataContext(ICrudRequestConfig config) : this(null, config) { }
+        public DataContext(IRequestConfig config) : this(null, config) { }
 
-        public DataContext(EntitySet<TEntity> entitySet, ICrudRequestConfig config)
+        public DataContext(EntitySet<TEntity> entitySet, IRequestConfig config)
         {
             EntitySet = entitySet;
             Configuration = config;

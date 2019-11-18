@@ -18,7 +18,7 @@ namespace Turner.Infrastructure.Crud.Validation
             {
                 return (IRequestValidator<TRequest>)_validatorCreator(typeof(IRequestValidator<TRequest>));
             }
-            catch(ActivationException)
+            catch (ActivationException)
             {
                 return null;
             }

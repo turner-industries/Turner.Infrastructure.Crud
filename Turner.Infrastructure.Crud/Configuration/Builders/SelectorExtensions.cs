@@ -9,40 +9,40 @@ namespace Turner.Infrastructure.Crud.Configuration
     public static class SelectorExtensions
     {
         public static TBuilder SelectUsing<TRequest, TEntity, TBuilder>(
-            this CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder> config,
+            this RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder> config,
             Func<TRequest, Expression<Func<TEntity, bool>>> selector)
             where TEntity : class
-            where TBuilder : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
+            where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
         {
             return config.SelectWith(builder => builder.Single(selector));
         }
 
         public static TBuilder SelectUsing<TRequest, TEntity, TBuilder>(
-            this CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder> config,
+            this RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder> config,
             Expression<Func<TRequest, TEntity, bool>> selector)
             where TEntity : class
-            where TBuilder : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
+            where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
         {
             return config.SelectWith(builder => builder.Single(selector));
         }
 
         public static TBuilder SelectUsing<TRequest, TEntity, TBuilder, TKey>(
-            this CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder> config,
+            this RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder> config,
             Expression<Func<TRequest, IEnumerable<TKey>>> requestEnumerableExpr,
             Expression<Func<TEntity, TKey>> entityKeyExpr)
             where TEntity : class
-            where TBuilder : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
+            where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
         {
             return config.SelectWith(builder => builder.Collection(requestEnumerableExpr, entityKeyExpr));
         }
 
         public static TBuilder SelectUsing<TRequest, TEntity, TBuilder, TIn, TKey>(
-            this CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder> config,
+            this RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder> config,
             Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr,
             Expression<Func<TIn, TKey>> requestItemKeyExpr,
             Expression<Func<TEntity, TKey>> entityKeyExpr)
             where TEntity : class
-            where TBuilder : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
+            where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
         {
             return config.SelectWith(builder => builder.Collection(requestEnumerableExpr, requestItemKeyExpr, entityKeyExpr));
         }

@@ -3,11 +3,11 @@ using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Errors
 {
-    public class CrudErrorDispatcher
+    public class ErrorDispatcher
     {
-        public ICrudErrorHandler Handler { get; internal set; }
+        public IErrorHandler Handler { get; internal set; }
 
-        public CrudErrorDispatcher(ICrudErrorHandler handler)
+        public ErrorDispatcher(IErrorHandler handler)
         {
             Handler = handler;
         }

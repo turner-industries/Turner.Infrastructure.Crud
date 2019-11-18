@@ -4,6 +4,6 @@ namespace Turner.Infrastructure.Crud.Requests
 {
     internal interface ICrudRequestHandler
     {
-        CrudErrorDispatcher ErrorDispatcher { get; }
+        ErrorDispatcher ErrorDispatcher { get; }
     }
 }

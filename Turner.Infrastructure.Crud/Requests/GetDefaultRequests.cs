@@ -16,7 +16,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class GetRequestProfile<TEntity, TKey, TOut>
-        : CrudRequestProfile<GetRequest<TEntity, TKey, TOut>>
+        : RequestProfile<GetRequest<TEntity, TKey, TOut>>
         where TEntity : class
     {
         public GetRequestProfile()
@@ -33,7 +33,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class GetByIdRequestProfile<TEntity, TOut>
-        : CrudRequestProfile<GetByIdRequest<TEntity, TOut>>
+        : RequestProfile<GetByIdRequest<TEntity, TOut>>
         where TEntity : class
     {
         public GetByIdRequestProfile()
@@ -50,7 +50,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class GetByGuidRequestProfile<TEntity, TOut>
-        : CrudRequestProfile<GetByGuidRequest<TEntity, TOut>>
+        : RequestProfile<GetByGuidRequest<TEntity, TOut>>
         where TEntity : class
     {
         public GetByGuidRequestProfile()
@@ -67,7 +67,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class GetByNameRequestProfile<TEntity, TOut>
-        : CrudRequestProfile<GetByNameRequest<TEntity, TOut>>
+        : RequestProfile<GetByNameRequest<TEntity, TOut>>
         where TEntity : class
     {
         public GetByNameRequestProfile()

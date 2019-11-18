@@ -17,7 +17,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class SaveRequestProfile<TEntity, TIn>
-        : CrudRequestProfile<SaveRequest<TEntity, TIn>>
+        : RequestProfile<SaveRequest<TEntity, TIn>>
         where TEntity : class
     {
         public SaveRequestProfile()
@@ -40,7 +40,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class SaveRequestProfile<TEntity, TIn, TOut>
-        : CrudRequestProfile<SaveRequest<TEntity, TIn, TOut>>
+        : RequestProfile<SaveRequest<TEntity, TIn, TOut>>
         where TEntity : class
     {
         public SaveRequestProfile()
@@ -70,7 +70,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class SaveRequestProfile<TEntity, TKey, TIn, TOut>
-        : CrudRequestProfile<SaveRequest<TEntity, TKey, TIn, TOut>>
+        : RequestProfile<SaveRequest<TEntity, TKey, TIn, TOut>>
         where TEntity : class
     {
         public SaveRequestProfile()
@@ -90,7 +90,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class SaveByIdRequestProfile<TEntity, TIn, TOut>
-        : CrudRequestProfile<SaveByIdRequest<TEntity, TIn, TOut>>
+        : RequestProfile<SaveByIdRequest<TEntity, TIn, TOut>>
         where TEntity : class
     {
         public SaveByIdRequestProfile()
@@ -107,7 +107,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class SaveByGuidRequestProfile<TEntity, TIn, TOut>
-        : CrudRequestProfile<SaveByGuidRequest<TEntity, TIn, TOut>>
+        : RequestProfile<SaveByGuidRequest<TEntity, TIn, TOut>>
         where TEntity : class
     {
         public SaveByGuidRequestProfile()
@@ -124,7 +124,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class SaveByNameRequestProfile<TEntity, TIn, TOut>
-        : CrudRequestProfile<SaveByNameRequest<TEntity, TIn, TOut>>
+        : RequestProfile<SaveByNameRequest<TEntity, TIn, TOut>>
         where TEntity : class
     {
         public SaveByNameRequestProfile()

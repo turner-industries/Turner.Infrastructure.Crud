@@ -15,11 +15,11 @@ namespace Turner.Infrastructure.Crud.Errors
         }
 
         public new static bool IsReturnedFor(Exception e)
-            => e is CrudFailedToFindException;
+            => e is FailedToFindException;
 
         public new static FailedToFindError From(object request, Exception exception)
         {
-            if (exception is CrudFailedToFindException cftfException)
+            if (exception is FailedToFindException cftfException)
                 return new FailedToFindError(request, cftfException.EntityTypeProperty);
 
             return new FailedToFindError(request, null);

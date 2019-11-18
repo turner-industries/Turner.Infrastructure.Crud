@@ -30,7 +30,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class UpdateAllByIdRequestProfile<TEntity, TIn>
-        : CrudBulkRequestProfile<UpdateAllByIdRequest<TEntity, TIn>, TIn>
+        : BulkRequestProfile<UpdateAllByIdRequest<TEntity, TIn>, TIn>
         where TEntity : class
     {
         public UpdateAllByIdRequestProfile()
@@ -49,7 +49,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class UpdateAllByIdRequestProfile<TEntity, TIn, TOut>
-        : CrudBulkRequestProfile<UpdateAllByIdRequest<TEntity, TIn, TOut>, TIn>
+        : BulkRequestProfile<UpdateAllByIdRequest<TEntity, TIn, TOut>, TIn>
         where TEntity : class
     {
         public UpdateAllByIdRequestProfile()
@@ -68,7 +68,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class UpdateAllByGuidRequestProfile<TEntity, TIn>
-        : CrudBulkRequestProfile<UpdateAllByGuidRequest<TEntity, TIn>, TIn>
+        : BulkRequestProfile<UpdateAllByGuidRequest<TEntity, TIn>, TIn>
         where TEntity : class
     {
         public UpdateAllByGuidRequestProfile()
@@ -87,7 +87,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class UpdateAllByGuidRequestProfile<TEntity, TIn, TOut>
-        : CrudBulkRequestProfile<UpdateAllByGuidRequest<TEntity, TIn, TOut>, TIn>
+        : BulkRequestProfile<UpdateAllByGuidRequest<TEntity, TIn, TOut>, TIn>
         where TEntity : class
     {
         public UpdateAllByGuidRequestProfile()
@@ -106,7 +106,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class UpdateAllByNameRequestProfile<TEntity, TIn>
-        : CrudBulkRequestProfile<UpdateAllByNameRequest<TEntity, TIn>, TIn>
+        : BulkRequestProfile<UpdateAllByNameRequest<TEntity, TIn>, TIn>
         where TEntity : class
     {
         public UpdateAllByNameRequestProfile()
@@ -125,7 +125,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class UpdateAllByNameRequestProfile<TEntity, TIn, TOut>
-        : CrudBulkRequestProfile<UpdateAllByNameRequest<TEntity, TIn, TOut>, TIn>
+        : BulkRequestProfile<UpdateAllByNameRequest<TEntity, TIn, TOut>, TIn>
         where TEntity : class
     {
         public UpdateAllByNameRequestProfile()

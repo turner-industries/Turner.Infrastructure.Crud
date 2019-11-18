@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
+// ReSharper disable once CheckNamespace
 namespace Turner.Infrastructure.Crud
 {
     public interface IBoxedEntityHook
@@ -66,8 +67,9 @@ namespace Turner.Infrastructure.Crud
 
     public class InstanceEntityHookFactory : IEntityHookFactory
     {
+        // ReSharper disable once NotAccessedField.Local
         private readonly object _instance;
-        private IBoxedEntityHook _adaptedInstance;
+        private readonly IBoxedEntityHook _adaptedInstance;
 
         private InstanceEntityHookFactory(object instance, IBoxedEntityHook adaptedInstance)
         {
@@ -90,7 +92,7 @@ namespace Turner.Infrastructure.Crud
 
     public class TypeEntityHookFactory : IEntityHookFactory
     {
-        private static Func<Type, object> s_serviceFactory;
+        private static Func<Type, object> _serviceFactory;
 
         private Func<IBoxedEntityHook> _hookFactory;
 
@@ -101,7 +103,7 @@ namespace Turner.Infrastructure.Crud
 
         internal static void BindContainer(Func<Type, object> serviceFactory)
         {
-            s_serviceFactory = serviceFactory;
+            _serviceFactory = serviceFactory;
         }
 
         internal static TypeEntityHookFactory From<THook, TRequest, TEntity>()
@@ -111,7 +113,7 @@ namespace Turner.Infrastructure.Crud
             return new TypeEntityHookFactory(
                 () =>
                 {
-                    var instance = (IEntityHook<TRequest, TEntity>)s_serviceFactory(typeof(THook));
+                    var instance = (IEntityHook<TRequest, TEntity>)_serviceFactory(typeof(THook));
                     return new FunctionEntityHook((request, entity, ct) 
                         => instance.Run((TRequest)request, (TEntity)entity, ct));
                 });

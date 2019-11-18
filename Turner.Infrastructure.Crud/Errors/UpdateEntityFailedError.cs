@@ -13,11 +13,11 @@ namespace Turner.Infrastructure.Crud.Errors
         }
 
         public new static bool IsReturnedFor(Exception e)
-            => e is CrudUpdateEntityFailedException;
+            => e is UpdateEntityFailedException;
 
         public new static UpdateEntityFailedError From(object request, Exception exception)
         {
-            if (exception is CrudUpdateEntityFailedException uefException)
+            if (exception is UpdateEntityFailedException uefException)
             {
                 return new UpdateEntityFailedError(request, 
                     uefException.ItemProperty, 

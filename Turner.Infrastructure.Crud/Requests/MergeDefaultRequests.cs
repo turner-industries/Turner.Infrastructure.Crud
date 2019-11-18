@@ -34,7 +34,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class MergeByIdRequestProfile<TEntity, TIn>
-        : CrudBulkRequestProfile<MergeByIdRequest<TEntity, TIn>, TIn>
+        : BulkRequestProfile<MergeByIdRequest<TEntity, TIn>, TIn>
         where TEntity : class
     {
         public MergeByIdRequestProfile()
@@ -53,7 +53,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class MergeByIdRequestProfile<TEntity, TIn, TOut>
-        : CrudBulkRequestProfile<MergeByIdRequest<TEntity, TIn, TOut>, TIn>
+        : BulkRequestProfile<MergeByIdRequest<TEntity, TIn, TOut>, TIn>
         where TEntity : class
     {
         public MergeByIdRequestProfile()
@@ -72,7 +72,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class MergeByGuidRequestProfile<TEntity, TIn>
-        : CrudBulkRequestProfile<MergeByGuidRequest<TEntity, TIn>, TIn>
+        : BulkRequestProfile<MergeByGuidRequest<TEntity, TIn>, TIn>
         where TEntity : class
     {
         public MergeByGuidRequestProfile()
@@ -91,7 +91,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class MergeByGuidRequestProfile<TEntity, TIn, TOut>
-        : CrudBulkRequestProfile<MergeByGuidRequest<TEntity, TIn, TOut>, TIn>
+        : BulkRequestProfile<MergeByGuidRequest<TEntity, TIn, TOut>, TIn>
         where TEntity : class
     {
         public MergeByGuidRequestProfile()
@@ -110,7 +110,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class MergeByNameRequestProfile<TEntity, TIn>
-        : CrudBulkRequestProfile<MergeByNameRequest<TEntity, TIn>, TIn>
+        : BulkRequestProfile<MergeByNameRequest<TEntity, TIn>, TIn>
         where TEntity : class
     {
         public MergeByNameRequestProfile()
@@ -129,7 +129,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class MergeByNameRequestProfile<TEntity, TIn, TOut>
-        : CrudBulkRequestProfile<MergeByNameRequest<TEntity, TIn, TOut>, TIn>
+        : BulkRequestProfile<MergeByNameRequest<TEntity, TIn, TOut>, TIn>
         where TEntity : class
     {
         public MergeByNameRequestProfile()

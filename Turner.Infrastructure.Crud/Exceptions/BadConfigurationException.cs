@@ -5,28 +5,28 @@ using System.Security.Permissions;
 namespace Turner.Infrastructure.Crud.Exceptions
 {
     [Serializable]
-    public class CrudFailedToFindException : Exception
+    public class BadConfigurationException : Exception
     {
-        public Type EntityTypeProperty { get; set; }
+        public string ConfigurationProperty { get; set; }
 
-        public CrudFailedToFindException()
+        public BadConfigurationException()
         {
         }
 
-        public CrudFailedToFindException(string message)
+        public BadConfigurationException(string message)
             : base(message)
         {
         }
 
-        public CrudFailedToFindException(string message, Exception inner)
+        public BadConfigurationException(string message, Exception inner)
             : base(message, inner)
         {
         }
 
-        protected CrudFailedToFindException(SerializationInfo info, StreamingContext context)
+        protected BadConfigurationException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-            EntityTypeProperty = (Type)info.GetValue(nameof(EntityTypeProperty), typeof(Type));
+            ConfigurationProperty = info.GetString(nameof(ConfigurationProperty));
         }
 
         [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]
@@ -35,7 +35,7 @@ namespace Turner.Infrastructure.Crud.Exceptions
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
 
-            info.AddValue(nameof(EntityTypeProperty), EntityTypeProperty);
+            info.AddValue(nameof(ConfigurationProperty), ConfigurationProperty);
 
             base.GetObjectData(info, context);
         }

@@ -7,7 +7,7 @@ namespace Turner.Infrastructure.Crud.Extensions
     {
         internal static IQueryable<TEntity> FilterWith<TEntity>(this IQueryable<TEntity> entities,
             object request, 
-            ICrudRequestConfig config)
+            IRequestConfig config)
             where TEntity : class
         {
             var filters = config.GetFiltersFor<TEntity>();
@@ -18,7 +18,7 @@ namespace Turner.Infrastructure.Crud.Extensions
 
         internal static IQueryable<TEntity> SortWith<TEntity>(this IQueryable<TEntity> entities,
             object request,
-            ICrudRequestConfig config)
+            IRequestConfig config)
             where TEntity : class
         {
             var sorter = config.GetSorterFor<TEntity>();
@@ -28,7 +28,7 @@ namespace Turner.Infrastructure.Crud.Extensions
 
         internal static IQueryable<TEntity> SelectWith<TEntity>(this IQueryable<TEntity> entities,
             object request,
-            ICrudRequestConfig config)
+            IRequestConfig config)
             where TEntity : class
         {
             var selector = config.GetSelectorFor<TEntity>().Get<TEntity>();

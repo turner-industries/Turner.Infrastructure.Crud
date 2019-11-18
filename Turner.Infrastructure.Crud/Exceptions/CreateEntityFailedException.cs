@@ -1,32 +1,33 @@
 ﻿using System;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using Newtonsoft.Json;
 
 namespace Turner.Infrastructure.Crud.Exceptions
 {
     [Serializable]
-    public class BadCrudConfigurationException : Exception
+    public class CreateEntityFailedException : Exception
     {
-        public string ConfigurationProperty { get; set; }
+        public object ItemProperty { get; set; }
 
-        public BadCrudConfigurationException()
+        public CreateEntityFailedException()
         {
         }
 
-        public BadCrudConfigurationException(string message)
+        public CreateEntityFailedException(string message)
             : base(message)
         {
         }
 
-        public BadCrudConfigurationException(string message, Exception inner)
+        public CreateEntityFailedException(string message, Exception inner)
             : base(message, inner)
         {
         }
 
-        protected BadCrudConfigurationException(SerializationInfo info, StreamingContext context)
+        protected CreateEntityFailedException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-            ConfigurationProperty = info.GetString(nameof(ConfigurationProperty));
+            ItemProperty = JsonConvert.DeserializeObject(info.GetString(nameof(ItemProperty)));
         }
 
         [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]
@@ -34,8 +35,8 @@ namespace Turner.Infrastructure.Crud.Exceptions
         {
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
-
-            info.AddValue(nameof(ConfigurationProperty), ConfigurationProperty);
+            
+            info.AddValue(nameof(ItemProperty), JsonConvert.SerializeObject(ItemProperty));
 
             base.GetObjectData(info, context);
         }

@@ -6,27 +6,27 @@ using System.Security.Permissions;
 namespace Turner.Infrastructure.Crud.Exceptions
 {
     [Serializable]
-    public class CrudRequestFailedException : Exception
+    public class RequestFailedException : Exception
     {
         public Type RequestTypeProperty { get; set; }
 
         public object ResponseData { get; set; }
         
-        public CrudRequestFailedException()
+        public RequestFailedException()
         {
         }
 
-        public CrudRequestFailedException(string message)
+        public RequestFailedException(string message)
             : base(message)
         {
         }
 
-        public CrudRequestFailedException(string message, Exception inner)
+        public RequestFailedException(string message, Exception inner)
             : base(message, inner)
         {
         }
 
-        protected CrudRequestFailedException(SerializationInfo info, StreamingContext context)
+        protected RequestFailedException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
             RequestTypeProperty = (Type) info.GetValue(nameof(RequestTypeProperty), typeof(Type));

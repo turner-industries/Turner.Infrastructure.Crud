@@ -6,36 +6,36 @@ using Turner.Infrastructure.Crud.Requests;
 
 namespace Turner.Infrastructure.Crud.Configuration
 {
-    public abstract class CrudBulkRequestProfile<TRequest, TItem>
-        : CrudRequestProfileCommon<TRequest>
+    public abstract class BulkRequestProfile<TRequest, TItem>
+        : RequestProfileCommon<TRequest>
         where TRequest : ICrudRequest, IBulkRequest
     {
         private readonly Expression<Func<TRequest, IEnumerable<TItem>>> _defaultItemSource;
 
-        public CrudBulkRequestProfile()
+        public BulkRequestProfile()
         {
         }
 
-        public CrudBulkRequestProfile(Expression<Func<TRequest, IEnumerable<TItem>>> defaultItemSource)
+        public BulkRequestProfile(Expression<Func<TRequest, IEnumerable<TItem>>> defaultItemSource)
         {
             _defaultItemSource = defaultItemSource;
         }
 
-        protected CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> ForEntity<TEntity>()
+        protected BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> ForEntity<TEntity>()
             where TEntity : class
         {
-            var builder = new CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>();
+            var builder = new BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>();
 
             if (_defaultItemSource != null)
                 builder.WithRequestItems(_defaultItemSource);
 
-            _requestEntityBuilders[typeof(TEntity)] = builder;
+            RequestEntityBuilders[typeof(TEntity)] = builder;
 
             return builder;
         }
     }
 
-    public class DefaultBulkCrudRequestProfile<TRequest> : CrudBulkRequestProfile<TRequest, TRequest>
+    public class DefaultBulkRequestProfile<TRequest> : BulkRequestProfile<TRequest, TRequest>
         where TRequest : ICrudRequest, IBulkRequest
     {
     }

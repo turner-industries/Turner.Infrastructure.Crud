@@ -8,7 +8,7 @@ using Turner.Infrastructure.Crud.Exceptions;
 
 namespace Turner.Infrastructure.Crud.Configuration
 {
-    public interface ICrudRequestConfig
+    public interface IRequestConfig
     {
         Type RequestType { get; }
 
@@ -60,8 +60,8 @@ namespace Turner.Infrastructure.Crud.Configuration
             where TEntity : class;
     }
 
-    public class CrudRequestConfig<TRequest>
-        : ICrudRequestConfig
+    public class RequestConfig<TRequest>
+        : IRequestConfig
     {
         private IKey _requestKey;
 
@@ -77,8 +77,8 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         private readonly RequestOptions _options = new RequestOptions();
 
-        private readonly Dictionary<Type, CrudRequestOptionsConfig> _entityOptionOverrides
-            = new Dictionary<Type, CrudRequestOptionsConfig>();
+        private readonly Dictionary<Type, RequestOptionsConfig> _entityOptionOverrides
+            = new Dictionary<Type, RequestOptionsConfig>();
 
         private readonly Dictionary<Type, RequestOptions> _optionsCache
             = new Dictionary<Type, RequestOptions>();
@@ -207,7 +207,7 @@ namespace Turner.Infrastructure.Crud.Configuration
                     return selector;
             }
 
-            throw new BadCrudConfigurationException(
+            throw new BadConfigurationException(
                 $"No selector defined for entity '{typeof(TEntity)}' " +
                 $"for request '{typeof(TRequest)}'.");
         }
@@ -278,7 +278,7 @@ namespace Turner.Infrastructure.Crud.Configuration
                     $"Unable to join entities of type '{entities.GetType()}' " +
                     $"with request items of type '{items.GetType()}'. ";
 
-                throw new BadCrudConfigurationException(message);
+                throw new BadConfigurationException(message);
             }
 
             return joiner(items, entities).Select(t => new Tuple<object, TEntity>(t.Item1, (TEntity)t.Item2));
@@ -293,13 +293,13 @@ namespace Turner.Infrastructure.Crud.Configuration
             return null;
         }
 
-        internal void SetOptions(CrudRequestOptionsConfig options)
+        internal void SetOptions(RequestOptionsConfig options)
         {
             if (options != null)
                 OverrideOptions(_options, options);
         }
 
-        internal void SetOptionsFor<TEntity>(CrudRequestOptionsConfig options)
+        internal void SetOptionsFor<TEntity>(RequestOptionsConfig options)
         {
             _entityOptionOverrides[typeof(TEntity)] = options;
         }
@@ -415,7 +415,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             }
         }
 
-        private void OverrideOptions(RequestOptions options, CrudRequestOptionsConfig config)
+        private void OverrideOptions(RequestOptions options, RequestOptionsConfig config)
         {
             if (config.UseProjection.HasValue)
                 options.UseProjection = config.UseProjection.Value;

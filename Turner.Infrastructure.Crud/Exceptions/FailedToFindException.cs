@@ -1,33 +1,32 @@
 ﻿using System;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using Newtonsoft.Json;
 
 namespace Turner.Infrastructure.Crud.Exceptions
 {
     [Serializable]
-    public class CrudCreateResultFailedException : Exception
+    public class FailedToFindException : Exception
     {
-        public object EntityProperty { get; set; }
+        public Type EntityTypeProperty { get; set; }
 
-        public CrudCreateResultFailedException()
+        public FailedToFindException()
         {
         }
 
-        public CrudCreateResultFailedException(string message)
+        public FailedToFindException(string message)
             : base(message)
         {
         }
 
-        public CrudCreateResultFailedException(string message, Exception inner)
+        public FailedToFindException(string message, Exception inner)
             : base(message, inner)
         {
         }
 
-        protected CrudCreateResultFailedException(SerializationInfo info, StreamingContext context)
+        protected FailedToFindException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-            EntityProperty = JsonConvert.DeserializeObject(info.GetString(nameof(EntityProperty)));
+            EntityTypeProperty = (Type)info.GetValue(nameof(EntityTypeProperty), typeof(Type));
         }
 
         [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]
@@ -35,8 +34,8 @@ namespace Turner.Infrastructure.Crud.Exceptions
         {
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
-            
-            info.AddValue(nameof(EntityProperty), JsonConvert.SerializeObject(EntityProperty));
+
+            info.AddValue(nameof(EntityTypeProperty), EntityTypeProperty);
 
             base.GetObjectData(info, context);
         }

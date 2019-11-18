@@ -25,20 +25,19 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public Task<Response<PagedGetAllResult<TOut>>> HandleAsync(TRequest request)
         {
-            return HandleWithErrorsAsync(request, HandleAsync);
+            return HandleWithErrorsAsync(request, _HandleAsync);
         }
 
-        public async Task<PagedGetAllResult<TOut>> HandleAsync(TRequest request, CancellationToken token)
+        public async Task<PagedGetAllResult<TOut>> _HandleAsync(TRequest request)
         {
-            await request.RunRequestHooks(RequestConfig, token).Configure();
+            await request.RunRequestHooks(RequestConfig).Configure();
                     
             var entities = Context
                 .Set<TEntity>()
                 .FilterWith(request, RequestConfig)
                 .SortWith(request, RequestConfig);
                     
-            var totalItemCount = await entities.CountAsync(token).Configure();
-            token.ThrowIfCancellationRequested();
+            var totalItemCount = await entities.CountAsync().Configure();
 
             var pageSize = request.PageSize < 1 ? totalItemCount : request.PageSize;
             var totalPageCount = totalItemCount == 0 ? 1 : (totalItemCount + pageSize - 1) / pageSize;
@@ -50,7 +49,7 @@ namespace Turner.Infrastructure.Crud.Requests
             if (totalItemCount != 0)
             {
                 entities = entities.Skip(startIndex).Take(pageSize);
-                var items = await GetItems(request, entities, token).Configure();
+                var items = await GetItems(request, entities).Configure();
                 result = new PagedGetAllResult<TOut>(items, pageNumber, pageSize, totalPageCount, totalItemCount);
             }
             else
@@ -58,12 +57,14 @@ namespace Turner.Infrastructure.Crud.Requests
                 result = new PagedGetAllResult<TOut>(Array.Empty<TOut>(), 1, pageSize, 1, 0);
             }
 
-            return await request.RunResultHooks(RequestConfig, result, token).Configure();
+            return await request.RunResultHooks(RequestConfig, result).Configure();
         }
 
-        private async Task<TOut[]> GetItems(TRequest request, IQueryable<TEntity> entities, CancellationToken token)
+        private async Task<TOut[]> GetItems(TRequest request, 
+            IQueryable<TEntity> entities, 
+            CancellationToken token = default(CancellationToken))
         {
-            var items = Array.Empty<TOut>();
+            TOut[] items;
 
             if (Options.UseProjection)
             {
@@ -73,12 +74,12 @@ namespace Turner.Infrastructure.Crud.Requests
                 if (items.Length == 0)
                 {
                     if (RequestConfig.ErrorConfig.FailedToFindInGetAllIsError)
-                        throw new CrudFailedToFindException { EntityTypeProperty = typeof(TEntity) };
+                        throw new FailedToFindException { EntityTypeProperty = typeof(TEntity) };
 
                     var defaultEntity = RequestConfig.GetDefaultFor<TEntity>();
                     if (defaultEntity != null)
                     {
-                        items = new TOut[]
+                        items = new[]
                         {
                             await defaultEntity.CreateResult<TEntity, TOut>(RequestConfig, token).Configure()
                         };
@@ -93,11 +94,11 @@ namespace Turner.Infrastructure.Crud.Requests
                 if (resultEntities.Length == 0)
                 {
                     if (RequestConfig.ErrorConfig.FailedToFindInGetAllIsError)
-                        throw new CrudFailedToFindException { EntityTypeProperty = typeof(TEntity) };
+                        throw new FailedToFindException { EntityTypeProperty = typeof(TEntity) };
 
                     var defaultEntity = RequestConfig.GetDefaultFor<TEntity>();
                     if (defaultEntity != null)
-                        resultEntities = new TEntity[] { RequestConfig.GetDefaultFor<TEntity>() };
+                        resultEntities = new[] { RequestConfig.GetDefaultFor<TEntity>() };
                 }
 
                 await request.RunEntityHooks<TEntity>(RequestConfig, entities, token).Configure();

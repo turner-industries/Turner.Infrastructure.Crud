@@ -22,7 +22,8 @@ namespace Turner.Infrastructure.Crud.Requests
             Options = RequestConfig.GetOptionsFor<TEntity>();
         }
         
-        protected async Task<TEntity[]> UpdateEntities(TRequest request, CancellationToken ct)
+        protected async Task<TEntity[]> UpdateEntities(TRequest request, 
+            CancellationToken ct = default(CancellationToken))
         {
             await request.RunRequestHooks(RequestConfig, ct).Configure();
 
@@ -39,7 +40,10 @@ namespace Turner.Infrastructure.Crud.Requests
 
             ct.ThrowIfCancellationRequested();
 
-            var joinedItems = RequestConfig.Join(items, entities).Where(x => x.Item2 != null);
+            var joinedItems = RequestConfig
+                .Join(items, entities)
+                .Where(x => x.Item2 != null)
+                .ToArray();
 
             var updatedEntities = await request.UpdateEntities(RequestConfig, joinedItems, ct).Configure();
 
@@ -69,7 +73,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public Task<Response> HandleAsync(TRequest request)
         {
-            return HandleWithErrorsAsync(request, (_, token) => (Task)UpdateEntities(request, token));
+            return HandleWithErrorsAsync(request, _ => (Task)UpdateEntities(request));
         }
     }
 
@@ -87,16 +91,16 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public Task<Response<UpdateAllResult<TOut>>> HandleAsync(TRequest request)
         {
-            return HandleWithErrorsAsync(request, HandleAsync);
+            return HandleWithErrorsAsync(request, _HandleAsync);
         }
 
-        public async Task<UpdateAllResult<TOut>> HandleAsync(TRequest request, CancellationToken token)
+        public async Task<UpdateAllResult<TOut>> _HandleAsync(TRequest request)
         {
-            var entities = await UpdateEntities(request, token).Configure();
-            var items = await entities.CreateResults<TEntity, TOut>(RequestConfig, token).Configure();
+            var entities = await UpdateEntities(request).Configure();
+            var items = await entities.CreateResults<TEntity, TOut>(RequestConfig).Configure();
             var result = new UpdateAllResult<TOut>(items);
 
-            return await request.RunResultHooks(RequestConfig, result, token).Configure();
+            return await request.RunResultHooks(RequestConfig, result).Configure();
         }
     }
 }

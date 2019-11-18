@@ -17,7 +17,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class CreateRequestProfile<TEntity, TIn>
-        : CrudRequestProfile<CreateRequest<TEntity, TIn>>
+        : RequestProfile<CreateRequest<TEntity, TIn>>
         where TEntity : class
     {
         public CreateRequestProfile()
@@ -40,7 +40,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class CreateRequestProfile<TEntity, TIn, TOut>
-        : CrudRequestProfile<CreateRequest<TEntity, TIn, TOut>>
+        : RequestProfile<CreateRequest<TEntity, TIn, TOut>>
         where TEntity : class
     {
         public CreateRequestProfile()

@@ -16,7 +16,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class DeleteRequestProfile<TEntity, TKey>
-        : CrudRequestProfile<DeleteRequest<TEntity, TKey>>
+        : RequestProfile<DeleteRequest<TEntity, TKey>>
         where TEntity : class
     {
         public DeleteRequestProfile()
@@ -35,7 +35,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class DeleteRequestProfile<TEntity, TKey, TOut>
-        : CrudRequestProfile<DeleteRequest<TEntity, TKey, TOut>>
+        : RequestProfile<DeleteRequest<TEntity, TKey, TOut>>
         where TEntity : class
     {
         public DeleteRequestProfile()
@@ -53,7 +53,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class DeleteByIdRequestProfile<TEntity>
-        : CrudRequestProfile<DeleteByIdRequest<TEntity>>
+        : RequestProfile<DeleteByIdRequest<TEntity>>
         where TEntity : class
     {
         public DeleteByIdRequestProfile()
@@ -71,7 +71,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class DeleteByIdRequestProfile<TEntity, TOut>
-        : CrudRequestProfile<DeleteByIdRequest<TEntity, TOut>>
+        : RequestProfile<DeleteByIdRequest<TEntity, TOut>>
         where TEntity : class
     {
         public DeleteByIdRequestProfile()
@@ -89,7 +89,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class DeleteByGuidRequestProfile<TEntity>
-        : CrudRequestProfile<DeleteByGuidRequest<TEntity>>
+        : RequestProfile<DeleteByGuidRequest<TEntity>>
         where TEntity : class
     {
         public DeleteByGuidRequestProfile()
@@ -107,7 +107,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class DeleteByGuidRequestProfile<TEntity, TOut>
-        : CrudRequestProfile<DeleteByGuidRequest<TEntity, TOut>>
+        : RequestProfile<DeleteByGuidRequest<TEntity, TOut>>
         where TEntity : class
     {
         public DeleteByGuidRequestProfile()
@@ -125,7 +125,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class DeleteByNameRequestProfile<TEntity>
-        : CrudRequestProfile<DeleteByNameRequest<TEntity>>
+        : RequestProfile<DeleteByNameRequest<TEntity>>
         where TEntity : class
     {
         public DeleteByNameRequestProfile()
@@ -143,7 +143,7 @@ namespace Turner.Infrastructure.Crud.Requests
     }
 
     public class DeleteByNameRequestProfile<TEntity, TOut>
-        : CrudRequestProfile<DeleteByNameRequest<TEntity, TOut>>
+        : RequestProfile<DeleteByNameRequest<TEntity, TOut>>
         where TEntity : class
     {
         public DeleteByNameRequestProfile()

@@ -6,28 +6,31 @@ using Newtonsoft.Json;
 namespace Turner.Infrastructure.Crud.Exceptions
 {
     [Serializable]
-    public class CrudCreateEntityFailedException : Exception
+    public class UpdateEntityFailedException : Exception
     {
         public object ItemProperty { get; set; }
 
-        public CrudCreateEntityFailedException()
+        public object EntityProperty { get; set; }
+
+        public UpdateEntityFailedException()
         {
         }
 
-        public CrudCreateEntityFailedException(string message)
+        public UpdateEntityFailedException(string message)
             : base(message)
         {
         }
 
-        public CrudCreateEntityFailedException(string message, Exception inner)
+        public UpdateEntityFailedException(string message, Exception inner)
             : base(message, inner)
         {
         }
 
-        protected CrudCreateEntityFailedException(SerializationInfo info, StreamingContext context)
+        protected UpdateEntityFailedException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
             ItemProperty = JsonConvert.DeserializeObject(info.GetString(nameof(ItemProperty)));
+            EntityProperty = JsonConvert.DeserializeObject(info.GetString(nameof(EntityProperty)));
         }
 
         [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]
@@ -35,8 +38,9 @@ namespace Turner.Infrastructure.Crud.Exceptions
         {
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
-            
+
             info.AddValue(nameof(ItemProperty), JsonConvert.SerializeObject(ItemProperty));
+            info.AddValue(nameof(EntityProperty), JsonConvert.SerializeObject(EntityProperty));
 
             base.GetObjectData(info, context);
         }

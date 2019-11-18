@@ -54,7 +54,7 @@ namespace Turner.Infrastructure.Crud
                     $"from a request of type '{request.GetType()}'. " +
                     $"Configuration expected a request of type '{_boundRequestType}'.";
 
-                throw new CrudRequestFailedException(message)
+                throw new RequestFailedException(message)
                 {
                     RequestTypeProperty = request.GetType()
                 };

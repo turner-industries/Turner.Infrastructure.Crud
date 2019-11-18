@@ -6,7 +6,9 @@ using System.Linq.Expressions;
 
 namespace Turner.Infrastructure.Crud.Context
 {
-    public interface IEntityQueryable<TEntity> : IOrderedQueryable<TEntity>, IAsyncEnumerable<TEntity>
+    // ReSharper disable once PossibleInterfaceMemberAmbiguity
+    public interface IEntityQueryable<out TEntity> 
+        : IOrderedQueryable<TEntity>, IAsyncEnumerable<TEntity>
     {
     }
 

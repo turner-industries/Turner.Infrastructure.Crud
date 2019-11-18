@@ -11,8 +11,8 @@ using Turner.Infrastructure.Crud.Exceptions;
 // ReSharper disable once CheckNamespace
 namespace Turner.Infrastructure.Crud.Configuration.Builders
 {
-    public class CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>
-        : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>>
+    public class BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>
+        : RequestEntityConfigBuilderCommon<TRequest, TEntity, BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>>
         where TEntity : class
     {
         private Expression<Func<TRequest, IEnumerable<TItem>>> _getRequestItems;
@@ -20,7 +20,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         private readonly List<IItemHookFactory> _itemHooks
             = new List<IItemHookFactory>();
         
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithRequestItems(
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithRequestItems(
             Expression<Func<TRequest, IEnumerable<TItem>>> requestItemsExpr)
         {
             _getRequestItems = requestItemsExpr;
@@ -29,7 +29,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook<THook, TBaseRequest>()
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook<THook, TBaseRequest>()
             where THook : IItemHook<TBaseRequest, TItem>
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
@@ -40,11 +40,11 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook<THook>()
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook<THook>()
             where THook : IItemHook<TRequest, TItem>
             => AddItemHook<THook, TRequest>();
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook<TBaseRequest>(
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook<TBaseRequest>(
             IItemHook<TBaseRequest, TItem> hook)
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
@@ -55,7 +55,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook(
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook(
             Func<TRequest, TItem, CancellationToken, Task<TItem>> hook)
         {
             _itemHooks.Add(FunctionItemHookFactory.From(hook));
@@ -63,11 +63,11 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook(
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook(
             Func<TRequest, TItem, Task<TItem>> hook)
             => AddItemHook((request, item, ct) => hook(request, item));
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook(
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook(
             Func<TRequest, TItem, TItem> hook)
         {
             _itemHooks.Add(FunctionItemHookFactory.From(hook));
@@ -75,7 +75,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseRequestItemKey<TKey>(
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseRequestItemKey<TKey>(
             Expression<Func<TItem, TKey>> itemKeyExpr)
         {
             RequestItemKey = new Key(typeof(TKey), itemKeyExpr);
@@ -83,7 +83,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseRequestItemKey(
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseRequestItemKey(
             string itemKeyProperty)
         {
             var iParamExpr = Expression.Parameter(typeof(TItem));
@@ -96,7 +96,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<TRequest, TItem, CancellationToken, Task<TEntity>> creator)
         {
             CreateEntity = (request, item, ct) => creator((TRequest)request, (TItem)item, ct);
@@ -104,11 +104,11 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<TRequest, TItem, Task<TEntity>> creator)
             => CreateEntityWith((request, item, ct) => creator(request, item));
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<TRequest, TItem, TEntity> creator)
         {
             CreateEntity = (request, item, ct) =>
@@ -122,7 +122,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<TItem, CancellationToken, Task<TEntity>> creator)
         {
             CreateEntity = (request, item, ct) => creator((TItem)item, ct);
@@ -130,11 +130,11 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<TItem, Task<TEntity>> creator)
             => CreateEntityWith((item, ct) => creator(item));
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<TItem, TEntity> creator)
         {
             CreateEntity = (request, item, ct) =>
@@ -148,7 +148,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<TRequest, TItem, TEntity, CancellationToken, Task<TEntity>> updator)
         {
             UpdateEntity = (request, item, entity, ct) => updator((TRequest)request, (TItem)item, entity, ct);
@@ -156,11 +156,11 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<TRequest, TItem, TEntity, Task<TEntity>> updator)
             => UpdateEntityWith((request, item, entity, ct) => updator(request, item, entity));
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<TRequest, TItem, TEntity, TEntity> updator)
         {
             UpdateEntity = (request, item, entity, ct) =>
@@ -174,7 +174,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<TItem, TEntity, CancellationToken, Task<TEntity>> updator)
         {
             UpdateEntity = (request, item, entity, ct) => updator((TItem)item, entity, ct);
@@ -182,11 +182,11 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<TItem, TEntity, Task<TEntity>> updator)
             => UpdateEntityWith((item, entity, ct) => updator(item, entity));
 
-        public CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<TItem, TEntity, TEntity> updator)
         {
             UpdateEntity = (request, item, entity, ct) =>
@@ -200,7 +200,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return this;
         }
 
-        public override void Build<TCompatibleRequest>(CrudRequestConfig<TCompatibleRequest> config)
+        public override void Build<TCompatibleRequest>(RequestConfig<TCompatibleRequest> config)
         {
             if (_getRequestItems == null)
             {
@@ -208,7 +208,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
                     $"No request item source has been defined for '{typeof(TRequest)}'." +
                     $"Define item source by calling `{nameof(WithRequestItems)}` in the request's profile.";
 
-                throw new BadCrudConfigurationException(message);
+                throw new BadConfigurationException(message);
             }
 
             base.Build(config);
@@ -244,7 +244,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         }
 
         private void DefaultSelector<TCompatibleRequest>(
-            CrudRequestConfig<TCompatibleRequest> config)
+            RequestConfig<TCompatibleRequest> config)
         {
             var itemKey = config.GetRequestKey();
             var entityKey = config.GetKeyFor<TEntity>();
@@ -256,7 +256,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             }
         }
 
-        private void BuildJoiner<TCompatibleRequest>(CrudRequestConfig<TCompatibleRequest> config)
+        private void BuildJoiner<TCompatibleRequest>(RequestConfig<TCompatibleRequest> config)
         {
             if (EntityKey == null || RequestItemKey == null)
                 return;
@@ -265,7 +265,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
                 .GetMethod("FullOuterJoin", BindingFlags.Static | BindingFlags.NonPublic)
                 .MakeGenericMethod(typeof(object), typeof(TEntity), RequestItemKey.KeyType);
 
-            var makeKeySelectorInfo = typeof(CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>)
+            var makeKeySelectorInfo = typeof(BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>)
                 .GetMethod("MakeKeySelector", BindingFlags.Static | BindingFlags.NonPublic);
 
             var itemsParam = Expression.Parameter(typeof(IEnumerable<object>));

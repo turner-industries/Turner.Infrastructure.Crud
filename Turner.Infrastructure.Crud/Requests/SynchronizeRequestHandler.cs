@@ -25,7 +25,8 @@ namespace Turner.Infrastructure.Crud.Requests
             Options = RequestConfig.GetOptionsFor<TEntity>();
         }
 
-        protected async Task<TEntity[]> SynchronizeEntities(TRequest request, CancellationToken ct)
+        protected async Task<TEntity[]> SynchronizeEntities(TRequest request, 
+            CancellationToken ct = default(CancellationToken))
         {
             await request.RunRequestHooks(RequestConfig, ct).Configure();
 
@@ -55,7 +56,7 @@ namespace Turner.Infrastructure.Crud.Requests
             ct.ThrowIfCancellationRequested();
 
             var updatedEntities = await UpdateEntities(
-                request, joinedItems.Where(x => x.Item2 != null), ct).Configure();
+                request, joinedItems.Where(x => x.Item2 != null).ToArray(), ct).Configure();
 
             ct.ThrowIfCancellationRequested();
 
@@ -67,7 +68,8 @@ namespace Turner.Infrastructure.Crud.Requests
             return mergedEntities;
         }
 
-        private async Task DeleteEntities(TRequest request, CancellationToken ct)
+        private async Task DeleteEntities(TRequest request, 
+            CancellationToken ct = default(CancellationToken))
         {
             var whereClause = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>()(request);
             var notWhereClause = whereClause.Update(
@@ -85,7 +87,7 @@ namespace Turner.Infrastructure.Crud.Requests
         
         private async Task<TEntity[]> CreateEntities(TRequest request, 
             IEnumerable<object> items, 
-            CancellationToken ct)
+            CancellationToken ct = default(CancellationToken))
         {
             var entities = await request.CreateEntities<TEntity>(RequestConfig, items, ct).Configure();
 
@@ -98,7 +100,7 @@ namespace Turner.Infrastructure.Crud.Requests
         }
 
         private async Task<TEntity[]> UpdateEntities(TRequest request,
-            IEnumerable<Tuple<object, TEntity>> items,
+            ICollection<Tuple<object, TEntity>> items,
             CancellationToken ct)
         {
             var entities = await request.UpdateEntities(RequestConfig, items, ct).Configure();
@@ -125,7 +127,7 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public Task<Response> HandleAsync(TRequest request)
         {
-            return HandleWithErrorsAsync(request, (_, token) => (Task)SynchronizeEntities(request, token));
+            return HandleWithErrorsAsync(request, _ => (Task)SynchronizeEntities(request));
         }
     }
 
@@ -142,16 +144,16 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public Task<Response<SynchronizeResult<TOut>>> HandleAsync(TRequest request)
         {
-            return HandleWithErrorsAsync(request, HandleAsync);
+            return HandleWithErrorsAsync(request, _HandleAsync);
         }
 
-        public async Task<SynchronizeResult<TOut>> HandleAsync(TRequest request, CancellationToken token)
+        public async Task<SynchronizeResult<TOut>> _HandleAsync(TRequest request)
         {
-            var entities = await SynchronizeEntities(request, token).Configure();
-            var items = await entities.CreateResults<TEntity, TOut>(RequestConfig, token).Configure();
+            var entities = await SynchronizeEntities(request).Configure();
+            var items = await entities.CreateResults<TEntity, TOut>(RequestConfig).Configure();
             var result = new SynchronizeResult<TOut>(items);
 
-            return await request.RunResultHooks(RequestConfig, result, token).Configure();
+            return await request.RunResultHooks(RequestConfig, result).Configure();
         }
     }
 }

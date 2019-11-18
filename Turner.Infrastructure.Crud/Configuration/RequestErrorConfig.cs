@@ -3,7 +3,7 @@ using Turner.Infrastructure.Crud.Errors;
 
 namespace Turner.Infrastructure.Crud.Configuration
 {
-    public class CrudRequestErrorConfig
+    public class RequestErrorConfig
     {
         public bool? FailedToFindInGetIsError { get; set; }
 
@@ -15,6 +15,6 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         public bool? FailedToFindInDeleteIsError { get; set; }
         
-        public Func<ICrudErrorHandler> ErrorHandlerFactory { get; set; }
+        public Func<IErrorHandler> ErrorHandlerFactory { get; set; }
     }
 }

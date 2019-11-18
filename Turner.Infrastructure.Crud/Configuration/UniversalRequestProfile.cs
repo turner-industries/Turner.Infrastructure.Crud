@@ -8,10 +8,10 @@ using Turner.Infrastructure.Crud.Exceptions;
 namespace Turner.Infrastructure.Crud.Configuration
 {
     public abstract class UniversalRequestProfile<TRequest>
-        : CrudRequestProfile
+        : RequestProfile
     {
-        private List<CrudRequestProfile> _inheritProfiles
-            = new List<CrudRequestProfile>();
+        private List<RequestProfile> _inheritProfiles
+            = new List<RequestProfile>();
 
         protected internal readonly List<IRequestHookFactory> RequestHooks
             = new List<IRequestHookFactory>();
@@ -21,15 +21,15 @@ namespace Turner.Infrastructure.Crud.Configuration
 
         public override Type RequestType => typeof(TRequest);
 
-        internal override void Inherit(IEnumerable<CrudRequestProfile> profiles)
+        internal override void Inherit(IEnumerable<RequestProfile> profiles)
         {
             _inheritProfiles = profiles.ToList();
         }
 
-        internal override ICrudRequestConfig BuildConfiguration()
+        internal override IRequestConfig BuildConfiguration()
         {
-            var config = (CrudRequestConfig<TRequest>)Activator.CreateInstance(
-                typeof(CrudRequestConfig<>).MakeGenericType(typeof(TRequest)));
+            var config = (RequestConfig<TRequest>)Activator.CreateInstance(
+                typeof(RequestConfig<>).MakeGenericType(typeof(TRequest)));
 
             foreach (var profile in _inheritProfiles)
                 profile.Apply(config);
@@ -37,7 +37,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             return config;
         }
 
-        internal override void Apply<TConfigRequest>(CrudRequestConfig<TConfigRequest> config)
+        internal override void Apply<TConfigRequest>(RequestConfig<TConfigRequest> config)
         {
             config.AddRequestHooks(RequestHooks);
             config.AddResultHooks(ResultHooks);

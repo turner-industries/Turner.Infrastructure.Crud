@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+// ReSharper disable once CheckNamespace
 namespace Turner.Infrastructure.Crud
 {
     public class BasicSortOperation<TRequest, TEntity>
@@ -44,9 +45,9 @@ namespace Turner.Infrastructure.Crud
             if (_firstSortFunc == null || (_predicate != null && !_predicate(request)))
                 return null;
             
-            var result = _firstSortFunc(queryable) as IOrderedQueryable<TEntity>;
+            var result = _firstSortFunc(queryable);
             foreach (var sortFunc in _restSortFuncs)
-                result = sortFunc(result) as IOrderedQueryable<TEntity>;
+                result = sortFunc(result);
 
             return result;
         }
@@ -55,8 +56,7 @@ namespace Turner.Infrastructure.Crud
     public class BasicSorter<TRequest, TEntity> : ISorter<TRequest, TEntity>
         where TEntity : class
     {
-        private readonly List<BasicSortOperation<TRequest, TEntity>> _operations
-            = new List<BasicSortOperation<TRequest, TEntity>>();
+        private readonly List<BasicSortOperation<TRequest, TEntity>> _operations;
 
         public BasicSorter(List<BasicSortOperation<TRequest, TEntity>> operations)
         {
@@ -65,11 +65,9 @@ namespace Turner.Infrastructure.Crud
         
         public IOrderedQueryable<TEntity> Sort(TRequest request, IQueryable<TEntity> queryable)
         {
-            IOrderedQueryable<TEntity> result;
-
             foreach (var operation in _operations)
             {
-                result = operation.Sort(request, queryable);
+                var result = operation.Sort(request, queryable);
                 if (result != null)
                     return result;
             }

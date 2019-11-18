@@ -1,4 +1,5 @@
 ﻿using Turner.Infrastructure.Mediator;
+
 // ReSharper disable UnusedTypeParameter
 
 namespace Turner.Infrastructure.Crud.Requests

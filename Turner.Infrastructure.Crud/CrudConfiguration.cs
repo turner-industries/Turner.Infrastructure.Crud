@@ -9,6 +9,7 @@ using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Validation;
 using Turner.Infrastructure.Mediator;
+using Turner.Infrastructure.Mediator.Decorators;
 
 namespace Turner.Infrastructure.Crud
 {
@@ -32,7 +33,7 @@ namespace Turner.Infrastructure.Crud
         private readonly List<ICrudInitializationTask> _tasks
             = new List<ICrudInitializationTask>();
 
-        private CrudOptions _options = new CrudOptions();
+        private readonly CrudOptions _options = new CrudOptions();
 
         public CrudInitializer(Container container, Assembly[] assemblies = null)
         {
@@ -58,7 +59,7 @@ namespace Turner.Infrastructure.Crud
 
             return this;
         }
-
+        
         public CrudInitializer ValidateAllRequests(bool validate = true)
         {
             _options.ValidateAllRequests = validate;
@@ -76,7 +77,7 @@ namespace Turner.Infrastructure.Crud
         public CrudInitializer RemoveInitializers<T>()
             where T : ICrudInitializationTask
         {
-            _tasks.RemoveAll(task => typeof(T).IsAssignableFrom(task.GetType()));
+            _tasks.RemoveAll(task => task is T);
 
             return this;
         }
@@ -84,7 +85,7 @@ namespace Turner.Infrastructure.Crud
         public void Initialize()
         {
             var assemblies = _assemblies.Distinct().ToArray();
-            var configManager = new CrudConfigManager(assemblies);
+            var configManager = new CrudConfigManager(_container.GetInstance, assemblies);
 
             _container.RegisterInstance(configManager);
             _container.RegisterSingleton<IDataAgentFactory, DataAgentFactory>();
@@ -96,7 +97,7 @@ namespace Turner.Infrastructure.Crud
             TypeFilterFactory.BindContainer(_container.GetInstance);
             TypeSorterFactory.BindContainer(_container.GetInstance);
             DataAgentFactory.BindContainer(_container.GetInstance);
-
+            
             _tasks.ForEach(t => t.Run(_container, assemblies, _options));
         }
     }
@@ -108,10 +109,10 @@ namespace Turner.Infrastructure.Crud
             container.RegisterInitializer<ICrudRequestHandler>(handler =>
             {
                 if (handler.ErrorDispatcher.Handler == null)
-                    handler.ErrorDispatcher.Handler = container.GetInstance<ICrudErrorHandler>();
+                    handler.ErrorDispatcher.Handler = container.GetInstance<IErrorHandler>();
             });
 
-            container.Register(typeof(ICrudErrorHandler), typeof(CrudErrorHandler), Lifestyle.Singleton);
+            container.Register(typeof(IErrorHandler), typeof(ErrorHandler), Lifestyle.Singleton);
         }
     }
 
@@ -131,7 +132,7 @@ namespace Turner.Infrastructure.Crud
 
             return c => typeof(ICrudRequestHandler).IsAssignableFrom(c.ImplementationType) &&
                 !c.ImplementationType.RequestHasAttribute(typeof(DoNotValidateAttribute)) &&
-                !shouldValidate(c) &&
+                !shouldValidate(c) && 
                 c.ImplementationType.RequestHasAttribute(typeof(MaybeValidateAttribute));
         }
 
@@ -170,12 +171,12 @@ namespace Turner.Infrastructure.Crud
                 typeof(IRequestValidator<>).MakeGenericType(tRequest);
 
             if (handlerArguments.Length == 1)
-                return typeof(CrudValidateDecorator<,>).MakeGenericType(tRequest, tValidator);
+                return typeof(ValidateDecorator<,>).MakeGenericType(tRequest, tValidator);
 
             if (handlerArguments.Length == 2)
             {
                 var tResult = handlerArguments[1];
-                return typeof(CrudValidateDecorator<,,>).MakeGenericType(tRequest, tResult, tValidator);
+                return typeof(ValidateDecorator<,,>).MakeGenericType(tRequest, tResult, tValidator);
             }
 
             return null;
@@ -185,16 +186,16 @@ namespace Turner.Infrastructure.Crud
         {
             var shouldValidate = ShouldValidate(options.ValidateAllRequests);
             var shouldMaybeValidate = ShouldMaybeValidate(options.ValidateAllRequests);
+            
+            container.Register(typeof(IRequestValidator<>), assemblies);
 
             container.RegisterInstance(new ValidatorFactory(container.GetInstance));
-
-            container.Register(typeof(IRequestValidator<>), assemblies);
 
             container.RegisterDecorator(typeof(IRequestHandler<>), ValidatorFactory, Lifestyle.Transient, shouldValidate);
             container.RegisterDecorator(typeof(IRequestHandler<,>), ValidatorFactory, Lifestyle.Transient, shouldValidate);
 
-            container.RegisterDecorator(typeof(IRequestHandler<>), typeof(CrudMaybeValidateDecorator<>), shouldMaybeValidate);
-            container.RegisterDecorator(typeof(IRequestHandler<,>), typeof(CrudMaybeValidateDecorator<,>), shouldMaybeValidate);
+            container.RegisterDecorator(typeof(IRequestHandler<>), typeof(MaybeValidateDecorator<>), shouldMaybeValidate);
+            container.RegisterDecorator(typeof(IRequestHandler<,>), typeof(MaybeValidateDecorator<,>), shouldMaybeValidate);
         }
     }
 
@@ -203,6 +204,9 @@ namespace Turner.Infrastructure.Crud
         public void Run(Container container, Assembly[] assemblies, CrudOptions options)
         {
             bool IfNotHandled(PredicateContext c) => !c.Handled;
+
+            //container.Register(typeof(IRequestHandler<>), assemblies);
+            //container.Register(typeof(IRequestHandler<,>), assemblies);
 
             container.Register(typeof(CreateRequestHandler<,>), assemblies);
             container.Register(typeof(CreateRequestHandler<,,>), assemblies);
@@ -293,6 +297,7 @@ namespace Turner.Infrastructure.Crud
         }
     }
 
+    // TODO: Rename to avoid conflict with namespace
     public static class Crud
     {
         public static CrudInitializer CreateInitializer(Container container, Assembly[] assemblies = null)

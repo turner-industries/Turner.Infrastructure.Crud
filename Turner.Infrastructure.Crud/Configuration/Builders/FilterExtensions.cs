@@ -9,79 +9,79 @@ namespace Turner.Infrastructure.Crud.Configuration
 {
     public static class FilterUsingExtensions
     {
-        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> FilterUsing<TRequest, TEntity>(
-            this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
+        public static RequestEntityConfigBuilder<TRequest, TEntity> FilterUsing<TRequest, TEntity>(
+            this RequestEntityConfigBuilder<TRequest, TEntity> config,
             Func<TRequest, Expression<Func<TEntity, bool>>> filterFunc)
             where TEntity : class
             => FilterUsing(config, filterFunc, null);
 
-        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterUsing<TRequest, TItem, TEntity>(
-            this CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
+        public static BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterUsing<TRequest, TItem, TEntity>(
+            this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Func<TRequest, Expression<Func<TEntity, bool>>> filterFunc)
             where TEntity : class
             => FilterUsing(config, filterFunc, null);
 
-        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> FilterUsing<TRequest, TEntity>(
-            this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
+        public static RequestEntityConfigBuilder<TRequest, TEntity> FilterUsing<TRequest, TEntity>(
+            this RequestEntityConfigBuilder<TRequest, TEntity> config,
             Expression<Func<TRequest, TEntity, bool>> filterExpr)
             where TEntity : class
             => FilterUsing(config, filterExpr, null);
 
-        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterUsing<TRequest, TItem, TEntity>(
-            this CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
+        public static BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterUsing<TRequest, TItem, TEntity>(
+            this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Expression<Func<TRequest, TEntity, bool>> filterExpr)
             where TEntity : class
             => FilterUsing(config, filterExpr, null);
 
-        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> FilterUsing<TRequest, TEntity>(
-            this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
+        public static RequestEntityConfigBuilder<TRequest, TEntity> FilterUsing<TRequest, TEntity>(
+            this RequestEntityConfigBuilder<TRequest, TEntity> config,
             Expression<Func<TEntity, bool>> filterExpr)
             where TEntity : class
-            => FilterUsing<TRequest, TEntity, CrudRequestEntityConfigBuilder<TRequest, TEntity>>(config, filterExpr, null);
+            => FilterUsing<TRequest, TEntity, RequestEntityConfigBuilder<TRequest, TEntity>>(config, filterExpr, null);
 
-        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterUsing<TRequest, TItem, TEntity>(
-            this CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
+        public static BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterUsing<TRequest, TItem, TEntity>(
+            this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Expression<Func<TEntity, bool>> filterExpr)
             where TEntity : class
-            => FilterUsing<TRequest, TEntity, CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>>(config, filterExpr, null);
+            => FilterUsing<TRequest, TEntity, BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>>(config, filterExpr, null);
 
-        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> FilterUsing<TRequest, TEntity>(
-            this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
+        public static RequestEntityConfigBuilder<TRequest, TEntity> FilterUsing<TRequest, TEntity>(
+            this RequestEntityConfigBuilder<TRequest, TEntity> config,
             Func<TRequest, bool> predicateFunc,
             Func<TRequest, Expression<Func<TEntity, bool>>> filterFunc)
             where TEntity : class
             => FilterUsing(config, filterFunc, predicateFunc);
 
-        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterUsing<TRequest, TItem, TEntity>(
-            this CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
+        public static BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterUsing<TRequest, TItem, TEntity>(
+            this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Func<TRequest, bool> predicateFunc,
             Func<TRequest, Expression<Func<TEntity, bool>>> filterFunc)
             where TEntity : class
             => FilterUsing(config, filterFunc, predicateFunc);
 
-        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> FilterUsing<TRequest, TEntity>(
-            this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
+        public static RequestEntityConfigBuilder<TRequest, TEntity> FilterUsing<TRequest, TEntity>(
+            this RequestEntityConfigBuilder<TRequest, TEntity> config,
             Func<TRequest, bool> predicateFunc,
             Expression<Func<TRequest, TEntity, bool>> filterExpr)
             where TEntity : class
             => FilterUsing(config, filterExpr, predicateFunc);
 
-        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterUsing<TRequest, TItem, TEntity>(
-            this CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
+        public static BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterUsing<TRequest, TItem, TEntity>(
+            this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Func<TRequest, bool> predicateFunc,
             Expression<Func<TRequest, TEntity, bool>> filterExpr)
             where TEntity : class
             => FilterUsing(config, filterExpr, predicateFunc);
 
-        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> FilterUsing<TRequest, TEntity>(
-            this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
+        public static RequestEntityConfigBuilder<TRequest, TEntity> FilterUsing<TRequest, TEntity>(
+            this RequestEntityConfigBuilder<TRequest, TEntity> config,
             Func<TRequest, bool> predicateFunc,
             Expression<Func<TEntity, bool>> filterExpr)
             where TEntity : class
             => FilterUsing(config, filterExpr, predicateFunc);
 
-        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterUsing<TRequest, TItem, TEntity>(
-            this CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
+        public static BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterUsing<TRequest, TItem, TEntity>(
+            this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Func<TRequest, bool> predicateFunc,
             Expression<Func<TEntity, bool>> filterExpr)
             where TEntity : class
@@ -92,7 +92,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             Func<TRequest, Expression<Func<TEntity, bool>>> filterFunc,
             Func<TRequest, bool> predicateFunc)
             where TEntity : class
-            where TBuilder : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
+            where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
         {
             return predicateFunc == null
                 ? config.FilterWith((request, queryable) => queryable.Where(filterFunc(request)))
@@ -107,7 +107,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             Expression<Func<TRequest, TEntity, bool>> filterExpr,
             Func<TRequest, bool> predicateFunc)
             where TEntity : class
-            where TBuilder : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
+            where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
         {
             return FilterUsing(config, request =>
             {
@@ -123,7 +123,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             Expression<Func<TEntity, bool>> filterExpr,
             Func<TRequest, bool> predicateFunc)
             where TEntity : class
-            where TBuilder : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
+            where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
         {
             return predicateFunc == null
                 ? config.FilterWith((request, queryable) => queryable.Where(filterExpr))
@@ -133,26 +133,26 @@ namespace Turner.Infrastructure.Crud.Configuration
 
     public static class FilterOnExtensions
     {
-        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> FilterOn<TRequest, TEntity, TRequestProp, TEntityProp>(
-           this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
+        public static RequestEntityConfigBuilder<TRequest, TEntity> FilterOn<TRequest, TEntity, TRequestProp, TEntityProp>(
+           this RequestEntityConfigBuilder<TRequest, TEntity> config,
            Expression<Func<TRequest, TRequestProp>> requestFilterExpr,
            Expression<Func<TEntity, TEntityProp>> entityPropExpr)
            where TEntity : class
-            => FilterOn<TRequest, TEntity, CrudRequestEntityConfigBuilder<TRequest, TEntity>, TRequestProp, TEntityProp>(config, requestFilterExpr, entityPropExpr);
+            => FilterOn<TRequest, TEntity, RequestEntityConfigBuilder<TRequest, TEntity>, TRequestProp, TEntityProp>(config, requestFilterExpr, entityPropExpr);
 
-        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterOn<TRequest, TItem, TEntity, TRequestProp, TEntityProp>(
-           this CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
+        public static BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterOn<TRequest, TItem, TEntity, TRequestProp, TEntityProp>(
+           this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
            Expression<Func<TRequest, TRequestProp>> requestFilterExpr,
            Expression<Func<TEntity, TEntityProp>> entityPropExpr)
            where TEntity : class
-            => FilterOn<TRequest, TEntity, CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>, TRequestProp, TEntityProp>(config, requestFilterExpr, entityPropExpr);
+            => FilterOn<TRequest, TEntity, BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>, TRequestProp, TEntityProp>(config, requestFilterExpr, entityPropExpr);
         
         public static TBuilder FilterOn<TRequest, TEntity, TBuilder, TKey>(
             this TBuilder config,
             Expression<Func<TRequest, IEnumerable<TKey>>> requestEnumerableExpr,
             Expression<Func<TEntity, TKey>> entityKeyExpr)
             where TEntity : class
-            where TBuilder : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
+            where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
             => FilterOn(config, null, requestEnumerableExpr, entityKeyExpr);
 
         public static TBuilder FilterOn<TRequest, TEntity, TBuilder, TKey>(
@@ -161,25 +161,25 @@ namespace Turner.Infrastructure.Crud.Configuration
             Expression<Func<TRequest, IEnumerable<TKey>>> requestEnumerableExpr,
             Expression<Func<TEntity, TKey>> entityKeyExpr)
             where TEntity : class
-            where TBuilder : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
-            => FilterOn(config, predicateFunc, requestEnumerableExpr, entityKeyExpr);
+            where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
+            => FilterOn(config, requestEnumerableExpr, entityKeyExpr, predicateFunc);
 
-        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> FilterOn<TRequest, TEntity, TIn>(
-            this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
+        public static RequestEntityConfigBuilder<TRequest, TEntity> FilterOn<TRequest, TEntity, TIn>(
+            this RequestEntityConfigBuilder<TRequest, TEntity> config,
             Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr,
             string requestItemKeyProperty,
             string entityKeyProperty)
             where TEntity : class
-            => FilterOn<TRequest, TEntity, CrudRequestEntityConfigBuilder<TRequest, TEntity>, TIn>(config, requestEnumerableExpr, requestItemKeyProperty, entityKeyProperty, null);
+            => FilterOn<TRequest, TEntity, RequestEntityConfigBuilder<TRequest, TEntity>, TIn>(config, requestEnumerableExpr, requestItemKeyProperty, entityKeyProperty, null);
 
-        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> FilterOn<TRequest, TEntity, TIn>(
-            this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
+        public static RequestEntityConfigBuilder<TRequest, TEntity> FilterOn<TRequest, TEntity, TIn>(
+            this RequestEntityConfigBuilder<TRequest, TEntity> config,
             Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr,
             string requestItemKeyProperty,
             string entityKeyProperty,
             Func<TRequest, bool> predicateFunc)
             where TEntity : class
-            => FilterOn<TRequest, TEntity, CrudRequestEntityConfigBuilder<TRequest, TEntity>, TIn>(config, requestEnumerableExpr, requestItemKeyProperty, entityKeyProperty, predicateFunc);
+            => FilterOn<TRequest, TEntity, RequestEntityConfigBuilder<TRequest, TEntity>, TIn>(config, requestEnumerableExpr, requestItemKeyProperty, entityKeyProperty, predicateFunc);
 
         public static TBuilder FilterOn<TRequest, TEntity, TBuilder, TIn, TKey>(
             this TBuilder config,
@@ -187,7 +187,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             Expression<Func<TIn, TKey>> requestItemKeyExpr,
             Expression<Func<TEntity, TKey>> entityKeyExpr)
             where TEntity : class
-            where TBuilder : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
+            where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
             => FilterOn(config, requestEnumerableExpr, requestItemKeyExpr, entityKeyExpr, null);
 
         public static TBuilder FilterOn<TRequest, TEntity, TBuilder, TIn, TKey>(
@@ -197,62 +197,62 @@ namespace Turner.Infrastructure.Crud.Configuration
             Expression<Func<TIn, TKey>> requestItemKeyExpr,
             Expression<Func<TEntity, TKey>> entityKeyExpr)
             where TEntity : class
-            where TBuilder : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
+            where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
             => FilterOn(config, requestEnumerableExpr, requestItemKeyExpr, entityKeyExpr, predicateFunc);
         
-        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterOn<TRequest, TItem, TEntity, TIn>(
-            this CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
+        public static BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterOn<TRequest, TItem, TEntity, TIn>(
+            this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr,
             string requestItemKeyProperty,
             string entityKeyProperty)
             where TEntity : class
-            => FilterOn<TRequest, TEntity, CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>, TIn>(config, requestEnumerableExpr, requestItemKeyProperty, entityKeyProperty, null);
+            => FilterOn<TRequest, TEntity, BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>, TIn>(config, requestEnumerableExpr, requestItemKeyProperty, entityKeyProperty, null);
 
-        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterOn<TRequest, TItem, TEntity, TIn>(
-            this CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
+        public static BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterOn<TRequest, TItem, TEntity, TIn>(
+            this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Func<TRequest, bool> predicateFunc,
             Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr,
             string requestItemKeyProperty,
             string entityKeyProperty)
             where TEntity : class
-            => FilterOn<TRequest, TEntity, CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>, TIn>(config, requestEnumerableExpr, requestItemKeyProperty, entityKeyProperty, predicateFunc);
+            => FilterOn<TRequest, TEntity, BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>, TIn>(config, requestEnumerableExpr, requestItemKeyProperty, entityKeyProperty, predicateFunc);
 
-        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> FilterOn<TRequest, TEntity, TKey>(
-            this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
+        public static RequestEntityConfigBuilder<TRequest, TEntity> FilterOn<TRequest, TEntity, TKey>(
+            this RequestEntityConfigBuilder<TRequest, TEntity> config,
             Expression<Func<TRequest, IEnumerable<TKey>>> requestEnumerableExpr,
             string entityKeyProperty)
             where TEntity : class
-            => FilterOn<TRequest, TEntity, CrudRequestEntityConfigBuilder<TRequest, TEntity>, TKey>(config, requestEnumerableExpr, entityKeyProperty, null);
+            => FilterOn<TRequest, TEntity, RequestEntityConfigBuilder<TRequest, TEntity>, TKey>(config, requestEnumerableExpr, entityKeyProperty, null);
 
-        public static CrudRequestEntityConfigBuilder<TRequest, TEntity> FilterOn<TRequest, TEntity, TKey>(
-            this CrudRequestEntityConfigBuilder<TRequest, TEntity> config,
+        public static RequestEntityConfigBuilder<TRequest, TEntity> FilterOn<TRequest, TEntity, TKey>(
+            this RequestEntityConfigBuilder<TRequest, TEntity> config,
             Func<TRequest, bool> predicateFunc,
             Expression<Func<TRequest, IEnumerable<TKey>>> requestEnumerableExpr,
             string entityKeyProperty)
             where TEntity : class
-            => FilterOn<TRequest, TEntity, CrudRequestEntityConfigBuilder<TRequest, TEntity>, TKey>(config, requestEnumerableExpr, entityKeyProperty, predicateFunc);
+            => FilterOn<TRequest, TEntity, RequestEntityConfigBuilder<TRequest, TEntity>, TKey>(config, requestEnumerableExpr, entityKeyProperty, predicateFunc);
 
-        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterOn<TRequest, TItem, TEntity, TKey>(
-            this CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
+        public static BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterOn<TRequest, TItem, TEntity, TKey>(
+            this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Expression<Func<TRequest, IEnumerable<TKey>>> requestEnumerableExpr,
             string entityKeyProperty)
             where TEntity : class
-            => FilterOn<TRequest, TEntity, CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>, TKey>(config, requestEnumerableExpr, entityKeyProperty, null);
+            => FilterOn<TRequest, TEntity, BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>, TKey>(config, requestEnumerableExpr, entityKeyProperty, null);
 
-        public static CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterOn<TRequest, TItem, TEntity, TKey>(
-            this CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
+        public static BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> FilterOn<TRequest, TItem, TEntity, TKey>(
+            this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Func<TRequest, bool> predicateFunc,
             Expression<Func<TRequest, IEnumerable<TKey>>> requestEnumerableExpr,
             string entityKeyProperty)
             where TEntity : class
-            => FilterOn<TRequest, TEntity, CrudBulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>, TKey>(config, requestEnumerableExpr, entityKeyProperty, predicateFunc);
+            => FilterOn<TRequest, TEntity, BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>, TKey>(config, requestEnumerableExpr, entityKeyProperty, predicateFunc);
 
         private static TBuilder FilterOn<TRequest, TEntity, TBuilder, TRequestProp, TEntityProp>(
             TBuilder config,
             Expression<Func<TRequest, TRequestProp>> requestFilterExpr,
             Expression<Func<TEntity, TEntityProp>> entityPropExpr)
             where TEntity : class
-            where TBuilder : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
+            where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
         {
             bool isNullable = Nullable.GetUnderlyingType(typeof(TRequestProp)) != null;
             bool isOptional = isNullable || !typeof(TRequestProp).IsValueType;
@@ -306,7 +306,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             Expression<Func<TEntity, TKey>> entityKeyExpr,
             Func<TRequest, bool> predicateFunc)
             where TEntity : class
-            where TBuilder : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
+            where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
         {
             var rParamExpr = Expression.Parameter(typeof(TRequest));
             var eParamExpr = Expression.Parameter(typeof(TEntity));
@@ -324,7 +324,9 @@ namespace Turner.Infrastructure.Crud.Configuration
                 rParamExpr,
                 Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr));
 
-            return config.FilterWith(filterFunc);
+            return predicateFunc == null
+                ? config.FilterWith(filterFunc)
+                : config.FilterWith((request, queryable) => predicateFunc(request) ? filterFunc(request, queryable) : queryable);
         }
 
         private static TBuilder FilterOn<TRequest, TEntity, TBuilder, TIn, TKey>(
@@ -334,7 +336,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             Expression<Func<TEntity, TKey>> entityKeyExpr,
             Func<TRequest, bool> predicateFunc)
             where TEntity : class
-            where TBuilder : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
+            where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
         {
             var rParamExpr = Expression.Parameter(typeof(TRequest));
             var eParamExpr = Expression.Parameter(typeof(TEntity));
@@ -362,7 +364,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             var filterFunc = CreateFilterFunc<TRequest, TEntity>(
                 Expression.Parameter(typeof(IQueryable<TEntity>)),
                 rParamExpr,
-                Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr));
+                whereClause);
 
             return predicateFunc == null
                 ? config.FilterWith(filterFunc)
@@ -376,7 +378,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             string entityKeyProperty,
             Func<TRequest, bool> predicateFunc)
             where TEntity : class
-            where TBuilder : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
+            where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
         {
             var rParamExpr = Expression.Parameter(typeof(TRequest));
             var eParamExpr = Expression.Parameter(typeof(TEntity));
@@ -408,7 +410,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             var filterFunc = CreateFilterFunc<TRequest, TEntity>(
                 Expression.Parameter(typeof(IQueryable<TEntity>)),
                 rParamExpr,
-                Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr));
+                whereClause);
             
             return predicateFunc == null
                 ? config.FilterWith(filterFunc)
@@ -421,10 +423,9 @@ namespace Turner.Infrastructure.Crud.Configuration
             string entityKeyProperty,
             Func<TRequest, bool> predicateFunc)
             where TEntity : class
-            where TBuilder : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
+            where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
         {
             var rParamExpr = Expression.Parameter(typeof(TRequest));
-            var qParamExpr = Expression.Parameter(typeof(IQueryable<TEntity>));
             var eParamExpr = Expression.Parameter(typeof(TEntity));
 
             var eKeyExpr = Expression.PropertyOrField(eParamExpr, entityKeyProperty);
@@ -441,7 +442,7 @@ namespace Turner.Infrastructure.Crud.Configuration
             var filterFunc = CreateFilterFunc<TRequest, TEntity>(
                 Expression.Parameter(typeof(IQueryable<TEntity>)),
                 rParamExpr,
-                Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr));
+                whereClause);
 
             return predicateFunc == null
                 ? config.FilterWith(filterFunc)

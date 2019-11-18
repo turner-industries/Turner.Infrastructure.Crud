@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 
+// ReSharper disable once CheckNamespace
 namespace Turner.Infrastructure.Crud
 {
     public interface IFilter<in TRequest, TEntity>
@@ -54,8 +55,9 @@ namespace Turner.Infrastructure.Crud
 
     public class InstanceFilterFactory : IFilterFactory
     {
+        // ReSharper disable once NotAccessedField.Local
         private readonly object _instance;
-        private IBoxedFilter _adaptedInstance;
+        private readonly IBoxedFilter _adaptedInstance;
 
         private InstanceFilterFactory(object instance, IBoxedFilter adaptedInstance)
         {
@@ -77,9 +79,9 @@ namespace Turner.Infrastructure.Crud
 
     public class TypeFilterFactory : IFilterFactory
     {
-        private static Func<Type, object> s_serviceFactory;
+        private static Func<Type, object> _serviceFactory;
 
-        private Func<IBoxedFilter> _filterFactory;
+        private readonly Func<IBoxedFilter> _filterFactory;
 
         public TypeFilterFactory(Func<IBoxedFilter> filterFactory)
         {
@@ -88,7 +90,7 @@ namespace Turner.Infrastructure.Crud
 
         internal static void BindContainer(Func<Type, object> serviceFactory)
         {
-            s_serviceFactory = serviceFactory;
+            _serviceFactory = serviceFactory;
         }
 
         internal static TypeFilterFactory From<TFilter, TRequest, TEntity>()
@@ -98,7 +100,7 @@ namespace Turner.Infrastructure.Crud
             return new TypeFilterFactory(
                 () =>
                 {
-                    var instance = (IFilter<TRequest, TEntity>)s_serviceFactory(typeof(TFilter));
+                    var instance = (IFilter<TRequest, TEntity>)_serviceFactory(typeof(TFilter));
                     return new FunctionFilter((request, queryable) 
                         => instance.Filter((TRequest)request, (IQueryable<TEntity>)queryable));
                 });

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.Exceptions;
@@ -24,64 +22,60 @@ namespace Turner.Infrastructure.Crud.Requests
 
         public Task<Response<GetAllResult<TOut>>> HandleAsync(TRequest request)
         {
-            return HandleWithErrorsAsync(request, HandleAsync);
+            return HandleWithErrorsAsync(request, _HandleAsync);
         }
 
-        private async Task<GetAllResult<TOut>> HandleAsync(TRequest request, CancellationToken token)
+        private async Task<GetAllResult<TOut>> _HandleAsync(TRequest request)
         {
-            await request.RunRequestHooks(RequestConfig, token).Configure();
+            await request.RunRequestHooks(RequestConfig).Configure();
 
             var entities = Context.Set<TEntity>()
                 .FilterWith(request, RequestConfig)
                 .SortWith(request, RequestConfig);
             
-            var items = Array.Empty<TOut>();
+            TOut[] items;
 
             if (Options.UseProjection)
             {
-                items = await entities.ProjectToArrayAsync<TEntity, TOut>(token).Configure();
-                token.ThrowIfCancellationRequested();
+                items = await entities.ProjectToArrayAsync<TEntity, TOut>().Configure();
                 
                 if (items.Length == 0)
                 {
                     if (RequestConfig.ErrorConfig.FailedToFindInGetAllIsError)
-                        throw new CrudFailedToFindException { EntityTypeProperty = typeof(TEntity) };
+                        throw new FailedToFindException { EntityTypeProperty = typeof(TEntity) };
 
                     var defaultEntity = RequestConfig.GetDefaultFor<TEntity>();
                     if (defaultEntity != null)
                     {
-                        items = new TOut[] 
+                        items = new[] 
                         {
-                            await defaultEntity.CreateResult<TEntity, TOut>(RequestConfig, token).Configure()
+                            await defaultEntity.CreateResult<TEntity, TOut>(RequestConfig).Configure()
                         };
                     }
                 }
             }
             else
             {
-                var resultEntities = await entities.ToArrayAsync(token).Configure();
-                token.ThrowIfCancellationRequested();
+                var resultEntities = await entities.ToArrayAsync().Configure();
 
                 if (resultEntities.Length == 0)
                 {
                     if (RequestConfig.ErrorConfig.FailedToFindInGetAllIsError)
-                        throw new CrudFailedToFindException { EntityTypeProperty = typeof(TEntity) };
+                        throw new FailedToFindException { EntityTypeProperty = typeof(TEntity) };
 
                     var defaultEntity = RequestConfig.GetDefaultFor<TEntity>();
                     if (defaultEntity != null)
-                        resultEntities = new TEntity[] { RequestConfig.GetDefaultFor<TEntity>() };
+                        resultEntities = new[] { RequestConfig.GetDefaultFor<TEntity>() };
                 }
 
-                await request.RunEntityHooks<TEntity>(RequestConfig, entities, token).Configure();
+                await request.RunEntityHooks<TEntity>(RequestConfig, entities).Configure();
 
-                items = await resultEntities.CreateResults<TEntity, TOut>(RequestConfig, token).Configure();
+                items = await resultEntities.CreateResults<TEntity, TOut>(RequestConfig).Configure();
             }
-
-            token.ThrowIfCancellationRequested();
-
+            
             var result = new GetAllResult<TOut>(items); 
 
-            return await request.RunResultHooks(RequestConfig, result, token).Configure();
+            return await request.RunResultHooks(RequestConfig, result).Configure();
         }
     }
 }

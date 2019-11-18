@@ -13,17 +13,17 @@ using Turner.Infrastructure.Crud.Exceptions;
 // ReSharper disable once CheckNamespace
 namespace Turner.Infrastructure.Crud.Configuration.Builders
 {
-    public abstract class CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
-        : ICrudRequestEntityConfigBuilder
+    public abstract class RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
+        : IRequestEntityConfigBuilder
         where TEntity : class
-        where TBuilder : CrudRequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
+        where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
     {
         private readonly List<IFilterFactory> _filters = new List<IFilterFactory>();
 
         protected readonly List<IEntityHookFactory> EntityHooks
             = new List<IEntityHookFactory>();
 
-        protected CrudRequestOptionsConfig OptionsConfig;
+        protected RequestOptionsConfig OptionsConfig;
         protected TEntity DefaultValue;
         protected ISorterFactory Sorter;
         protected ISelector Selector;
@@ -33,9 +33,9 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
         protected Func<object, object, CancellationToken, Task<TEntity>> CreateEntity;
         protected Func<object, object, TEntity, CancellationToken, Task<TEntity>> UpdateEntity;
         protected Func<TEntity, CancellationToken, Task<object>> CreateResult;
-        protected Func<ICrudErrorHandler> ErrorHandlerFactory;
+        protected Func<IErrorHandler> ErrorHandlerFactory;
         
-        public TBuilder ConfigureOptions(Action<CrudRequestOptionsConfig> config)
+        public TBuilder ConfigureOptions(Action<RequestOptionsConfig> config)
         {
             if (config == null)
             {
@@ -43,14 +43,14 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             }
             else
             {
-                OptionsConfig = new CrudRequestOptionsConfig();
+                OptionsConfig = new RequestOptionsConfig();
                 config(OptionsConfig);
             }
 
             return (TBuilder)this;
         }
 
-        public TBuilder UseErrorHandlerFactory(Func<ICrudErrorHandler> handlerFactory)
+        public TBuilder UseErrorHandlerFactory(Func<IErrorHandler> handlerFactory)
         {
             ErrorHandlerFactory = handlerFactory;
 
@@ -267,7 +267,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders
             return (TBuilder)this;
         }
 
-        public virtual void Build<TCompatibleRequest>(CrudRequestConfig<TCompatibleRequest> config)
+        public virtual void Build<TCompatibleRequest>(RequestConfig<TCompatibleRequest> config)
         {
             if (OptionsConfig != null)
                 config.SetOptionsFor<TEntity>(OptionsConfig);

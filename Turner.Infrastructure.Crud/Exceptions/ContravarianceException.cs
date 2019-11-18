@@ -4,7 +4,7 @@ using System.Security.Permissions;
 
 namespace Turner.Infrastructure.Crud.Exceptions
 {
-    public class ContravarianceException : BadCrudConfigurationException
+    public class ContravarianceException : BadConfigurationException
     {
         public Type BaseTypeProperty { get; set; }
 

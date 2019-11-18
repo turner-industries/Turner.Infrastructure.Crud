@@ -12,11 +12,11 @@ namespace Turner.Infrastructure.Crud.Errors
         }
 
         public new static bool IsReturnedFor(Exception e)
-            => e is CrudHookFailedException;
+            => e is HookFailedException;
 
         public new static HookFailedError From(object request, Exception exception)
         {
-            if (exception is CrudHookFailedException chfException)
+            if (exception is HookFailedException chfException)
                 return new HookFailedError(request, chfException.HookProperty, chfException.InnerException);
 
             return new HookFailedError(request, null, exception);

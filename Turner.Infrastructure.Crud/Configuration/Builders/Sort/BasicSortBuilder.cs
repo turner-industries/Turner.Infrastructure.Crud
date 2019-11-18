@@ -37,7 +37,7 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
         {
             if (_operations.Count == 0)
             {
-                throw new BadCrudConfigurationException(
+                throw new BadConfigurationException(
                     $"Basic sorting was set for request '{typeof(TRequest)}' and entity '{typeof(TEntity)}'" +
                     ", but no sort operation was defined.");
             }
@@ -111,18 +111,18 @@ namespace Turner.Infrastructure.Crud.Configuration.Builders.Sort
         public ConfigurableBasicSortClauseBuilder<TRequest, TEntity> ThenBy(string entityProperty)
         {
             var entityParam = Expression.Parameter(typeof(TEntity));
-            var entityProp = Expression.PropertyOrField(entityParam, entityProperty)
-                ?? throw new ArgumentException(nameof(entityProperty));
+            var entityProp = Expression.PropertyOrField(entityParam, entityProperty);
             
             var fwdMethodInfo = typeof(BasicSortOperationBuilder<TRequest, TEntity>)
-                .GetMethod("ForwardThenBy", BindingFlags.Instance | BindingFlags.NonPublic);
+                .GetMethod(nameof(ForwardThenBy), BindingFlags.Instance | BindingFlags.NonPublic);
 
+            // ReSharper disable once PossibleNullReferenceException
             var fwdMethod = fwdMethodInfo.MakeGenericMethod(entityProp.Type);
 
             return (ConfigurableBasicSortClauseBuilder<TRequest, TEntity>) 
                 fwdMethod.Invoke(this, new object[] { entityProperty});
         }
-
+        
         private ConfigurableBasicSortClauseBuilder<TRequest, TEntity> ForwardThenBy<TProp>(string entityProperty)
         {
             var entityExpr = Expression.Parameter(typeof(TEntity));
