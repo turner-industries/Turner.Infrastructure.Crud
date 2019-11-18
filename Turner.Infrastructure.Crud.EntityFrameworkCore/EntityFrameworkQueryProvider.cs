@@ -12,7 +12,7 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkCore
 {
     public class EntityFrameworkQueryProvider : IAsyncQueryProvider
     {
-        private static readonly MethodInfo _createQuery
+        private static readonly MethodInfo CreateQueryMethod
             = typeof(EntityFrameworkQueryProvider)
                 .GetRuntimeMethods()
                 .Single(x => x.Name == "CreateQuery" && x.IsGenericMethod);
@@ -29,7 +29,7 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkCore
 
         public IQueryable CreateQuery(Expression expression)
         {
-            return (IQueryable)_createQuery
+            return (IQueryable)CreateQueryMethod
                 .MakeGenericMethod(expression.Type.GetSequenceType())
                 .Invoke(this, new object[] { expression });
         }

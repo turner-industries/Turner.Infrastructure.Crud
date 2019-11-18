@@ -24,12 +24,4 @@ namespace Turner.Infrastructure.Crud.EntityFrameworkCore
             initializer.RemoveInitializers<EntityFrameworkCoreInitializer>();
         }
     }
-
-    public static class IncludeInitializer
-    {
-        public static CrudInitializer UseEntityFramework(this CrudInitializer initializer)
-        {
-            return initializer.AddInitializer(new EntityFrameworkCoreInitializer());
-        }
-    }
 }
