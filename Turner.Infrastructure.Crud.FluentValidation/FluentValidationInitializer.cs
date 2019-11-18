@@ -10,15 +10,7 @@ namespace Turner.Infrastructure.Crud.FluentValidation
 
         public void Run(Container container, Assembly[] assemblies, CrudOptions options)
         {
-            container.RegisterConditional(typeof(IRequestValidator<>), typeof(FluentValidator<>), c => !c.Handled);
-        }
-    }
-
-    public static class IncludeInitializer
-    {
-        public static CrudInitializer UseFluentValidation(this CrudInitializer initializer)
-        {
-            return initializer.AddInitializer(new FluentValidationInitializer());
+            container.RegisterConditional(typeof(IRequestValidator<>), typeof(FluentRequestValidator<>), IfNotHandled);
         }
     }
 }

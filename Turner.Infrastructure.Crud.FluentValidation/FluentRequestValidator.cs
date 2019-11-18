@@ -7,11 +7,11 @@ using Turner.Infrastructure.Crud.Validation;
 
 namespace Turner.Infrastructure.Crud.FluentValidation
 {
-    public class FluentValidator<TRequest> : IRequestValidator<TRequest>
+    public class FluentRequestValidator<TRequest> : IRequestValidator<TRequest>
     {
         private readonly IValidator<TRequest> _validator;
 
-        public FluentValidator(IValidator<TRequest> validator)
+        public FluentRequestValidator(IValidator<TRequest> validator)
         {
             _validator = validator;
         }
