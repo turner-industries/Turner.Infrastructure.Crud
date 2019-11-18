@@ -8,6 +8,11 @@ using Turner.Infrastructure.Mediator;
 namespace Turner.Infrastructure.Crud.Validation
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
+    public class DoNotValidateAttribute : Attribute
+    {
+    }
+
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
     public class ValidateAttribute : Attribute
     {
         public Type ValidatorType { get; }
@@ -32,7 +37,7 @@ namespace Turner.Infrastructure.Crud.Validation
         {
         }
     }
-    
+
     public class ValidateDecorator<TRequest, TValidator>
         : IRequestHandler<TRequest>
         where TRequest : IRequest

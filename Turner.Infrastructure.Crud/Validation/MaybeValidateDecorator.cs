@@ -7,6 +7,7 @@ using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Validation
 {
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
     internal class MaybeValidateAttribute : Attribute
     {
     }

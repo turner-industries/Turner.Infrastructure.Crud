@@ -9,7 +9,6 @@ using Turner.Infrastructure.Crud.Errors;
 using Turner.Infrastructure.Crud.Requests;
 using Turner.Infrastructure.Crud.Validation;
 using Turner.Infrastructure.Mediator;
-using Turner.Infrastructure.Mediator.Decorators;
 
 namespace Turner.Infrastructure.Crud
 {
