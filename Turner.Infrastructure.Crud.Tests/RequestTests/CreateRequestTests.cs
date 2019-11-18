@@ -111,7 +111,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class CreateUserWithResponseProfile
-        : CrudRequestProfile<CreateUserWithResponseRequest>
+        : RequestProfile<CreateUserWithResponseRequest>
     {
         public CreateUserWithResponseProfile()
         {
@@ -126,7 +126,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class CreateUserWithoutResponseProfile 
-        : CrudRequestProfile<CreateUserWithoutResponseRequest>
+        : RequestProfile<CreateUserWithoutResponseRequest>
     {
         public CreateUserWithoutResponseProfile()
         {

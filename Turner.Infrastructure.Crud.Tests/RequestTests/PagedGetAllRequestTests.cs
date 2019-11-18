@@ -199,7 +199,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class GetAllUsersPagedProfile 
-        : CrudRequestProfile<IPagedGetAllRequest>
+        : RequestProfile<IPagedGetAllRequest>
     {
         public GetAllUsersPagedProfile()
         {
@@ -218,7 +218,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class GetAllFilteredUsersPagedProfile 
-        : CrudRequestProfile<GetAllFilteredUsersPaged>
+        : RequestProfile<GetAllFilteredUsersPaged>
     {
         public GetAllFilteredUsersPagedProfile()
         {

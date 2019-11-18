@@ -159,7 +159,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
     
     public class SaveUserWithoutResponseProfile 
-        : CrudRequestProfile<SaveUserWithoutResponseRequest>
+        : RequestProfile<SaveUserWithoutResponseRequest>
     {
         public SaveUserWithoutResponseProfile()
         {
@@ -171,7 +171,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class SaveUserWithResponseProfile 
-        : CrudRequestProfile<SaveUserWithResponseRequest>
+        : RequestProfile<SaveUserWithResponseRequest>
     {
         public SaveUserWithResponseProfile()
         {
@@ -181,7 +181,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class DefaultSaveWithoutResponseRequestProfile
-        : CrudRequestProfile<SaveRequest<User, UserGetDto>>
+        : RequestProfile<SaveRequest<User, UserGetDto>>
     {
         public DefaultSaveWithoutResponseRequestProfile()
         {
@@ -191,7 +191,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class DefaultSaveWithResponseRequestProfile
-        : CrudRequestProfile<SaveRequest<User, UserGetDto, UserGetDto>>
+        : RequestProfile<SaveRequest<User, UserGetDto, UserGetDto>>
     {
         public DefaultSaveWithResponseRequestProfile()
         {

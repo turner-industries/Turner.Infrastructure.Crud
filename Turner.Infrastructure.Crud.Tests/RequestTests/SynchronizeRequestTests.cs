@@ -189,7 +189,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class SynchronizeUsersByIdProfile
-        : CrudBulkRequestProfile<SynchronizeUsersByIdRequest, UserGetDto>
+        : BulkRequestProfile<SynchronizeUsersByIdRequest, UserGetDto>
     {
         public SynchronizeUsersByIdProfile() : base(request => request.Items)
         {
@@ -214,7 +214,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
     
     public class SynchronizeUserClaimsProfile
-        : CrudBulkRequestProfile<SynchronizeUserClaimsRequest, UserClaimDto>
+        : BulkRequestProfile<SynchronizeUserClaimsRequest, UserClaimDto>
     {
         public SynchronizeUserClaimsProfile() : base(request => request.Claims)
         {

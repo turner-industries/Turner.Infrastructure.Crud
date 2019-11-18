@@ -157,7 +157,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class UpdateUserWithoutResponseRequestProfile 
-        : CrudRequestProfile<UpdateRequest<User, UserGetDto>>
+        : RequestProfile<UpdateRequest<User, UserGetDto>>
     {
         public UpdateUserWithoutResponseRequestProfile()
         {
@@ -167,7 +167,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class UpdateUserWithResponseRequestProfile 
-        : CrudRequestProfile<UpdateRequest<User, UserGetDto, UserGetDto>>
+        : RequestProfile<UpdateRequest<User, UserGetDto, UserGetDto>>
     {
         public UpdateUserWithResponseRequestProfile()
         {
@@ -177,7 +177,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class UpdateUserByIdProfile 
-        : CrudRequestProfile<UpdateUserByIdRequest>
+        : RequestProfile<UpdateUserByIdRequest>
     {
         public UpdateUserByIdProfile()
         {
@@ -189,7 +189,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class UpdateUserByNameProfile 
-        : CrudRequestProfile<UpdateUserByNameRequest>
+        : RequestProfile<UpdateUserByNameRequest>
     {
         public UpdateUserByNameProfile()
         {

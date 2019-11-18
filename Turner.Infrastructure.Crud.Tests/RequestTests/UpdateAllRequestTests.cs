@@ -89,7 +89,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class UpdateAllUsersByIdProfile 
-        : CrudBulkRequestProfile<UpdateAllUsersByIdRequest, UserGetDto>
+        : BulkRequestProfile<UpdateAllUsersByIdRequest, UserGetDto>
     {
         public UpdateAllUsersByIdProfile()
         {

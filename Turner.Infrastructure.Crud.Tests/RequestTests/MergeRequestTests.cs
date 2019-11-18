@@ -103,7 +103,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class MergeUsersByIdProfile
-        : CrudBulkRequestProfile<MergeUsersByIdRequest, UserGetDto>
+        : BulkRequestProfile<MergeUsersByIdRequest, UserGetDto>
     {
         public MergeUsersByIdProfile() : base(request => request.Items)
         {

@@ -114,7 +114,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public UserDto[] Users { get; set; }
     }
     
-    public class CreateUsersRequestProfile : CrudBulkRequestProfile<ICreateAllCommon, UserDto>
+    public class CreateUsersRequestProfile : BulkRequestProfile<ICreateAllCommon, UserDto>
     {
         public CreateUsersRequestProfile()
         {

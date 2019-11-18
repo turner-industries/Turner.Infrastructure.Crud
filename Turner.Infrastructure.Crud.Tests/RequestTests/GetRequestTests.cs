@@ -136,7 +136,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class GetUserByIdProfile 
-        : CrudRequestProfile<GetUserByIdRequest>
+        : RequestProfile<GetUserByIdRequest>
     {
         public GetUserByIdProfile()
         {
@@ -147,7 +147,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class GetUserByNameProfile 
-        : CrudRequestProfile<GetUserByNameRequest>
+        : RequestProfile<GetUserByNameRequest>
     {
         public GetUserByNameProfile()
         {
@@ -162,7 +162,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class GetUserByKeyProfile 
-        : CrudRequestProfile<GetUserByKeyRequest>
+        : RequestProfile<GetUserByKeyRequest>
     {
         public GetUserByKeyProfile()
         {

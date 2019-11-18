@@ -60,7 +60,7 @@ namespace Turner.Infrastructure.Crud.Tests
     }
     
     public class TestHooksProfile
-        : CrudBulkRequestProfile<ITestHooksRequest, HookDto>
+        : BulkRequestProfile<ITestHooksRequest, HookDto>
     {
         public TestHooksProfile() : base(r => r.Items)
         {
@@ -99,7 +99,7 @@ namespace Turner.Infrastructure.Crud.Tests
     }
 
     public class TestHooksRequestProfile
-        : CrudBulkRequestProfile<TestHooksRequest, HookDto>
+        : BulkRequestProfile<TestHooksRequest, HookDto>
     {
         public TestHooksRequestProfile() : base(r => r.Items)
         {

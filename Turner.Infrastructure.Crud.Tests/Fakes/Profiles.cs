@@ -36,7 +36,7 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         public SortKeys SortKey { get; set; }
     }
 
-    public class DebugErrorHandler : CrudErrorHandler
+    public class DebugErrorHandler : ErrorHandler
     {
         protected override Response HandleError(CreateEntityFailedError error) => throw new Exception(error.Reason, error.Exception);
 
@@ -53,9 +53,9 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         protected override Response HandleError(UpdateEntityFailedError error) => throw new Exception(error.Reason, error.Exception);
     }
 
-    public class CrudRequestProfile : CrudRequestProfile<ICrudRequest>
+    public class GenericRequestProfile : RequestProfile<ICrudRequest>
     {
-        public CrudRequestProfile()
+        public GenericRequestProfile()
         {
             ConfigureErrors(config =>
             {
@@ -71,7 +71,7 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
     }
 
     public class DefaultUpdateRequestProfile<TEntity, TKey, TIn, TOut>
-        : CrudRequestProfile<UpdateRequest<TEntity, TKey, TIn, TOut>>
+        : RequestProfile<UpdateRequest<TEntity, TKey, TIn, TOut>>
         where TEntity : class
     {
         public DefaultUpdateRequestProfile()
@@ -82,7 +82,7 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
     }
 
     public class DefaultSaveRequestProfile<TEntity, TKey, TIn, TOut>
-        : CrudRequestProfile<SaveRequest<TEntity, TKey, TIn, TOut>>
+        : RequestProfile<SaveRequest<TEntity, TKey, TIn, TOut>>
         where TEntity : class
     {
         public DefaultSaveRequestProfile()
@@ -93,7 +93,7 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
     }
 
     public class DefaultEntityBulkProfile
-        : CrudRequestProfile<ICrudRequest>
+        : RequestProfile<ICrudRequest>
     {
         public DefaultEntityBulkProfile()
         {

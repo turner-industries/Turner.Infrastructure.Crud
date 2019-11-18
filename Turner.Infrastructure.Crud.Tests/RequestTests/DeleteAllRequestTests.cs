@@ -84,7 +84,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
     
     public class DeleteAllUsersByIdProfile 
-        : CrudRequestProfile<DeleteAllUsersByIdRequest>
+        : RequestProfile<DeleteAllUsersByIdRequest>
     {
         public DeleteAllUsersByIdProfile()
         {

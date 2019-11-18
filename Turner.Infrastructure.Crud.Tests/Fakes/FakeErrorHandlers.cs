@@ -4,7 +4,7 @@ using Turner.Infrastructure.Mediator;
 
 namespace Turner.Infrastructure.Crud.Tests.Fakes
 {
-    public class TestErrorHandler : CrudErrorHandler
+    public class TestErrorHandler : ErrorHandler
     {
         protected override Response HandleError(FailedToFindError error)
         {

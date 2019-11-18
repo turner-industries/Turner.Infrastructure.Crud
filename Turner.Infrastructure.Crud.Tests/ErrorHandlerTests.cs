@@ -49,7 +49,7 @@ namespace Turner.Infrastructure.Crud.Tests
                 .Initialize();
             
             container.Options.AllowOverridingRegistrations = true;
-            container.Register<ICrudErrorHandler, TestErrorHandler>(Lifestyle.Singleton);
+            container.Register<IErrorHandler, TestErrorHandler>(Lifestyle.Singleton);
             container.Options.AllowOverridingRegistrations = false;
 
             _scope = AsyncScopedLifestyle.BeginScope(container);
@@ -229,7 +229,7 @@ namespace Turner.Infrastructure.Crud.Tests
     }
 
     public class UseDefaultErrorHandlerProfile
-        : CrudRequestProfile<UseDefaultErrorHandler>
+        : RequestProfile<UseDefaultErrorHandler>
     {
         public UseDefaultErrorHandlerProfile()
         {
@@ -246,7 +246,7 @@ namespace Turner.Infrastructure.Crud.Tests
     }
 
     public class UseCustomErrorHandlerForRequestProfile
-        : CrudRequestProfile<UseCustomErrorHandlerForRequest>
+        : RequestProfile<UseCustomErrorHandlerForRequest>
     {
         public UseCustomErrorHandlerForRequestProfile()
         {
@@ -266,7 +266,7 @@ namespace Turner.Infrastructure.Crud.Tests
     }
 
     public class UseCustomErrorHandlerForEntityProfile
-        : CrudRequestProfile<UseCustomErrorHandlerForEntity>
+        : RequestProfile<UseCustomErrorHandlerForEntity>
     {
         public UseCustomErrorHandlerForEntityProfile()
         {
@@ -284,7 +284,7 @@ namespace Turner.Infrastructure.Crud.Tests
     }
 
     public class FindFailureTestProfile
-        : CrudRequestProfile<FindFailureTestRequest>
+        : RequestProfile<FindFailureTestRequest>
     {
         public FindFailureTestProfile()
         {
@@ -305,7 +305,7 @@ namespace Turner.Infrastructure.Crud.Tests
     }
 
     public class HookFailureTestProfile
-        : CrudRequestProfile<HookFailureTestRequest>
+        : RequestProfile<HookFailureTestRequest>
     {
         public HookFailureTestProfile()
         {
@@ -326,7 +326,7 @@ namespace Turner.Infrastructure.Crud.Tests
     }
 
     public class CreateResultFailureTestProfile
-        : CrudRequestProfile<CreateResultFailureTestRequest>
+        : RequestProfile<CreateResultFailureTestRequest>
     {
         public CreateResultFailureTestProfile()
         {
@@ -350,7 +350,7 @@ namespace Turner.Infrastructure.Crud.Tests
     }
 
     public class CreateEntityFailureTestProfile
-        : CrudRequestProfile<CreateEntityFailureTestRequest>
+        : RequestProfile<CreateEntityFailureTestRequest>
     {
         public CreateEntityFailureTestProfile()
         {
@@ -371,7 +371,7 @@ namespace Turner.Infrastructure.Crud.Tests
     }
 
     public class UpdateEntityFailureTestProfile
-        : CrudRequestProfile<UpdateEntityFailureTestRequest>
+        : RequestProfile<UpdateEntityFailureTestRequest>
     {
         public UpdateEntityFailureTestProfile()
         {
@@ -393,7 +393,7 @@ namespace Turner.Infrastructure.Crud.Tests
     }
 
     public class RequestCanceledTestProfile
-        : CrudBulkRequestProfile<RequestCanceledTestRequest, int>
+        : BulkRequestProfile<RequestCanceledTestRequest, int>
     {
         public RequestCanceledTestProfile()
         {
@@ -407,7 +407,7 @@ namespace Turner.Infrastructure.Crud.Tests
         }
     }
 
-    public class ErrorTypeTestHandler : CrudErrorHandler
+    public class ErrorTypeTestHandler : ErrorHandler
     {
         public CrudError LastError { get; private set; }
 

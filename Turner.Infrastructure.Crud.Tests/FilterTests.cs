@@ -247,7 +247,7 @@ namespace Turner.Infrastructure.Crud.Tests
     { }
 
     public class IncludeBeforeConstantDateProfile
-        : CrudRequestProfile<IncludeBeforeConstantDateRequest>
+        : RequestProfile<IncludeBeforeConstantDateRequest>
     {
         public IncludeBeforeConstantDateProfile()
         {
@@ -263,7 +263,7 @@ namespace Turner.Infrastructure.Crud.Tests
     }
 
     public class IncludeBeforeDateProfile
-        : CrudRequestProfile<IncludeBeforeDateRequest>
+        : RequestProfile<IncludeBeforeDateRequest>
     {
         public IncludeBeforeDateProfile()
         {
@@ -277,7 +277,7 @@ namespace Turner.Infrastructure.Crud.Tests
     { }
 
     public class ExcludeBeforeConstantDateProfile
-        : CrudRequestProfile<ExcludeBeforeConstantDateRequest>
+        : RequestProfile<ExcludeBeforeConstantDateRequest>
     {
         public ExcludeBeforeConstantDateProfile()
         {
@@ -293,7 +293,7 @@ namespace Turner.Infrastructure.Crud.Tests
     }
 
     public class ExcludeBeforeDateProfile
-        : CrudRequestProfile<ExcludeBeforeDateRequest>
+        : RequestProfile<ExcludeBeforeDateRequest>
     {
         public ExcludeBeforeDateProfile()
         {
@@ -307,7 +307,7 @@ namespace Turner.Infrastructure.Crud.Tests
     { }
 
     public class IncludeAfterConstantDateProfile
-        : CrudRequestProfile<IncludeAfterConstantDateRequest>
+        : RequestProfile<IncludeAfterConstantDateRequest>
     {
         public IncludeAfterConstantDateProfile()
         {
@@ -323,7 +323,7 @@ namespace Turner.Infrastructure.Crud.Tests
     }
 
     public class IncludeAfterDateProfile
-        : CrudRequestProfile<IncludeAfterDateRequest>
+        : RequestProfile<IncludeAfterDateRequest>
     {
         public IncludeAfterDateProfile()
         {
@@ -337,7 +337,7 @@ namespace Turner.Infrastructure.Crud.Tests
     { }
 
     public class ExcludeAfterConstantDateProfile
-        : CrudRequestProfile<ExcludeAfterConstantDateRequest>
+        : RequestProfile<ExcludeAfterConstantDateRequest>
     {
         public ExcludeAfterConstantDateProfile()
         {
@@ -353,7 +353,7 @@ namespace Turner.Infrastructure.Crud.Tests
     }
 
     public class ExcludeAfterDateProfile
-        : CrudRequestProfile<ExcludeAfterDateRequest>
+        : RequestProfile<ExcludeAfterDateRequest>
     {
         public ExcludeAfterDateProfile()
         {
@@ -368,7 +368,7 @@ namespace Turner.Infrastructure.Crud.Tests
     }
 
     public class IncludeWithinConstantAndConstantDateProfile
-        : CrudRequestProfile<IncludeWithinConstantAndConstantDateRequest>
+        : RequestProfile<IncludeWithinConstantAndConstantDateRequest>
     {
         public IncludeWithinConstantAndConstantDateProfile()
         {
@@ -384,7 +384,7 @@ namespace Turner.Infrastructure.Crud.Tests
     }
 
     public class IncludeWithinRequestAndConstantDateProfile
-        : CrudRequestProfile<IncludeWithinRequestAndConstantDateRequest>
+        : RequestProfile<IncludeWithinRequestAndConstantDateRequest>
     {
         public IncludeWithinRequestAndConstantDateProfile()
         {
@@ -398,7 +398,7 @@ namespace Turner.Infrastructure.Crud.Tests
     { }
 
     public class IncludeStartsWithConstantStringProfile
-        : CrudRequestProfile<IncludeStartsWithConstantStringRequest>
+        : RequestProfile<IncludeStartsWithConstantStringRequest>
     {
         public IncludeStartsWithConstantStringProfile()
         {
@@ -414,7 +414,7 @@ namespace Turner.Infrastructure.Crud.Tests
     }
 
     public class IncludeStartsWithStringProfile
-        : CrudRequestProfile<IncludeStartsWithStringRequest>
+        : RequestProfile<IncludeStartsWithStringRequest>
     {
         public IncludeStartsWithStringProfile()
         {
@@ -430,7 +430,7 @@ namespace Turner.Infrastructure.Crud.Tests
     }
 
     public class ExcludeWithPredicateProfile
-        : CrudRequestProfile<ExcludeWithPredicateRequest>
+        : RequestProfile<ExcludeWithPredicateRequest>
     {
         public ExcludeWithPredicateProfile()
         {

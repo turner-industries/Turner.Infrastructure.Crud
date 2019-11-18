@@ -496,7 +496,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class GetAllSimpleSortedUsersProfile 
-        : CrudRequestProfile<GetAllSimpleSortedUsers>
+        : RequestProfile<GetAllSimpleSortedUsers>
     {
         public GetAllSimpleSortedUsersProfile()
         {
@@ -509,7 +509,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class GetAllCustomSortedUsersProfile 
-        : CrudRequestProfile<GetAllCustomSortedUsers>
+        : RequestProfile<GetAllCustomSortedUsers>
     {
         public GetAllCustomSortedUsersProfile()
         {
@@ -524,7 +524,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class GetAllBasicSortedUsersProfile 
-        : CrudRequestProfile<GetAllBasicSortedUsers>
+        : RequestProfile<GetAllBasicSortedUsers>
     {
         public GetAllBasicSortedUsersProfile()
         {
@@ -544,7 +544,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class GetAllSwitchSortedUsersProfile 
-        : CrudRequestProfile<GetAllSwitchSortedUsers>
+        : RequestProfile<GetAllSwitchSortedUsers>
     {
         public GetAllSwitchSortedUsersProfile()
         {
@@ -561,7 +561,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
         public string Case { get; set; }
     }
 
-    public class GetAllSwitchSortedUsersWithoutDefaultProfile : CrudRequestProfile<GetAllSwitchSortedUsersWithoutDefault>
+    public class GetAllSwitchSortedUsersWithoutDefaultProfile : RequestProfile<GetAllSwitchSortedUsersWithoutDefault>
     {
         public GetAllSwitchSortedUsersWithoutDefaultProfile()
         {
@@ -578,7 +578,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class GetAllTableSortedUsersWithoutDefaultProfile
-        : CrudRequestProfile<GetAllTableSortedUsersWithoutDefault>
+        : RequestProfile<GetAllTableSortedUsersWithoutDefault>
     {
         public GetAllTableSortedUsersWithoutDefaultProfile()
         {
@@ -600,7 +600,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
     
     public class GetAllTableSortedUsersProfile
-        : CrudRequestProfile<GetAllTableSortedUsers>
+        : RequestProfile<GetAllTableSortedUsers>
     {
         public GetAllTableSortedUsersProfile()
         {
@@ -619,7 +619,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     { }
 
     public class GetAllCustomFilteredUsersProfile 
-        : CrudRequestProfile<GetAllCustomFilteredUsers>
+        : RequestProfile<GetAllCustomFilteredUsers>
     {
         public GetAllCustomFilteredUsersProfile()
         {
@@ -637,7 +637,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     { }
 
     public class GetAllBasicUnconditionalFilteredUsersProfile 
-        : CrudRequestProfile<GetAllBasicUnconditionalFilteredUsers>
+        : RequestProfile<GetAllBasicUnconditionalFilteredUsers>
     {
         public GetAllBasicUnconditionalFilteredUsersProfile()
         {
@@ -653,7 +653,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class GetAllBasicConditionalFilteredUsersProfile 
-        : CrudRequestProfile<GetAllBasicConditionalFilteredUsers>
+        : RequestProfile<GetAllBasicConditionalFilteredUsers>
     {
         public GetAllBasicConditionalFilteredUsersProfile()
         {
@@ -681,7 +681,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     { }
 
     public class GetWithDefaultWithErrorProfile 
-        : CrudRequestProfile<GetUsersWithDefaultWithErrorRequest>
+        : RequestProfile<GetUsersWithDefaultWithErrorRequest>
     {
         public GetWithDefaultWithErrorProfile()
         {
@@ -691,7 +691,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class GetWithDefaultWithoutErrorProfile 
-        : CrudRequestProfile<GetUsersWithDefaultWithoutErrorRequest>
+        : RequestProfile<GetUsersWithDefaultWithoutErrorRequest>
     {
         public GetWithDefaultWithoutErrorProfile()
         {
@@ -701,7 +701,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class GetWithoutDefaultWithErrorProfile 
-        : CrudRequestProfile<GetUsersWithoutDefaultWithErrorRequest>
+        : RequestProfile<GetUsersWithoutDefaultWithErrorRequest>
     {
         public GetWithoutDefaultWithErrorProfile()
         {
@@ -710,7 +710,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     }
 
     public class GetWithoutDefaultWithoutErrorProfile 
-        : CrudRequestProfile<GetUsersWithoutDefaultWithoutErrorRequest>
+        : RequestProfile<GetUsersWithoutDefaultWithoutErrorRequest>
     {
         public GetWithoutDefaultWithoutErrorProfile()
         {
@@ -720,7 +720,7 @@ namespace Turner.Infrastructure.Crud.Tests.RequestTests
     
     public class GetUsersUnprojectedRequest : GetAllRequest<User, UserGetDto> { }
 
-    public class GetUsersUnprojectedProfile : CrudRequestProfileCommon<GetUsersUnprojectedRequest>
+    public class GetUsersUnprojectedProfile : RequestProfileCommon<GetUsersUnprojectedRequest>
     {
         public GetUsersUnprojectedProfile()
         {
