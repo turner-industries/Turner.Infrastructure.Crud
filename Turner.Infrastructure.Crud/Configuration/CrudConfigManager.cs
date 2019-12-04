@@ -135,8 +135,7 @@ namespace Turner.Infrastructure.Crud.Configuration
 
             config = GetRequestProfileFor(tRequest).BuildConfiguration();
 
-            if (!_requestConfigs.TryAdd(tRequest, config))
-                throw new Exception($"Failed to cache the configuration for {tRequest}.");
+            _requestConfigs.TryAdd(tRequest, config);
 
             return config;
         }
