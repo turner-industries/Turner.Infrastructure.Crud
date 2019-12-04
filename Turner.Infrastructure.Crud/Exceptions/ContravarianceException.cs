@@ -12,7 +12,7 @@ namespace Turner.Infrastructure.Crud.Exceptions
 
         public ContravarianceException(string property, Type tBase, Type tDerived)
             : base($"Invalid type for '{property}'.\n" +
-                   $"'{tBase}' is not contravariant with '{tBase}'.")
+                   $"'{tBase}' is not contravariant with '{tDerived}'.")
         {
             ConfigurationProperty = property;
             BaseTypeProperty = tBase;
@@ -21,7 +21,7 @@ namespace Turner.Infrastructure.Crud.Exceptions
 
         public ContravarianceException(string property, Type tBase, Type tDerived, Exception inner)
             : base($"Invalid type for '{property}'.\n" +
-                   $"'{tBase}' is not contravariant with '{tBase}'.", inner)
+                   $"'{tBase}' is not contravariant with '{tDerived}'.", inner)
         {
             ConfigurationProperty = property;
             BaseTypeProperty = tBase;
