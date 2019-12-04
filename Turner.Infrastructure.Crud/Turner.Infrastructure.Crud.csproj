@@ -10,7 +10,7 @@
     <Description>Turner.Infrastructure.Crud is intended to provide a package that complements the Turner Mediator by providing auto-generated request handlers for commonly-used (CRUD) requests.  For documentation or support, head to the github page: https://github.com/turner-industries/Turner.Infrastructure.Crud/wiki</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/turner-industries/Turner.Infrastructure.Crud</PackageProjectUrl>
-    <Version>2.2.0-alpha2</Version>
+    <Version>2.2.0-alpha4</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -19,6 +19,7 @@
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DefineConstants>TRACE;RELEASE;NETCOREAPP2_0</DefineConstants>
+    <OutputPath></OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Deploy|AnyCPU'">
