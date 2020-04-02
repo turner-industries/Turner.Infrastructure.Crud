@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper.QueryableExtensions;
 using Turner.Infrastructure.Crud.Exceptions;
 
 namespace Turner.Infrastructure.Crud.Context

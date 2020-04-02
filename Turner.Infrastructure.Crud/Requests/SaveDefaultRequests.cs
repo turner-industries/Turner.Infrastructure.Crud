@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using System;
+﻿using System;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Validation;
 

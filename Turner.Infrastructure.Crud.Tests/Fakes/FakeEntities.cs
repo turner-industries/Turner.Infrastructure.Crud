@@ -42,6 +42,10 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         {
             CreateMap<UserDto, User>()
                 .ForMember(x => x.Id, o => o.Ignore());
+
+            CreateMap<User, UserGetDto>();
+
+            CreateMap<User, ContextTests.ContextTests.PUser>();
         }
     }
 
@@ -107,6 +111,8 @@ namespace Turner.Infrastructure.Crud.Tests.Fakes
         {
             CreateMap<SiteDto, Site>()
                 .ForMember(x => x.Id, o => o.Ignore());
+
+            CreateMap<Site, SiteGetDto>();
         }
     }
 

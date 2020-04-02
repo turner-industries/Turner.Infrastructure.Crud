@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using System.Linq;
 using System.Threading.Tasks;
 using Turner.Infrastructure.Crud.Configuration;

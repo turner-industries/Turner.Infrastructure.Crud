@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
 using NUnit.Framework;
 using Turner.Infrastructure.Crud.Configuration;
 using Turner.Infrastructure.Crud.Requests;

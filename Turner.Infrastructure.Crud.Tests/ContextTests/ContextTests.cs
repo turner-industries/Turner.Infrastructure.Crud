@@ -40,6 +40,7 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
             container.Options.DefaultScopedLifestyle = new AsyncScopedLifestyle();
 
             UnitTestSetUp.ConfigureDatabase(container);
+            UnitTestSetUp.ConfigureAutoMapper(container, assemblies);
 
             container.ConfigureMediator(assemblies);
 
@@ -347,7 +348,7 @@ namespace Turner.Infrastructure.Crud.Tests.ContextTests
             Assert.IsTrue(results.Select(x => x.Name).Contains("User3"));
         }
 
-        private class PUser
+        public class PUser
         {
             public string Name { get; set; }
         }

@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.Threading.Tasks;

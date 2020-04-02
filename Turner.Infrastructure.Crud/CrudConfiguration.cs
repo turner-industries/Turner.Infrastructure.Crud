@@ -49,6 +49,7 @@ namespace Turner.Infrastructure.Crud
                 new CrudValidationInitializer(),
                 new CrudRequestInitializer(),
                 new CrudErrorHandlingInitializer(),
+                new CrudAutoMapperInitializer() 
             });
         }
 
@@ -98,6 +99,14 @@ namespace Turner.Infrastructure.Crud
             DataAgentFactory.BindContainer(_container.GetInstance);
             
             _tasks.ForEach(t => t.Run(_container, assemblies, _options));
+        }
+    }
+
+    internal class CrudAutoMapperInitializer : ICrudInitializationTask
+    {
+        public void Run(Container container, Assembly[] assemblies, CrudOptions options)
+        {
+            Mapper.Initialize(container);
         }
     }
 

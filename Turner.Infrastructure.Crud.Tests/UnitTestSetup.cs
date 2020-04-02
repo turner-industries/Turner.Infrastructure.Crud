@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using AutoMapper;
+using AutoMapper.Configuration;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -9,7 +10,6 @@ using SimpleInjector;
 using SimpleInjector.Lifestyles;
 using Turner.Infrastructure.Crud.Context;
 using Turner.Infrastructure.Crud.EntityFrameworkExtensions;
-using Turner.Infrastructure.Crud.FluentValidation;
 using Turner.Infrastructure.Crud.Tests.Fakes;
 using Turner.Infrastructure.Crud.Tests.Utilities;
 using Turner.Infrastructure.Mediator.Configuration;
@@ -72,11 +72,16 @@ namespace Turner.Infrastructure.Crud.Tests
 
         public static void ConfigureAutoMapper(Container container, Assembly[] assemblies)
         {
-            Mapper.Reset();
-            Mapper.Initialize(config =>
-            {
-                config.AddProfiles(assemblies);
-            });
+            var configExpression = new MapperConfigurationExpression();
+            configExpression.ConstructServicesUsing(container.GetInstance);
+
+            configExpression.AddMaps(assemblies);
+
+            var config = new MapperConfiguration(configExpression);
+
+            IMapper mapper = new AutoMapper.Mapper(config, container.GetInstance);
+
+            container.RegisterSingleton(() => mapper);
         }
 
         public static void ConfigureFluentValidation(Container container, Assembly[] assemblies)
