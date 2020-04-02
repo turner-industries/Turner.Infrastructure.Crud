@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>2.2.0-alpha4</Version>
+    <Version>2.2.0-alpha5</Version>
     <Authors>Turner Development Team</Authors>
     <Company>Turner Industries Group, LLC</Company>
     <Description>Adds Z.EntityFramework.Extensions support to Turner.Infrastructure.Crud.  For documentation or support, head to the github page: https://github.com/turner-industries/Turner.Infrastructure.Crud/wiki</Description>
